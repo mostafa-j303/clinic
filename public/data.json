@@ -1,0 +1,38 @@
+
+    
+{
+  "colors": {
+    "primary" : "#A555EC" ,
+    "hovprimary":"#D09CFA",
+    "secondary":"#FFD966" ,
+    "hovsecondary":"#FFFFD0"
+  },
+  "productes":[
+    { "id":1,
+      "name": "Product 1",
+      "price": "$99",
+      "image": "/Image/logo.jpg",
+      "details": "Details of Product 1 so lite very healthy"
+      
+    },
+    { "id":2,
+      "name": "Product 2",
+      "price": "$20",
+      "image": "/Image/logo.jpg",
+      "details": "Details of Product 2"
+    },
+    { "id":3,
+      "name": "Product 1",
+      "price": "$10",
+      "image": "/Image/logo.jpg",
+      "details": "Details of Product 1"
+    },
+    { "id":4,
+      "name": "Product 2",
+      "price": "$20",
+      "image": "/Image/logo.jpg",
+      "details": "Details of Product 2"
+    }
+  ]
+   
+}
