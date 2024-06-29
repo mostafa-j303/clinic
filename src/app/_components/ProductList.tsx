@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { ShoppingCart } from "lucide-react";
-import Counter from "./counter";
+// _components/ProductList.tsx
+import React, { useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
+import Counter from './counter';
+import { useCart } from '../_context/CartContext';
 
 // Define the type for a product
 interface Product {
@@ -12,7 +14,7 @@ interface Product {
 }
 
 // Define the class ClientProducts implementing the Product interface
-class ClientProducts implements Product {
+export class ClientProducts implements Product {
   id: number;
   name: string;
   price: string;
@@ -37,7 +39,7 @@ interface ProductListProps {
 
 const ProductList: React.FC<ProductListProps> = ({ productList }) => {
   const [productQuantities, setProductQuantities] = useState<{ [key: number]: number }>({});
-  const [clientProducts, setClientProducts] = useState<ClientProducts[]>([]);
+  const { cart, setCart } = useCart();
 
   const handleCountChange = (productId: number, newQuantity: number) => {
     setProductQuantities((prevQuantities) => ({
@@ -48,7 +50,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
 
   const addToCart = (product: Product, quantity: number) => {
     const newClientProduct = new ClientProducts(product, quantity);
-    setClientProducts((prevClientProducts) => [...prevClientProducts, newClientProduct]);
+    setCart((prevCart) => [...prevCart, newClientProduct]);
   };
 
   return (
@@ -58,17 +60,11 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
           key={product.id}
           className="transition ease-out duration-200 hover:scale-110 hover:z-40 p-4 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl"
         >
-          <img
-            alt=""
-            src={product.image}
-            className="h-56 w-full rounded-md object-cover"
-          />
+          <img alt="" src={product.image} className="h-56 w-full rounded-md object-fill" />
           <div className="flex justify-between">
             <div className="flex flex-col mt-2">
               <dl>
-                <div className="text-xl items-end text-black">
-                  {product.price}
-                </div>
+                <div className="text-xl items-end text-black">{product.price}</div>
                 <div className="text-primary font-medium">{product.name}</div>
                 <p className="text-gray-400 text-xs ">{product.details}</p>
               </dl>
@@ -90,9 +86,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
                 <div className="flex flex-col items-center rounded border border-gray-200">
                   <Counter
                     initialCount={1}
-                    onCountChange={(newCount) =>
-                      handleCountChange(product.id, newCount)
-                    }
+                    onCountChange={(newCount) => handleCountChange(product.id, newCount)}
                   />
                 </div>
               </div>
@@ -100,27 +94,6 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
           </div>
         </div>
       ))}
-      {/* Display the client's selected products */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Client Products</h2>
-        {clientProducts.length === 0 ? (
-          <p>No products added yet.</p>
-        ) : (
-          <ul>
-            {clientProducts.map((item, index) => (
-              <li key={index}>
-              <div> - Quantity: {item.quantity}</div>
-              <div>- Details: {item.details}</div>
-              <div>- Name: {item.name}</div>
-              <div>- Price:{item.price}</div>
-              <div>- ID: {item.id}</div>
-              <div>- image: {item.image}</div>
-              </li>
-              
-            ))}
-          </ul>
-        )}
-      </div>
     </div>
   );
 };

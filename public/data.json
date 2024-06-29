@@ -1,6 +1,7 @@
 
     
 {
+  "webtitle": "Stay Well With Maysa",
   "colors": {
     "primary" : "#A555EC" ,
     "hovprimary":"#D09CFA",
@@ -13,7 +14,7 @@
       "price": "$99",
       "image": "/Image/logo.jpg",
       "details": "Details of Product 1 so lite very healthy"
-      
+
     },
     { "id":2,
       "name": "Product 2",
