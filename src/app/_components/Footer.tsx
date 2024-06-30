@@ -1,19 +1,42 @@
+'use client'
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaTiktok, FaWhatsapp } from "react-icons/fa";
-
 import data from "../../../public/data.json";
 import { IoMail } from "react-icons/io5";
 
 function Footer() {
+  
+  const [mapError, setMapError] = useState(false);
+
+  const handleMapError = () => {
+    setMapError(true); // Set error state when iframe fails to load
+  };
   return (
     <footer id="f" className="bg-white lg:grid lg:grid-cols-5">
       <div className="relative block h-32 lg:col-span-2 lg:h-full">
-        <img
-          src="https://images.unsplash.com/photo-1642370324100-324b21fab3a9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1548&q=80"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+      <Link
+            target="_blank"
+            className="absolute bg-transparent z-50 w-full h-full text-black flex justify-center items-center text-xl font-extrabold"
+            href={data.myLocation}
+          > Click To See Location</Link>
+      {!mapError ? (
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d26584.637704388914!2d35.4780439983918!3d33.888345720788744!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f170f813de44b%3A0xb6a9f74e09fd1e5f!2sKoraytem%2C%20Beirut%2C%20Lebanon!5e0!3m2!1sen!2s!4v1620731361740!5m2!1sen!2s"
+            width="100%"
+            height="100%"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={handleMapError} // Handle iframe load error
+          ></iframe>
+          
+        ) : (
+          <Link
+            target="_blank"
+            className="absolute bg-transparent z-50 w-full h-full"
+            href={data.myLocation}
+          ></Link>
+        )}
       </div>
 
       <div className="px-4 py-16 sm:px-6 lg:col-span-3 lg:px-8">
@@ -21,8 +44,7 @@ function Footer() {
           <div>
             <p>
               <span className="text-xs uppercase tracking-wide text-gray-500">
-                {" "}
-                Call us{" "}
+                Call us
               </span>
 
               <Link
@@ -38,7 +60,7 @@ function Footer() {
               <li>Weekend: 10am - 3pm</li>
             </ul>
 
-            <ul className="mt-8 flex  gap-6">
+            <ul className="mt-8 flex gap-6">
               <li>
                 <Link
                   href={data.social.facebook}
@@ -152,18 +174,17 @@ function Footer() {
           <div className="text-black grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="p-5 bg-hovsecondary rounded-xl border-primary border-4">
               <h1 className="font-extrabold text-2xl">Our Address:</h1>
-            <p className="text-primary"> {data.addressdetail.address} </p>
-            <div className="flex">
-              <h1 className="font-bold">Building Name: </h1>
-              <p className="text-primary pl-1">{data.addressdetail.building} </p>
-            </div>
+              <p className="text-primary">{data.addressdetail.address}</p>
+              <div className="flex">
+                <h1 className="font-bold">Building Name: </h1>
+                <p className="text-primary pl-1">{data.addressdetail.building}</p>
+              </div>
 
-            <div className="flex">
-              <h1 className="font-bold">Floor number: </h1>
-              <span className="text-primary pl-1"> {data.addressdetail.floor}</span>
+              <div className="flex">
+                <h1 className="font-bold">Floor number: </h1>
+                <span className="text-primary pl-1">{data.addressdetail.floor}</span>
+              </div>
             </div>
-            </div>
-            
 
             <div></div>
           </div>
@@ -181,4 +202,5 @@ function Footer() {
     </footer>
   );
 }
+
 export default Footer;
