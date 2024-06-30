@@ -1,11 +1,15 @@
-"use client";
-import React from "react";
+'use client'
+import React, { useState } from "react";
 import { useCart } from "../_context/CartContext";
 import data from "../../../public/data.json";
 import Link from "next/link";
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [address, setAddress] = useState("");
+  const [locationFetched, setLocationFetched] = useState(false);
 
   // Parse data from JSON file
   const parsedData = {
@@ -29,6 +33,15 @@ const CartPage: React.FC = () => {
 
   // Calculate total including discount and delivery charge
   const total = subtotal - discountAmount + parsedData.delivery;
+
+  // Handle checkout
+  const handleCheckout = () => {
+    if (!name || !lastName || !address || !locationFetched) {
+      alert("Please fill out all required fields and fetch your location.");
+      return;
+    }
+    console.log("Checkout done!");
+  };
 
   return (
     <section className="bg-gradient-to-br  from-hovsecondary via-white to-hovsecondary">
@@ -103,7 +116,8 @@ const CartPage: React.FC = () => {
 
             <div className="bg-gray-200 rounded-b-2xl p-5 mt-8 flex justify-end border-t border-gray-100 pt-8">
               <div className="w-screen max-w-lg space-y-4">
-                <dl className="space-y-0.5 text-sm text-gray-700">
+                <div>
+                     <dl className="space-y-0.5 text-sm text-gray-700">
                   <div className="flex justify-between">
                     <dt>Subtotal</dt>
                     <dd>${subtotal.toFixed(2)}</dd>
@@ -121,19 +135,63 @@ const CartPage: React.FC = () => {
                     <dd>${total.toFixed(2)}</dd>
                   </div>
                 </dl>
-                <div className="flex justify-end">
-                  <Link
-                    href="#"
-                    className="block rounded bg-hovprimary  px-5 py-3 text-sm text-gray-100 transition duration-500 hover:bg-primary"
+
+                </div>
+               <div className="flex flex-col">
+                <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="border text-black p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Enter your last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="border p-2 text-black rounded"
+                  />
+                  <textarea
+                    placeholder="Enter your address detail"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="border p-2 text-black rounded"
+                  ></textarea>
+
+                  <button
+                    onClick={() => {
+                      // Replace this with logic to fetch user's location
+                      setLocationFetched(true);
+                      alert("Location fetched!");
+                    }}
+                    className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+                    disabled={locationFetched}
+                  >
+                    {locationFetched ? "Location Fetched" : "Fetch Location"}
+                  </button>
+
+               </div>
+                <div className="flex flex-col space-y-4">
+                  
+                  <button
+                    onClick={handleCheckout}
+                    className={`${
+                      !name || !lastName || !address || !locationFetched
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-primary hover:bg-hovprimary"
+                    } text-white px-4 py-2 rounded`}
+                    disabled={!name || !lastName || !address || !locationFetched}
                   >
                     Checkout
-                  </Link>
-                </div><h2 className="flex m-0 p-0 relative -top-[30px] text-gray-400 text-[12px]">
-              All Items will be sent via Whatsapp
-            </h2>
+                  </button>
+                </div>
+
+                <h2 className="flex m-0 p-0 relative -top-[30px] text-gray-400 text-[12px]">
+                  All Items will be sent via Whatsapp
+                </h2>
               </div>
             </div>
-            
           </div>
         </div>
       </div>
