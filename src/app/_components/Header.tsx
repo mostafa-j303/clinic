@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { ShoppingCart } from 'lucide-react'
 import { useCart } from '../_context/CartContext'
 import Cart from './Cart'
+import Link from 'next/link'
 const Header: React.FC = () => {
   const { cart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -13,7 +14,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white">
+    <header id='home' className="bg-white">
     <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md">
      <Image src={'/Image/logo.jpg'} alt={'logo'} width={120} height={60}></Image>
   
@@ -21,23 +22,23 @@ const Header: React.FC = () => {
         <nav aria-label="Global" className="hidden md:block">
           <ul className="flex items-center gap-6 text-sm">
             <li>
-              <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Home </a>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="/#home"> Home </Link>
             </li>
   
             <li>
-              <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Appointment </a>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Appointment </Link>
             </li>
   
             <li>
-              <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Products </a>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Products </Link>
             </li>
   
             <li>
-              <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> About Us</a>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> About Us</Link>
             </li>
   
             <li>
-              <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Contact Us </a>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Contact Us </Link>
             </li>
   
             

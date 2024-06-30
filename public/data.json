@@ -8,6 +8,8 @@
     "secondary":"#FFD966" ,
     "hovsecondary":"#FFFFD0"
   },
+  "discount":"0%",
+  "delivery":"$5",
   "productes":[
     { "id":1,
       "name": "Product 1",

@@ -1,11 +1,10 @@
-// _components/ProductList.tsx
-import React, { useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
-import Counter from './counter';
-import { useCart } from '../_context/CartContext';
+import React, { useContext, useState } from "react";
+import { ShoppingCart } from "lucide-react";
+import Counter from "./counter";
+import { useCart } from "../_context/CartContext";
 
 // Define the type for a product
-interface Product {
+export interface Product {
   id: number;
   name: string;
   price: string;
@@ -49,8 +48,19 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
   };
 
   const addToCart = (product: Product, quantity: number) => {
-    const newClientProduct = new ClientProducts(product, quantity);
-    setCart((prevCart) => [...prevCart, newClientProduct]);
+    setCart((prevCart) => {
+      const existingProduct = prevCart.find((item) => item.id === product.id);
+      if (existingProduct) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      } else {
+        const newClientProduct = new ClientProducts(product, quantity);
+        return [...prevCart, newClientProduct];
+      }
+    });
   };
 
   return (
@@ -60,11 +70,17 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
           key={product.id}
           className="transition ease-out duration-200 hover:scale-110 hover:z-40 p-4 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl"
         >
-          <img alt="" src={product.image} className="h-56 w-full rounded-md object-fill" />
+          <img
+            alt=""
+            src={product.image}
+            className="h-56 w-full rounded-md object-fill"
+          />
           <div className="flex justify-between">
             <div className="flex flex-col mt-2">
               <dl>
-                <div className="text-xl items-end text-black">{product.price}</div>
+                <div className="text-xl items-end text-black">
+                  {product.price}
+                </div>
                 <div className="text-primary font-medium">{product.name}</div>
                 <p className="text-gray-400 text-xs ">{product.details}</p>
               </dl>
@@ -86,7 +102,9 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
                 <div className="flex flex-col items-center rounded border border-gray-200">
                   <Counter
                     initialCount={1}
-                    onCountChange={(newCount) => handleCountChange(product.id, newCount)}
+                    onCountChange={(newCount) =>
+                      handleCountChange(product.id, newCount)
+                    }
                   />
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 function Hero() {
   return (
   
@@ -16,19 +17,19 @@ function Hero() {
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <a
+        <Link
           className="block w-full rounded bg-primary px-12 py-3 text-sm font-medium text-white shadow hover:bg-hovprimary focus:outline-none focus:ring active:bg-primary sm:w-auto"
           href="#"
         >
           Get Started
-        </a>
+        </Link>
 
-        <a
+        <Link
           className="block w-full rounded bg-white px-12 py-3 text-sm font-medium text-primary shadow hover:text-hovprimary focus:outline-none focus:ring active:text-primary sm:w-auto"
-          href="#"
+          href="#Products"
         >
-          Learn More
-        </a>
+          See Our Products
+        </Link>
       </div>
     </div>
   </div>
