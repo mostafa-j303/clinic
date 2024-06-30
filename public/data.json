@@ -8,6 +8,21 @@
     "secondary":"#FFD966" ,
     "hovsecondary":"#FFFFD0"
   },
+  "addressdetail":{
+    "address":"Lebanon, Beirut, Hamra, Pavillion street",
+    "building":"jarjour",
+    "floor":"second floor"
+  },
+  "social":{
+    "facebook":"https://www.facebook.com/RD.Maysa/",
+    "tiktok":"https://www.tiktok.com/@dietitianmaysa",
+    "insta":"https://www.instagram.com/staywellclinic",
+    "mail":"mostafajarjour612513@gmail.com",
+    "number":"96171310901"
+  },
+
+
+
   "discount":"0%",
   "delivery":"$5",
   "productes":[

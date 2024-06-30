@@ -1,25 +1,28 @@
-'use client'
+"use client";
 import React from "react";
 import { useCart } from "../_context/CartContext";
 import data from "../../../public/data.json";
 import Link from "next/link";
 
 const CartPage: React.FC = () => {
-  const { cart ,setCart } = useCart();
+  const { cart, setCart } = useCart();
 
   // Parse data from JSON file
   const parsedData = {
     discount: parseFloat(data.discount.replace("$", "")),
-    delivery: parseFloat(data.delivery.replace("$", ""))
+    delivery: parseFloat(data.delivery.replace("$", "")),
   };
 
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-
   // Calculate subtotal
-  const subtotal = cart.reduce((acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (acc, item) =>
+      acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+    0
+  );
 
   // Calculate discount amount
   const discountAmount = subtotal * (parsedData.discount / 100);
@@ -32,13 +35,18 @@ const CartPage: React.FC = () => {
       <div className=" mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <div className="bg-gray-50 rounded-2xl  h-full mx-auto max-w-3xl">
           <header className="text-center">
-            <h1 className="pt-5 text-xl font-bold text-gray-900 sm:text-3xl">Your Cart</h1>
+            <h1 className="pt-5 text-xl font-bold text-gray-900 sm:text-3xl">
+              Your Cart
+            </h1>
           </header>
 
           <div className="mt-8">
             <ul className="space-y-4">
               {cart.map((item, index) => (
-                <li  key={index} className="p-5  m-4 rounded-2xl bg-hovprimary flex items-center gap-4">
+                <li
+                  key={index}
+                  className="p-5  m-4 rounded-2xl bg-hovprimary flex items-center gap-4"
+                >
                   <img
                     src={item.image}
                     alt=""
@@ -53,7 +61,10 @@ const CartPage: React.FC = () => {
                   </div>
                   <div className="flex flex-1 items-center justify-end gap-2">
                     <form>
-                      <label htmlFor={`Line${index + 1}Qty`} className="sr-only">
+                      <label
+                        htmlFor={`Line${index + 1}Qty`}
+                        className="sr-only"
+                      >
                         Quantity
                       </label>
                       <input
@@ -65,8 +76,10 @@ const CartPage: React.FC = () => {
                         className="h-8 w-12 rounded border-gray-200 bg-gray-50 p-0 text-center text-xs text-gray-600 [-moz-appearance:_textfield] focus:outline-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
                       />
                     </form>
-                    <button onClick={()=>handleRemove(item.id)}
-                     className="bg-secondary p-2 rounded-xl text-gray-600  hover:text-red-600 transition duration-500">
+                    <button
+                      onClick={() => handleRemove(item.id)}
+                      className="bg-secondary p-2 rounded-xl text-gray-600  hover:text-red-600 transition duration-500"
+                    >
                       <span className="sr-only">Remove item</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -115,9 +128,12 @@ const CartPage: React.FC = () => {
                   >
                     Checkout
                   </Link>
-                </div>
+                </div><h2 className="flex m-0 p-0 relative -top-[30px] text-gray-400 text-[12px]">
+              All Items will be sent via Whatsapp
+            </h2>
               </div>
             </div>
+            
           </div>
         </div>
       </div>
