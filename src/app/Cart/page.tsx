@@ -1,7 +1,8 @@
 'use client'
+// pages/cart.tsx
 import React, { useState } from "react";
 import { useCart } from "../_context/CartContext";
-import data from "../../../public/data.json";
+import data from "../../../public/data.json"
 import Link from "next/link";
 
 const CartPage: React.FC = () => {
@@ -10,6 +11,7 @@ const CartPage: React.FC = () => {
   const [lastName, setLastName] = useState("");
   const [address, setAddress] = useState("");
   const [locationFetched, setLocationFetched] = useState(false);
+  const [locationLink, setLocationLink] = useState("");
 
   // Parse data from JSON file
   const parsedData = {
@@ -34,9 +36,29 @@ const CartPage: React.FC = () => {
   // Calculate total including discount and delivery charge
   const total = subtotal - discountAmount + parsedData.delivery;
 
+  // Fetch user's location and store as Google Maps link
+  const fetchLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const googleMapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+          setLocationLink(googleMapsLink);
+          setLocationFetched(true);
+        },
+        (error) => {
+          alert("Error fetching location.");
+          console.error("Error fetching location:", error);
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
+
   // Handle checkout
   const handleCheckout = () => {
-    if (!name || !lastName || !address || !locationFetched) {
+    if (!name || !lastName || !address || (cart.length < 1)) {
       alert("Please fill out all required fields and fetch your location.");
       return;
     }
@@ -54,7 +76,9 @@ const CartPage: React.FC = () => {
           </header>
 
           <div className="mt-8">
-            <ul className="space-y-4">
+          {cart.length === 0 ? (
+          <p className="mt-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
+        ) : ( <ul className="space-y-4">
               {cart.map((item, index) => (
                 <li
                   key={index}
@@ -112,33 +136,33 @@ const CartPage: React.FC = () => {
                   </div>
                 </li>
               ))}
-            </ul>
+            </ul>)}
+           
 
             <div className="bg-gray-200 rounded-b-2xl p-5 mt-8 flex justify-end border-t border-gray-100 pt-8">
               <div className="w-screen max-w-lg space-y-4">
                 <div>
-                     <dl className="space-y-0.5 text-sm text-gray-700">
-                  <div className="flex justify-between">
-                    <dt>Subtotal</dt>
-                    <dd>${subtotal.toFixed(2)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Delivery Charge</dt>
-                    <dd>${parsedData.delivery.toFixed(2)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Discount ({parsedData.discount}%)</dt>
-                    <dd>-${discountAmount.toFixed(2)}</dd>
-                  </div>
-                  <div className="flex justify-between !text-base font-medium">
-                    <dt>Total</dt>
-                    <dd>${total.toFixed(2)}</dd>
-                  </div>
-                </dl>
-
+                  <dl className="space-y-0.5 text-sm text-gray-700">
+                    <div className="flex justify-between">
+                      <dt>Subtotal</dt>
+                      <dd>${subtotal.toFixed(2)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt>Delivery Charge</dt>
+                      <dd>${parsedData.delivery.toFixed(2)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt>Discount ({parsedData.discount}%)</dt>
+                      <dd>-${discountAmount.toFixed(2)}</dd>
+                    </div>
+                    <div className="flex justify-between !text-base font-medium">
+                      <dt>Total</dt>
+                      <dd>${total.toFixed(2)}</dd>
+                    </div>
+                  </dl>
                 </div>
-               <div className="flex flex-col">
-                <input
+                <div className="flex flex-col">
+                  <input
                     type="text"
                     placeholder="Enter your name"
                     value={name}
@@ -160,34 +184,42 @@ const CartPage: React.FC = () => {
                   ></textarea>
 
                   <button
-                    onClick={() => {
-                      // Replace this with logic to fetch user's location
-                      setLocationFetched(true);
-                      alert("Location fetched!");
-                    }}
+                    onClick={fetchLocation}
                     className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
                     disabled={locationFetched}
                   >
                     {locationFetched ? "Location Fetched" : "Fetch Location"}
                   </button>
 
-               </div>
+                  {locationFetched && (
+                    <p className="mt-2 bg-hovsecondary text-black p-3 rounded-xl">
+                      Your Location:{" "}
+                      <Link
+                        href={locationLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-secondary p-2 rounded-xl"
+                      >
+                        View on Google
+                      </Link>
+                    </p>
+                  )}
+                </div>
                 <div className="flex flex-col space-y-4">
-                  
                   <button
                     onClick={handleCheckout}
                     className={`${
-                      !name || !lastName || !address || !locationFetched
+                      !name || !lastName || !address || (cart.length < 1)
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-primary hover:bg-hovprimary"
                     } text-white px-4 py-2 rounded`}
-                    disabled={!name || !lastName || !address || !locationFetched}
+                    disabled={!name || !lastName || !address || (cart.length < 1) }
                   >
                     Checkout
                   </button>
                 </div>
 
-                <h2 className="flex m-0 p-0 relative -top-[30px] text-gray-400 text-[12px]">
+                <h2 className="flex m-0 p-0 relative  text-gray-400 text-[12px]">
                   All Items will be sent via Whatsapp
                 </h2>
               </div>
