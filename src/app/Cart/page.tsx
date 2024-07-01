@@ -1,17 +1,15 @@
 'use client'
-// pages/cart.tsx
 import React, { useState } from "react";
 import { useCart } from "../_context/CartContext";
-import data from "../../../public/data.json"
-import Link from "next/link";
+import data from "../../../public/data.json";
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [address, setAddress] = useState("");
+  const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
-  const [locationLink, setLocationLink] = useState("");
 
   // Parse data from JSON file
   const parsedData = {
@@ -36,39 +34,54 @@ const CartPage: React.FC = () => {
   // Calculate total including discount and delivery charge
   const total = subtotal - discountAmount + parsedData.delivery;
 
-  // Fetch user's location and store as Google Maps link
+  // Fetch location
   const fetchLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const googleMapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
-          setLocationLink(googleMapsLink);
-          setLocationFetched(true);
-        },
-        (error) => {
-          alert("Error fetching location.");
-          console.error("Error fetching location:", error);
-        }
-      );
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        setLocationLink(googleMapsLink);
+        setLocationFetched(true);
+      });
     } else {
       alert("Geolocation is not supported by this browser.");
     }
   };
 
+  // Prepare WhatsApp message
+  const prepareWhatsAppMessage = () => {
+    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nTotal: $${total.toFixed(2)}\n\nItems:\n`;
+    
+    cart.forEach((item) => {
+      message += `${item.name} - ${item.quantity} x ${item.price}\n`;
+    });
+
+    message += `\nSubtotal: $${subtotal.toFixed(2)}`;
+    message += `\nDiscount: -$${discountAmount.toFixed(2)}`;
+    message += `\nDelivery Charge: $${parsedData.delivery.toFixed(2)}`;
+    message += `\nTotal: $${total.toFixed(2)}`;
+
+    if (locationFetched && locationLink) {
+      message += `\n\nLocation: ${locationLink}`;
+    }
+
+    return `https://wa.me/${data.social.number}?text=${encodeURIComponent(message)}`;
+  };
+
   // Handle checkout
   const handleCheckout = () => {
-    if (!name || !lastName || !address || (cart.length < 1)) {
+    if (!name || !lastName || !address || !locationFetched || (cart.length < 1)) {
       alert("Please fill out all required fields and fetch your location.");
       return;
     }
-    console.log("Checkout done!");
+    const whatsappLink = prepareWhatsAppMessage();
+    window.open(whatsappLink, "_blank");
   };
 
   return (
-    <section className="bg-gradient-to-br  from-hovsecondary via-white to-hovsecondary">
-      <div className=" mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="bg-gray-50 rounded-2xl  h-full mx-auto max-w-3xl">
+    <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
+      <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="bg-gray-50 rounded-2xl h-full mx-auto max-w-3xl">
           <header className="text-center">
             <h1 className="pt-5 text-xl font-bold text-gray-900 sm:text-3xl">
               Your Cart
@@ -76,13 +89,11 @@ const CartPage: React.FC = () => {
           </header>
 
           <div className="mt-8">
-          {cart.length === 0 ? (
-          <p className="mt-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
-        ) : ( <ul className="space-y-4">
+            <ul className="space-y-4">
               {cart.map((item, index) => (
                 <li
                   key={index}
-                  className="p-5  m-4 rounded-2xl bg-hovprimary flex items-center gap-4"
+                  className="p-5 m-4 rounded-2xl bg-hovprimary flex items-center gap-4"
                 >
                   <img
                     src={item.image}
@@ -115,7 +126,7 @@ const CartPage: React.FC = () => {
                     </form>
                     <button
                       onClick={() => handleRemove(item.id)}
-                      className="bg-secondary p-2 rounded-xl text-gray-600  hover:text-red-600 transition duration-500"
+                      className="bg-secondary p-2 rounded-xl text-gray-600 hover:text-red-600 transition duration-500"
                     >
                       <span className="sr-only">Remove item</span>
                       <svg
@@ -136,8 +147,7 @@ const CartPage: React.FC = () => {
                   </div>
                 </li>
               ))}
-            </ul>)}
-           
+            </ul>
 
             <div className="bg-gray-200 rounded-b-2xl p-5 mt-8 flex justify-end border-t border-gray-100 pt-8">
               <div className="w-screen max-w-lg space-y-4">
@@ -190,36 +200,22 @@ const CartPage: React.FC = () => {
                   >
                     {locationFetched ? "Location Fetched" : "Fetch Location"}
                   </button>
-
-                  {locationFetched && (
-                    <p className="mt-2 bg-hovsecondary text-black p-3 rounded-xl">
-                      Your Location:{" "}
-                      <Link
-                        href={locationLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-secondary p-2 rounded-xl"
-                      >
-                        View on Google
-                      </Link>
-                    </p>
-                  )}
                 </div>
                 <div className="flex flex-col space-y-4">
                   <button
                     onClick={handleCheckout}
                     className={`${
-                      !name || !lastName || !address || (cart.length < 1)
+                      !name || !lastName || !address || !locationFetched || (cart.length < 1)
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-primary hover:bg-hovprimary"
                     } text-white px-4 py-2 rounded`}
-                    disabled={!name || !lastName || !address || (cart.length < 1) }
+                    disabled={!name || !lastName || !address || !locationFetched || (cart.length < 1)}
                   >
-                    Checkout
+                    View My Cart
                   </button>
                 </div>
 
-                <h2 className="flex m-0 p-0 relative  text-gray-400 text-[12px]">
+                <h2 className="flex m-0 p-0 relative text-gray-400 text-[12px]">
                   All Items will be sent via Whatsapp
                 </h2>
               </div>
