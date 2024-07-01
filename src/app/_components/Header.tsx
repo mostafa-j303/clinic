@@ -5,6 +5,7 @@ import { ShoppingCart } from 'lucide-react'
 import { useCart } from '../_context/CartContext'
 import Cart from './Cart'
 import Link from 'next/link'
+import data from "../../../public/data.json"
 const Header: React.FC = () => {
   const { cart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -16,7 +17,7 @@ const Header: React.FC = () => {
   return (
     <header id='home' className="bg-white">
     <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md">
-     <Image src={'/Image/logo.jpg'} alt={'logo'} width={120} height={60}></Image>
+     <Image src={data.images.logo} alt={'logo'} width={120} height={60}></Image>
   
       <div className="flex flex-1 items-center justify-end md:justify-between">
         <nav aria-label="Global" className="hidden md:block">
@@ -30,7 +31,7 @@ const Header: React.FC = () => {
             </li>
   
             <li>
-              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Products </Link>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="/#product"> Products </Link>
             </li>
   
             <li>

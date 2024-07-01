@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import data from "../../../public/data.json"
 function Hero() {
   return (
   
@@ -34,7 +35,7 @@ function Hero() {
     </div>
   </div>
   <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    <Image className="pb-0"  src="/Image/Clipped_image_20240628_140833.png" alt="Maysa" width={400} height={573} ></Image>
+    <Image className="pb-0"  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
   </div>
   
 </section>

@@ -1,6 +1,11 @@
 
     
 { 
+  "images": {
+    "logo":"/Image/logo.jpg",
+    "missoPic": "/Image/missoPic.png"
+  },
+
   "myLocation": "https://www.google.com/maps/place/Jemle/@33.8943086,35.4819942,15z/data=!4m15!1m8!3m7!1s0x151f173e54629927:0x4adc02e087439f92!2sJemle!8m2!3d33.8942865!4d35.4819378!10e5!16s%2Fg%2F11vyzdwd0q!3m5!1s0x151f173e54629927:0x4adc02e087439f92!8m2!3d33.8942865!4d35.4819378!16s%2Fg%2F11vyzdwd0q?hl=en&entry=ttu",
   "webtitle": "Stay Well With Maysa",
   "colors": {

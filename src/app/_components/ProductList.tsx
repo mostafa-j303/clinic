@@ -64,9 +64,9 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
   };
 
   return (
-    <div className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center justify-items-center justify-self-center items-center">
+    <div id="product" className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center justify-items-center justify-self-center items-center">
       {productList.map((product) => (
-        <div
+        <div 
           key={product.id}
           className="transition ease-out duration-200 hover:scale-110 hover:z-40 p-4 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl"
         >
