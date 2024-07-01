@@ -54,18 +54,25 @@ const CartPage: React.FC = () => {
   // Calculate total including discount and delivery charge
   const total = subtotal - discountAmount + parsedData.delivery;
 
-  // Fetch location
   const fetchLocation = () => {
     if (navigator.geolocation) {
       setFetchingLocation(true); // Start fetching
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        setLocationLink(googleMapsLink);
-        setLocationFetched(true);
-        localStorage.setItem('locationLink', googleMapsLink);
-        setFetchingLocation(false); // Finished fetching
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+          setLocationLink(googleMapsLink);
+          setLocationFetched(true);
+          localStorage.setItem('locationLink', googleMapsLink);
+          setFetchingLocation(false); // Finished fetching
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            alert('Please allow location access to fetch your location.');
+          }
+          setFetchingLocation(false); // Finished fetching (even if denied)
+        }
+      );
     } else {
       alert('Geolocation is not supported by this browser.');
     }
@@ -120,7 +127,7 @@ const CartPage: React.FC = () => {
       message += `\n\nLocation: ${locationLink}`;
     }
 
-    return `https://wa.me/69176612513?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${data.social.number}?text=${encodeURIComponent(message)}`;
   };
 
   // Handle checkout
