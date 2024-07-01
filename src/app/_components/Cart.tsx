@@ -15,7 +15,7 @@ const Cart: React.FC = () => {
       <div>
         <h3 className="bg-primary p-4 pb-2 text-lg font-semibold mb-1">Shopping Cart:</h3>
         {cart.length === 0 ? (
-          <p className="mt-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
+          <p className="mt-4 m-2 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
         ) : (
           <div className="m-1">
             <ul>

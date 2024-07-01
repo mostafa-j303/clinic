@@ -158,8 +158,10 @@ const CartPage: React.FC = () => {
               Your Cart
             </h1>
           </header>
-
-          <div className="mt-8">
+          
+          <div className="mt-8">{cart.length === 0 ? (
+          <p className="mt-4 m-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
+        ) : (
             <ul className="space-y-4">
               {cart.map((item, index) => (
                 <li
@@ -219,7 +221,7 @@ const CartPage: React.FC = () => {
                 </li>
               ))}
             </ul>
-
+        )}
             <div className="bg-gray-200 rounded-b-2xl p-5 mt-8 flex justify-end border-t border-gray-100 pt-8">
               <div className="w-screen max-w-lg space-y-4">
                 <div>
