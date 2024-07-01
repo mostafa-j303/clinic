@@ -1,21 +1,41 @@
-'use client'
-import React, { useState } from "react";
-import { useCart } from "../_context/CartContext";
-import data from "../../../public/data.json";
+'use client';
+import React, { useState, useEffect } from 'react';
+import { useCart } from '../_context/CartContext';
+import data from '../../../public/data.json';
+import Link from 'next/link';
+import LocationLoader from '../_components/Apploading'; // Adjust the path as needed
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
-  const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [address, setAddress] = useState("");
+  const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [address, setAddress] = useState('');
   const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
+  const [fetchingLocation, setFetchingLocation] = useState(false); // New state
 
   // Parse data from JSON file
   const parsedData = {
-    discount: parseFloat(data.discount.replace("$", "")),
-    delivery: parseFloat(data.delivery.replace("$", "")),
+    discount: parseFloat(data.discount.replace('$', '')),
+    delivery: parseFloat(data.delivery.replace('$', '')),
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('name');
+      const storedLastName = localStorage.getItem('lastName');
+      const storedAddress = localStorage.getItem('address');
+      const storedLocationLink = localStorage.getItem('locationLink');
+
+      if (storedName) setName(storedName);
+      if (storedLastName) setLastName(storedLastName);
+      if (storedAddress) setAddress(storedAddress);
+      if (storedLocationLink) {
+        setLocationLink(storedLocationLink);
+        setLocationFetched(true);
+      }
+    }
+  }, []);
 
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
@@ -24,7 +44,7 @@ const CartPage: React.FC = () => {
   // Calculate subtotal
   const subtotal = cart.reduce(
     (acc, item) =>
-      acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      acc + parseFloat(item.price.replace('$', '')) * item.quantity,
     0
   );
 
@@ -37,21 +57,56 @@ const CartPage: React.FC = () => {
   // Fetch location
   const fetchLocation = () => {
     if (navigator.geolocation) {
+      setFetchingLocation(true); // Start fetching
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
         setLocationLink(googleMapsLink);
         setLocationFetched(true);
+        localStorage.setItem('locationLink', googleMapsLink);
+        setFetchingLocation(false); // Finished fetching
       });
     } else {
-      alert("Geolocation is not supported by this browser.");
+      alert('Geolocation is not supported by this browser.');
     }
+  };
+
+  // Clear location
+  const clearLocation = () => {
+    setLocationLink(null);
+    setLocationFetched(false);
+    localStorage.removeItem('locationLink');
+  };
+
+  // Handle input changes and save to local storage
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    localStorage.setItem('name', value);
+  };
+
+  const handleLastNameChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setLastName(value);
+    localStorage.setItem('lastName', value);
+  };
+
+  const handleAddressChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const value = e.target.value;
+    setAddress(value);
+    localStorage.setItem('address', value);
   };
 
   // Prepare WhatsApp message
   const prepareWhatsAppMessage = () => {
-    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nTotal: $${total.toFixed(2)}\n\nItems:\n`;
-    
+    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nTotal: $${total.toFixed(
+      2
+    )}\n\nItems:\n`;
+
     cart.forEach((item) => {
       message += `${item.name} - ${item.quantity} x ${item.price}\n`;
     });
@@ -65,21 +120,30 @@ const CartPage: React.FC = () => {
       message += `\n\nLocation: ${locationLink}`;
     }
 
-    return `https://wa.me/${data.social.number}?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/69176612513?text=${encodeURIComponent(message)}`;
   };
 
   // Handle checkout
   const handleCheckout = () => {
-    if (!name || !lastName || !address || !locationFetched || (cart.length < 1)) {
-      alert("Please fill out all required fields and fetch your location.");
+    if (
+      !name ||
+      !lastName ||
+      !address ||
+      !locationFetched ||
+      cart.length < 1 // Corrected from cart.map.length to cart.length
+    ) {
+      alert('Please fill out all required fields and fetch your location.');
       return;
     }
     const whatsappLink = prepareWhatsAppMessage();
-    window.open(whatsappLink, "_blank");
+    window.open(whatsappLink, '_blank');
   };
 
   return (
     <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
+      {/** Conditional rendering of the loader */}
+      {fetchingLocation && <LocationLoader />}
+
       <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <div className="bg-gray-50 rounded-2xl h-full mx-auto max-w-3xl">
           <header className="text-center">
@@ -176,40 +240,69 @@ const CartPage: React.FC = () => {
                     type="text"
                     placeholder="Enter your name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={handleNameChange}
                     className="border text-black p-2 rounded"
                   />
                   <input
                     type="text"
                     placeholder="Enter your last name"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={handleLastNameChange}
                     className="border p-2 text-black rounded"
                   />
                   <textarea
                     placeholder="Enter your address detail"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={handleAddressChange}
                     className="border p-2 text-black rounded"
                   ></textarea>
 
-                  <button
-                    onClick={fetchLocation}
-                    className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
-                    disabled={locationFetched}
-                  >
-                    {locationFetched ? "Location Fetched" : "Fetch Location"}
-                  </button>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={fetchLocation}
+                      className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+                      disabled={locationFetched}
+                    >
+                      {locationFetched ? 'Location Fetched' : 'Fetch Location'}
+                    </button>
+                    {locationFetched && (
+                      <button
+                        onClick={clearLocation}
+                        className="bg-red-500 text-white px-4 py-2 rounded"
+                      >
+                        Clear Location
+                      </button>
+                    )}
+                    {locationFetched && (
+                      <Link
+                        className="bg-secondary text-white px-4 py-2 pt-3 pb-3 rounded ml-3"
+                        target="_blank"
+                        href={locationLink || 'home'}
+                      >
+                        Check Location
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col space-y-4">
                   <button
                     onClick={handleCheckout}
                     className={`${
-                      !name || !lastName || !address || !locationFetched || (cart.length < 1)
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-primary hover:bg-hovprimary"
+                      !name ||
+                      !lastName ||
+                      !address ||
+                      !locationFetched ||
+                      cart.length < 1
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-primary hover:bg-hovprimary'
                     } text-white px-4 py-2 rounded`}
-                    disabled={!name || !lastName || !address || !locationFetched || (cart.length < 1)}
+                    disabled={
+                      !name ||
+                      !lastName ||
+                      !address ||
+                      !locationFetched ||
+                      cart.length < 1
+                    }
                   >
                     View My Cart
                   </button>
