@@ -35,7 +35,7 @@ function Hero() {
     </div>
   </div>
   <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    <Image className="pb-0"  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
+    <Image className="bg-hovprimary pb-0  border-8 border-primary border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
   </div>
   
 </section>
