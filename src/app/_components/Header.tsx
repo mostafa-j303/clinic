@@ -27,7 +27,7 @@ const Header: React.FC = () => {
             </li>
   
             <li>
-              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Appointment </Link>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#appointment"> Appointment </Link>
             </li>
   
             <li>
@@ -35,7 +35,7 @@ const Header: React.FC = () => {
             </li>
   
             <li>
-              <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> About Us</Link>
+              <Link className="text-gray-500 transition hover:text-gray-500/75" href="/#aboutus"> About Us</Link>
             </li>
   
             <li>

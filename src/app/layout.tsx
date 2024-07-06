@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <CartContextProvider>
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className }>
         <Header></Header>
         {children}
         
