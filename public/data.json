@@ -29,6 +29,35 @@
 
 
 
+  "appointment":[
+    {"id": 1,
+  "price":"$25",
+  "name": "normal subscription",
+"duration":"month",
+"details":["hovprimaryafshosejafn", "we aree weriyy helthy broooo", "comen one to use","almost finsh"]
+},
+{"id": 2,
+"price":"$25",
+"name": "normal subscription",
+"duration":"month",
+"details":["hovprimaryafshosejafn","thea loadst one ", "comen one to use"]
+},
+{"id": 3,
+"price":"$25",
+"name": "normal subscription",
+"duration":"month",
+"details":["hovprimaryafshosejafn","thea loadst one ", "we aree weriyy helthy broooo", "comen one to use"]
+  },
+{"id": 4,
+"price":"$25",
+"name": "normal subscription",
+"duration":"month",
+"details":["hovprimaryafshosejafn","thea loadst one ", "we aree weriyy helthy broooo", "comen one to use"]
+  }
+  ],
+
+
+
   "discount":"20%",
   "delivery":"$5",
   "productes":[
