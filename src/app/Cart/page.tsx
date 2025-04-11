@@ -320,7 +320,7 @@ const CartPage: React.FC = () => {
                       cart.length < 1
                     }
                   >
-                    View My Cart
+                    Send Order
                   </button>
                 </div>
 
