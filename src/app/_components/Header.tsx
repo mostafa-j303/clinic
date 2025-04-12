@@ -15,9 +15,9 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header id='home' className="bg-white">
-    <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md">
-     <Image src={data.images.logo} alt={'logo'} width={120} height={60}></Image>
+    <header id='home' className="z-50 fixed bg-white w-full">
+    <div className=" flex h-16  items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md mx-0 ">
+     <Image className='h-14 rounded-2xl' src={data.images.logo} alt={'logo'} width={120} height={60}></Image>
   
       <div className="flex flex-1 items-center justify-end md:justify-between">
         <nav aria-label="Global" className="hidden md:block">

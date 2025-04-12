@@ -11,11 +11,11 @@ const Cart: React.FC = () => {
   };
 
   return (
-    <div className="absolute lg:left-[66%] top-[6.7%] min-w-[300px] flex flex-col justify-between bg-hovprimary h-[300px] w-[250px] z-10 rounded-md border shadow-sm  mx-10 right-10  overflow-auto">
+    <div className="absolute top-14 right-0 min-w-[300px] flex flex-col justify-between bg-hovprimary h-[300px] w-[250px] z-10 rounded-md border shadow-sm  mx-5  overflow-auto">
       <div>
         <h3 className="bg-primary p-4 pb-2 text-lg font-semibold mb-1">Shopping Cart:</h3>
         {cart.length === 0 ? (
-          <p className="mt-4 m-2 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
+          <p className="mt-4 m-2 bg-white text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
         ) : (
           <div className="m-1">
             <ul>

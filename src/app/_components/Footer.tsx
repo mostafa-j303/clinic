@@ -17,7 +17,7 @@ function Footer() {
       <div className="relative block h-32 lg:col-span-2 lg:h-full">
       <Link
             target="_blank"
-            className="absolute bg-transparent z-50 w-full h-full text-black flex justify-center items-center text-xl font-extrabold"
+            className="absolute bg-white opacity-70 z-40 w-full h-full text-black flex justify-center items-center text-xl font-extrabold"
             href={data.myLocation}
           > Click To See Location</Link>
       {!mapError ? (
@@ -26,7 +26,7 @@ function Footer() {
             width="100%"
             height="100%"
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolut inset-0 h-full w-full object-cover"
             onError={handleMapError} // Handle iframe load error
           ></iframe>
           
