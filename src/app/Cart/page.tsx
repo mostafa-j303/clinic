@@ -159,21 +159,22 @@ const CartPage: React.FC = () => {
         <div className="bg-gray-50 rounded-2xl h-full mx-auto max-w-3xl">
           <header className="text-center">
             <h1 className="pt-5 text-xl font-bold text-gray-900 sm:text-3xl">
-              Your Cart
+              Your Cart:
             </h1>
+            <hr />
           </header>
 
-          <div className="mt-8">
+          <div className="mt-3">
             {cart.length === 0 ? (
               <p className="mt-4 m-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">
                 No products added yet.
               </p>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-2 max-h-56 overflow-x-scroll mx-4">
                 {cart.map((item, index) => (
                   <li
                     key={index}
-                    className="p-5 m-4 rounded-2xl bg-hovprimary flex items-center gap-4"
+                    className="p-3 m-1 rounded-md bg-hovprimary flex items-center gap-4"
                   >
                     <img
                       src={item.image}
@@ -196,6 +197,7 @@ const CartPage: React.FC = () => {
                           Quantity
                         </label>
                         <input
+                          readOnly
                           disabled
                           type="number"
                           min="1"
@@ -229,7 +231,7 @@ const CartPage: React.FC = () => {
                 ))}
               </ul>
             )}
-            <div className="bg-gray-200 rounded-b-2xl p-5 mt-8 flex justify-end border-t border-gray-100 pt-8">
+            <div className="bg-gray-200 rounded-b-2xl p-5 flex justify-end border-t border-gray-100 pt-8">
               <div className="w-screen max-w-lg space-y-4">
                 <div>
                   <dl className="space-y-0.5 text-sm text-gray-700">
@@ -257,23 +259,23 @@ const CartPage: React.FC = () => {
                     placeholder="Enter your name"
                     value={name}
                     onChange={handleNameChange}
-                    className="border text-black p-2 rounded"
+                    className="border text-black p-2 rounded-t outline-none"
                   />
                   <input
                     type="text"
                     placeholder="Enter your last name"
                     value={lastName}
                     onChange={handleLastNameChange}
-                    className="border p-2 text-black rounded"
+                    className="border border-t-gray-400 p-2 text-black outline-none "
                   />
                   <textarea
                     placeholder="Enter your address detail"
                     value={address}
                     onChange={handleAddressChange}
-                    className="border p-2 text-black rounded"
+                    className=" p-2 text-black rounded-b border border-t-gray-400 outline-none"
                   ></textarea>
 
-                  <div className="flex space-x-4">
+                  <div className="mt-2 flex space-x-4">
                     <button
                       onClick={fetchLocation}
                       className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"

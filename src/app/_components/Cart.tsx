@@ -3,37 +3,45 @@ import React from "react";
 import { useCart } from "../_context/CartContext";
 import Link from "next/link";
 
-const Cart: React.FC = () => {
+interface CartProps {
+  setIsCartOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const Cart: React.FC<CartProps> = ({setIsCartOpen}) => {
   const { cart, setCart } = useCart();
 
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
+  const handleViewCartClick = () => {
+    setIsCartOpen(false); // Close the cart on click
+  };
+
 
   return (
-    <div className="absolute top-14 right-0 min-w-[300px] flex flex-col justify-between bg-hovprimary h-[300px] w-[250px] z-10 rounded-md border shadow-sm  mx-5  overflow-auto">
+    <div className="absolute top-14 right-0 min-w-[300px] flex flex-col justify-between bg-hovprimary h-[300px] w-[250px] z-10 rounded-md border-none shadow-sm  mx-5 ">
       <div>
-        <h3 className="bg-primary p-4 pb-2 text-lg font-semibold mb-1">Shopping Cart:</h3>
+        <h3 className="bg-primary p-4 pb-2 text-lg font-semibold rounded-t-sm">Shopping Cart:</h3>
         {cart.length === 0 ? (
           <p className="mt-4 m-2 bg-white text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
         ) : (
-          <div className="m-1">
-            <ul>
+          <div className="">
+            <ul className="max-h-52 overflow-auto">
               {cart.map((item, index) => (
-                <div key={index} className="mt-2 p-2 space-y-6 bg-secondary rounded-2xl">
+                <div key={index} className="mt-1 p-1 space-y-6 bg-secondary ">
                   <ul className="space-y-4">
-                    <li className="flex items-center gap-4">
+                    <li className="flex items-center gap-1">
                       <img
                         src={item.image}
                         alt=""
-                        className="size-16 rounded object-fill"
+                        className="size-16 rounded-sm object-fill"
                       />
                       <div>
-                        <h3 className="text-sm text-gray-900">{item.name}</h3>
+                        <h3 className="text-xs text-gray-900">{item.name}</h3>
                         <dl className="mt-0.5 space-y-px text-[10px] text-gray-600">
                           <div>{item.details}</div>
                         </dl>
-                        <h2>{item.price}</h2>
+                        <h6 className="text-xs">{item.price}</h6>
                       </div>
                       <div className="flex flex-1 items-center justify-end gap-2">
                         <form>
@@ -76,8 +84,12 @@ const Cart: React.FC = () => {
           </div>
         )}
       </div>
-      <div className="m-4 mt-[13px] space-y-4 text-center">
-        <Link href={"/Cart"} className="w-full block rounded bg-white px-5 py-3 text-sm text-black hover:bg-hovsecondary hover:text-primary transition duration-500">
+      <div className=" space-y-4 text-center ">
+        <Link 
+        href={"/Cart"} 
+        className="w-full block rounded-b-md  bg-white px-5 py-3 text-sm text-black hover:bg-hovsecondary hover:text-primary transition duration-500"
+        onClick={handleViewCartClick}
+        >
           View My Cart
         </Link>
       </div>

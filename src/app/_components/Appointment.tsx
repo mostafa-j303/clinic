@@ -53,7 +53,7 @@ function Appointment() {
     <div id="appointment" className="bg-gradient-to-b from-hovprimary via-white to-hovsecondary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="grid grid-cols-1  gap-4 sm:grid-cols-3  md:grid-cols-3 lg:grid-cols-3  md:gap-8">
         {data.appointment.map((appointment: AppointmentType) => (
-          <div key={appointment.id} className="flex flex-col justify-around  bg-white hover:box-content rounded-2xl border border-gray-300 p-6 shadow-sm sm:px-8 lg:p-12 hover:border-primary hover:border-2 transition duration-500 hover:scale-y-105">
+          <div key={appointment.id} className="flex flex-col justify-around  bg-white hover:box-content rounded-2xl border border-gray-300 p-2 pb-4 shadow-sm   hover:border-primary hover:border-2 transition duration-500 hover:scale-y-105">
             <div className="text-center">
               <h2 className="text-lg font-medium text-gray-900">
                 {appointment.name}
@@ -101,7 +101,7 @@ function Appointment() {
       </div>
 
       {modalIsOpen && selectedAppointment && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-8 w-96">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Appointment for {selectedAppointment.name}</h2>
             <form className="space-y-4">

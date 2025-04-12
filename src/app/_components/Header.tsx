@@ -63,7 +63,7 @@ const Header: React.FC = () => {
         </div>
       </div>
     </div>
-    {isCartOpen && (<Cart />)}
+    {isCartOpen && (<Cart setIsCartOpen={setIsCartOpen}/>)}
   </header>
   )
 }

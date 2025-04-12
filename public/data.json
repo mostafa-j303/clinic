@@ -1,91 +1,118 @@
+{
 
-    
-{ 
   "images": {
-    "logo":"/Image/logo.jpg",
-    "missoPic": "/Image/missoPic.png"
+    "logo": "/Image/logo.jpg",
+    "missoPic": "/Image/missopic.png"
   },
 
   "myLocation": "https://www.google.com/maps/place/Jemle/@33.8943086,35.4819942,15z/data=!4m15!1m8!3m7!1s0x151f173e54629927:0x4adc02e087439f92!2sJemle!8m2!3d33.8942865!4d35.4819378!10e5!16s%2Fg%2F11vyzdwd0q!3m5!1s0x151f173e54629927:0x4adc02e087439f92!8m2!3d33.8942865!4d35.4819378!16s%2Fg%2F11vyzdwd0q?hl=en&entry=ttu",
+
   "webtitle": "Stay Well With Maysa",
+
   "colors": {
-    "primary" : "#A555EC" ,
-    "hovprimary":"#D09CFA",
-    "secondary":"#FFD966" ,
-    "hovsecondary":"#FFFFD0"
-  },
-  "addressdetail":{
-    "address":"Lebanon, Beirut, Hamra, Pavillion street",
-    "building":"jarjour",
-    "floor":"second floor"
-  },
-  "social":{
-    "facebook":"https://www.facebook.com/RD.Maysa/",
-    "tiktok":"https://www.tiktok.com/@dietitianmaysa",
-    "insta":"https://www.instagram.com/staywellclinic",
-    "mail":"mostafajarjour612513@gmail.com",
-    "number":"96171310901"
+    "primary": "#A555EC",
+    "hovprimary": "#D09CFA",
+    "secondary": "#FFD966",
+    "hovsecondary": "#FFFFD0"
   },
 
-
-
-  "appointment":[
-    {"id": 1,
-  "price":"$25",
-  "name": "normal subscription",
-"duration":"month",
-"details":["hovprimaryafshosejafn", "we aree weriyy helthy broooo", "comen one to use","almost finsh"]
-},
-{"id": 2,
-"price":"$25",
-"name": "normal subscription",
-"duration":"month",
-"details":["hovprimaryafshosejafn","thea loadst one ", "comen one to use"]
-},
-{"id": 3,
-"price":"$25",
-"name": "normal subscription",
-"duration":"month",
-"details":["hovprimaryafshosejafn","thea loadst one ", "we aree weriyy helthy broooo", "comen one to use"]
+  "addressdetail": {
+    "address": "Lebanon, Beirut, Hamra, Pavillion street",
+    "building": "jarjour",
+    "floor": "second floor"
   },
-{"id": 4,
-"price":"$360",
-"name": "normal subscription",
-"duration":"month",
-"details":["hovprimaryafshosejafn","thea loadst one ", "we aree weriyy helthy broooo", "comen one to use"]
-  }
+
+  "social": {
+    "facebook": "https://www.facebook.com/RD.Maysa/",
+    "tiktok": "https://www.tiktok.com/@dietitianmaysa",
+    "insta": "https://www.instagram.com/staywellclinic",
+    "mail": "mostafajarjour612513@gmail.com",
+    "number": "96171310901"
+  },
+
+  "appointment": [
+    {
+      "id": 1,
+      "price": "$25",
+      "name": "normal subscription",
+      "duration": "month",
+      "details": [
+        "hovprimaryafshosejafn",
+        "we aree weriyy helthy broooo",
+        "comen one to use",
+        "almost finsh"
+      ]
+    },
+    {
+      "id": 2,
+      "price": "$25",
+      "name": "normal subscription",
+      "duration": "month",
+      "details": [
+        "hovprimaryafshosejafn",
+        "thea loadst one ",
+        "comen one to use"
+      ]
+    },
+    {
+      "id": 3,
+      "price": "$25",
+      "name": "normal subscription",
+      "duration": "month",
+      "details": [
+        "hovprimaryafshosejafn",
+        "thea loadst one ",
+        "we aree weriyy helthy broooo",
+        "comen one to use"
+      ]
+    },
+    {
+      "id": 4,
+      "price": "$360",
+      "name": "normal subscription",
+      "duration": "month",
+      "details": [
+        "hovprimaryafshosejafn",
+        "thea loadst one ",
+        "we aree weriyy helthy broooo",
+        "comen one to use"
+      ]
+    }
   ],
 
+  "discount": "20%",
 
+  "delivery": "$5",
 
-  "discount":"20%",
-  "delivery":"$5",
-  "productes":[
-    { "id":1,
+  "productes": [
+    {
+      "id": 1,
       "name": "Product 1",
       "price": "$99",
       "image": "/Image/logo.jpg",
       "details": "Details of Product 1 so lite very healthy"
-
     },
-    { "id":2,
+    {
+      "id": 2,
       "name": "Product 2",
       "price": "$20",
       "image": "/Image/logo.jpg",
       "details": "Details of Product 2"
     },
-    { "id":3,
+    {
+      "id": 3,
       "name": "Product 1",
       "price": "$10",
       "image": "/Image/logo.jpg",
       "details": "Details of Product 1"
     },
-    { "id":4,
+    {
+      "id": 4,
       "name": "Product 2",
       "price": "$20",
       "image": "/Image/logo.jpg",
       "details": "Details of Product 2"
     }
   ]
-   
+
 }

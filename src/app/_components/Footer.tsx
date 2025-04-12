@@ -39,7 +39,7 @@ function Footer() {
         )}
       </div>
 
-      <div className="px-4 py-16 sm:px-6 lg:col-span-3 lg:px-8">
+      <div className="px-4 py-6 sm:px-6 lg:col-span-3 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div>
             <p>
@@ -190,12 +190,12 @@ function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-gray-100 pt-12">
+        <div className="mt-4 border-t border-gray-100 pt-4">
           <div className="sm:flex sm:items-center sm:justify-between">
-            <p className="mt-8 text-xs text-gray-500 sm:mt-0">
-              &copy; 2024. MJ-303. All rights reserved.
+            <p className="mt-4 text-xs text-gray-500 sm:mt-0">
+              All rights reserved for Mostafa Jarjour, 2024.
             </p>
-            <p>{data.webtitle}</p>
+            <p className="text-gray-600 text-sm">{data.webtitle}</p>
           </div>
         </div>
       </div>

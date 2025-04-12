@@ -64,7 +64,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
   };
 
   return (
-    <div id="product" className="p-2 py-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center justify-items-center justify-self-center items-center">
+    <div id="Products" className="p-2 pt-8  grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center justify-items-center justify-self-center items-center">
       {productList.map((product) => (
         <div 
           key={product.id}
@@ -75,7 +75,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
             src={product.image}
             className="max-w-fit w-full rounded-md object-fill"
           />
-          <div className="flex justify-between p-4">
+          <div className="flex justify-between px-4 pb-4 pt-0">
             <div className="flex flex-col mt-2 justify-between">
               <dl>
                 <div className="text-xl items-end text-black">
