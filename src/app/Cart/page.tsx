@@ -231,7 +231,7 @@ const CartPage: React.FC = () => {
                 ))}
               </ul>
             )}
-            <div className="bg-gray-200 rounded-b-2xl p-5 flex justify-end border-t border-gray-100 pt-8">
+            <div className="bg-gray-200 rounded-b-2xl  flex justify-center text-center border-t border-gray-100 p-2 pt-8">
               <div className="w-screen max-w-lg space-y-4">
                 <div>
                   <dl className="space-y-0.5 text-sm text-gray-700">
@@ -275,10 +275,10 @@ const CartPage: React.FC = () => {
                     className=" p-2 text-black rounded-b border border-t-gray-400 outline-none"
                   ></textarea>
 
-                  <div className="mt-2 flex space-x-4">
+                  <div className="mt-2 flex space-x-2">
                     <button
                       onClick={fetchLocation}
-                      className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+                      className="bg-primary text-white text-xs p-2 rounded disabled:opacity-50"
                       disabled={locationFetched}
                     >
                       {locationFetched ? "Location Fetched" : "Fetch Location"}
@@ -286,14 +286,14 @@ const CartPage: React.FC = () => {
                     {locationFetched && (
                       <button
                         onClick={clearLocation}
-                        className="bg-red-500 text-white px-4 py-2 rounded"
+                        className="bg-red-500 text-white text-xs p-2 rounded"
                       >
                         Clear Location
                       </button>
                     )}
                     {locationFetched && (
                       <Link
-                        className="bg-secondary text-white px-4 py-2 pt-3 pb-3 rounded ml-3"
+                        className="bg-secondary text-white text-xs p-2 pt-3 pb-3 rounded ml-3"
                         target="_blank"
                         href={locationLink || "home"}
                       >
