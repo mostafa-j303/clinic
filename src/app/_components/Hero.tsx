@@ -5,8 +5,8 @@ function Hero() {
   return (
   
 <section className="w-[100%] bg-gradient-to-br from-secondary via-hovsecondary to-white bg-hero-img pt-20  flex flex-wrap justify-self-center justify-center  justify-items-center content-center">
-  <div className="mx-auto pt-10 max-w-screen-xl pb-10  px-4 py-32 lg:flex  lg:items-center">
-    <div className=" p-10 mx-auto max-w-xl text-center">
+  <div className="mx-auto max-w-screen-xl   px-4  lg:flex  lg:items-center">
+    <div className=" p-5 mx-auto max-w-xl text-center">
       <h1 className="text-3xl text-black font-extrabold sm:text-5xl">
         Understand User Flow.
         <strong className="font-extrabold text-primary sm:block"> Increase Conversion. </strong>
