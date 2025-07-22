@@ -3,6 +3,12 @@ import { ShoppingCart } from "lucide-react";
 import Counter from "./counter";
 import { useCart } from "../_context/CartContext";
 
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Grid } from "swiper/modules";
+
 // Define the type for a product
 export interface Product {
   id: number;
@@ -37,7 +43,9 @@ interface ProductListProps {
 }
 
 const ProductList: React.FC<ProductListProps> = ({ productList }) => {
-  const [productQuantities, setProductQuantities] = useState<{ [key: number]: number }>({});
+  const [productQuantities, setProductQuantities] = useState<{
+    [key: number]: number;
+  }>({});
   const { cart, setCart } = useCart();
 
   const handleCountChange = (productId: number, newQuantity: number) => {
@@ -61,58 +69,83 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
         return [...prevCart, newClientProduct];
       }
     });
+    // ✅ Reset counter to 1 after adding to cart
+    setProductQuantities((prev) => ({
+      ...prev,
+      [product.id]: 1,
+    }));
   };
 
   return (
-    <div id="Products" className="p-2 pt-8  grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 justify-center justify-items-center justify-self-center items-center">
+    <Swiper
+      modules={[Navigation, Pagination, Grid]}
+      spaceBetween={15}
+      slidesPerView={2}
+      slidesPerGroup={2}
+      slidesPerGroupSkip={0}
+      grid={{
+        rows: 2,
+        fill: "row",
+      }}
+      navigation
+      pagination={{ clickable: true }}
+      breakpoints={{
+        768: { slidesPerView: 2, slidesPerGroup: 2 },
+        1024: { slidesPerView: 4, slidesPerGroup: 4 },
+      }}
+      className="w-full h-full"
+    >
       {productList.map((product) => (
-        <div 
-          key={product.id}
-          className="justify-between grid transition ease-out duration-200 hover:z-40  mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full"
-        >
-          <img
-            alt=""
-            src={product.image}
-            className="max-w-fit w-full rounded-md object-fill"
-          />
-          <div className="flex justify-between px-4 pb-4 pt-0">
-            <div className="flex flex-col mt-2 justify-between">
-              <dl>
-                <div className="text-xl items-end text-black">
-                  {product.price}
-                </div>
-                <div className="text-primary font-medium">{product.name}</div>
-                <p className="text-gray-400 text-xs ">{product.details}</p>
-              </dl>
-              <div>
-                <button
-                  className="mt-2 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-2 py-1 focus:outline-none focus:ring"
-                  onClick={() => addToCart(product, productQuantities[product.id] || 1)}
-                >
-                  <span className="absolute inset-y-0 left-0 w-[2px] bg-hovprimary transition-all duration-500 group-hover:w-full group-active:bg-primary"></span>
-                  <span className="flex relative text-sm font-medium text-primary transition-colors group-hover:text-white">
-                    Add
-                    <ShoppingCart className="pl-1 pb-2" />
-                  </span>
-                </button>
-              </div>
-            </div>
-            <div className="flex items-end justify-between flex-nowrap">
-              <div>
-                <div className="flex flex-col items-center rounded border border-gray-200">
-                  <Counter
-                    initialCount={1}
-                    onCountChange={(newCount) =>
-                      handleCountChange(product.id, newCount)
+        <SwiperSlide key={product.id} className="h-full flex-wrap">
+          <div className="transition ease-out duration-200 hover:z-40 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid">
+            <img
+              alt=""
+              src={product.image}
+              className="max-w-fit w-full rounded-md object-fill"
+            />
+            <div className="flex justify-between px-4 pb-4 pt-0">
+              <div className="flex flex-col mt-2 justify-between">
+                <dl>
+                  <div className="text-xl items-end text-black">
+                    {product.price}
+                  </div>
+                  <div className="text-primary font-medium">{product.name}</div>
+                  <p className="text-gray-400 text-xs line-clamp-2 h-10 overflow-hidden">
+                    {product.details}
+                  </p>
+                </dl>
+                <div>
+                  <button
+                    className="mt-2 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-2 py-1 focus:outline-none focus:ring"
+                    onClick={() =>
+                      addToCart(product, productQuantities[product.id] || 1)
                     }
-                  />
+                  >
+                    <span className="absolute inset-y-0 left-0 w-[2px] bg-hovprimary transition-all duration-500 group-hover:w-full group-active:bg-primary"></span>
+                    <span className="flex relative text-sm font-medium text-primary transition-colors group-hover:text-white">
+                      Add
+                      <ShoppingCart className="pl-1 pb-2" />
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-end justify-between flex-nowrap">
+                <div>
+                  <div className="flex flex-col items-center rounded border border-gray-200">
+                    <Counter
+                      initialCount={productQuantities[product.id] || 1}
+                      onCountChange={(newCount) =>
+                        handleCountChange(product.id, newCount)
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </SwiperSlide>
       ))}
-    </div>
+    </Swiper>
   );
 };
 

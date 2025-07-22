@@ -4,6 +4,8 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
+  --color-primary: theme('colors.primary');
+  --color-secondary: theme('colors.secondary');
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,4 +33,29 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.swiper-wrapper{
+  flex-wrap: wrap !important;
+}
+.swiper-button-next,
+.swiper-button-prev {
+  color: var(--color-secondary) !important;
+}
+.swiper-button-next::after , .swiper-button-prev::after{
+ font-size:xx-small !important;
+ font-weight: bolder !important;
+ background-color: var(--color-primary);
+ padding: 9px 12px;
+ border-radius: 50%;
+}
+
+.swiper-pagination-bullet {
+  background-color: var(--color-secondary) !important;
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: var(--color-secondary) !important;
+  opacity: 1;
 }

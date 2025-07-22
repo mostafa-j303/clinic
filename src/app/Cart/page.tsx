@@ -308,7 +308,7 @@ const CartPage: React.FC = () => {
                     )}
                     {locationFetched && (
                       <Link
-                        className="bg-secondary text-white text-xs p-2 pt-3 pb-3 rounded ml-3"
+                        className="bg-primary text-white text-xs p-2 pt-3 pb-3 rounded ml-3"
                         target="_blank"
                         href={locationLink || "home"}
                       >

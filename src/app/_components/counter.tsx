@@ -1,4 +1,4 @@
-import React, { useState , useId} from "react";
+import React, { useState , useId, useEffect} from "react";
 
 interface CounterProps {
   initialCount: number;
@@ -8,6 +8,11 @@ interface CounterProps {
 const Counter: React.FC<CounterProps> = ({ initialCount, onCountChange }) => {
   const [count, setCount] = useState<number>(initialCount);
   const uniqueId = useId();
+
+  // 🔄 Sync internal state with parent-provided initialCount
+  useEffect(() => {
+    setCount(initialCount);
+  }, [initialCount]);
 
   const handleIncrement = () => {
     setCount((prevCount) => prevCount + 1);
