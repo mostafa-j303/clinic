@@ -192,8 +192,10 @@ function Appointment() {
                   className="p-3 text-gray-600 mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
                 >
                   <option value="Cash">Cash</option>
-                  <option value="Wish Money">Wish Money (Sent to {data.social.number})</option>
+                  <option value="Wish Money">Wish Money</option>
                 </select>
+                {paymentMethod === "Wish Money" && <span className="text-red-800 text-sm"> Pay to wish Account: {data.social.number}</span>}
+
               </div>
               <button
                 type="button"
