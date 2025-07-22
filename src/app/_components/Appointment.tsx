@@ -1,21 +1,25 @@
-'use client'
+"use client";
 import React, { useState, useEffect } from "react";
 import data from "../../../public/data.json";
 
 type AppointmentType = {
   id: number;
   price: string;
+  offerPrice?: string;
   name: string;
-  duration: string;
+  duration?: string;
   details: string[];
 };
 
 function Appointment() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentType | null>(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<AppointmentType | null>(null);
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [date, setDate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+
 
   useEffect(() => {
     const storedName = localStorage.getItem("name") || "";
@@ -41,33 +45,53 @@ function Appointment() {
         Name: ${name}
         Last Name: ${lastName}
         Date: ${date}
-        Appointment: ${selectedAppointment.name} - ${selectedAppointment.price}/${selectedAppointment.duration}
+        Payment Method: ${paymentMethod}
+        Appointment: ${selectedAppointment.name}
+        Price: ${selectedAppointment.offerPrice? selectedAppointment.offerPrice: selectedAppointment.price
+      }
       `;
-      const whatsappUrl = `https://wa.me/${data.social.number}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/${
+        data.social.number
+      }?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
       closeModal();
     }
   };
 
   return (
-    <div id="appointment" className="bg-gradient-to-b from-hovprimary via-white to-hovsecondary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div
+      id="appointment"
+      className="bg-gradient-to-b from-hovprimary via-white to-hovsecondary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+    >
       <div className="grid grid-cols-2  gap-4 sm:grid-cols-3  md:grid-cols-3 lg:grid-cols-4  md:gap-8">
         {data.appointment.map((appointment: AppointmentType) => (
-          <div key={appointment.id} className="flex flex-col justify-between  bg-white hover:box-content rounded-2xl border border-gray-300 p-2 pb-4 shadow-sm   hover:border-primary hover:border-2 transition duration-500 hover:scale-y-105">
+          <div
+            key={appointment.id}
+            className="flex flex-col justify-between  bg-white hover:box-content rounded-2xl border border-gray-300 p-2 pb-4 shadow-sm   hover:border-primary hover:border-2 transition duration-500 hover:scale-y-105"
+          >
             <div className="text-center">
               <h2 className="text-lg font-medium text-gray-900">
                 {appointment.name}
                 <span className="sr-only">Plan</span>
               </h2>
 
-              <p className="mt-1 sm:mt-4">
-                <strong className="text-xl font-bold text-primary sm:text-4xl">
+              <p >
+                <strong
+                  className={`font-bold  ${
+                    appointment.offerPrice
+                      ? "line-through text-base text-gray-700"
+                      : "text-xl text-primary"
+                  }`}
+                >
                   {appointment.price}
                 </strong>
-                <span className="text-sm font-medium text-gray-700">/{appointment.duration}</span>
+                {appointment.offerPrice && (
+                  <span className="text-xl font-medium text-primary ">
+                    /{appointment.offerPrice}
+                  </span>
+                )}
               </p>
             </div>
-
             <ul className="mt-1 space-y-1">
               {appointment.details.map((detail, index) => (
                 <li key={index} className="flex items-center gap-1">
@@ -89,13 +113,15 @@ function Appointment() {
                 </li>
               ))}
             </ul>
-              <div className="flex justify-end flex-col">  <button
-              onClick={() => openModal(appointment)}
-              className="w-fit self-center mt-2 block rounded-full border border-primary bg-white px-4 py-3 text-center text-sm font-medium text-primary hover:ring-1 hover:ring-primary focus:outline-none focus:ring active:text-primary hover:text-white hover:bg-primary transition duration-500"
-            >
-              Get Started
-            </button></div>
-          
+            <div className="flex justify-end flex-col">
+              {" "}
+              <button
+                onClick={() => openModal(appointment)}
+                className="w-fit self-center mt-2 block rounded-full border border-primary bg-white px-4 py-3 text-center text-sm font-medium text-primary hover:ring-1 hover:ring-primary focus:outline-none focus:ring active:text-primary hover:text-white hover:bg-primary transition duration-500"
+              >
+                Book now
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -103,10 +129,17 @@ function Appointment() {
       {modalIsOpen && selectedAppointment && (
         <div className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-8 w-96">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Appointment for {selectedAppointment.name}</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">
+              Appointment for {selectedAppointment.name}
+            </h2>
             <form className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Name
+                </label>
                 <input
                   id="name"
                   type="text"
@@ -116,7 +149,12 @@ function Appointment() {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last Name</label>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Last Name
+                </label>
                 <input
                   id="lastName"
                   type="text"
@@ -126,7 +164,12 @@ function Appointment() {
                 />
               </div>
               <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+                <label
+                  htmlFor="date"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Date
+                </label>
                 <input
                   id="date"
                   type="date"
@@ -134,6 +177,23 @@ function Appointment() {
                   onChange={(e) => setDate(e.target.value)}
                   className="p-3 text-gray-600 mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
                 />
+              </div>
+              <div>
+                <label
+                  htmlFor="paymentMethod"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Payment Method
+                </label>
+                <select
+                  id="paymentMethod"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="p-3 text-gray-600 mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Wish Money">Wish Money (Sent to {data.social.number})</option>
+                </select>
               </div>
               <button
                 type="button"

@@ -22,7 +22,7 @@ function Hero() {
           className="block w-full rounded bg-primary px-12 py-3 text-sm font-medium text-white shadow hover:bg-hovprimary focus:outline-none focus:ring active:bg-primary sm:w-auto"
           href="#appointment"
         >
-          Get Started
+          Book Now
         </Link>
 
         <Link

@@ -10,6 +10,7 @@ const CartPage: React.FC = () => {
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false); // New state
@@ -106,7 +107,7 @@ const CartPage: React.FC = () => {
 
   // Prepare WhatsApp message
   const prepareWhatsAppMessage = () => {
-    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nTotal: $${total.toFixed(
+    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nPayment Method: ${paymentMethod}\nTotal: $${total.toFixed(
       2
     )}\n\nItems:\n`;
 
@@ -274,6 +275,20 @@ const CartPage: React.FC = () => {
                     onChange={handleAddressChange}
                     className=" p-2 text-black rounded-b border border-t-gray-400 outline-none"
                   ></textarea>
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Payment Method
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="p-2 text-black border rounded w-full"
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="Wish Money">Wish Money</option>
+                    </select>
+                  </div>
+                  {paymentMethod === "Wish Money" && <span className="text-red-800 text-sm"> Pay to wish Account: {data.social.number}</span>}
 
                   <div className="mt-2 flex space-x-2">
                     <button

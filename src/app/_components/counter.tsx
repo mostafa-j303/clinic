@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useId} from "react";
 
 interface CounterProps {
   initialCount: number;
@@ -7,6 +7,7 @@ interface CounterProps {
 
 const Counter: React.FC<CounterProps> = ({ initialCount, onCountChange }) => {
   const [count, setCount] = useState<number>(initialCount);
+  const uniqueId = useId();
 
   const handleIncrement = () => {
     setCount((prevCount) => prevCount + 1);
@@ -30,7 +31,7 @@ const Counter: React.FC<CounterProps> = ({ initialCount, onCountChange }) => {
       </button>
       <input
         type="number"
-        id="Quantity"
+        id={`quantity-${uniqueId}`} 
         value={count}
         readOnly
         className="text-black h-10 w-10 border-transparent text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"

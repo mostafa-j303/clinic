@@ -33,49 +33,118 @@
   "appointment": [
     {
       "id": 1,
-      "price": "$25",
-      "name": "normal subscription",
-      "duration": "month",
+      "price": "$130",
+      "offerPrice": "$100",
+      "name": "3 Months subscription",
+      "duration": "3 months",
       "details": [
-        "hovprimaryafshosejafn",
-        "we aree weriyy helthy broooo",
-        "comen one to use",
-        "almost finsh"
+        "4 visits",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
       ]
     },
     {
       "id": 2,
-      "price": "$25",
-      "name": "normal subscription",
-      "duration": "month",
+     "price": "$250",
+      "offerPrice": "$200",
+      "name": "6 Months subscription",
+      "duration": "6 months",
       "details": [
-        "hovprimaryafshosejafn",
-        "thea loadst one ",
-        "comen one to use"
+        "8 visits",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
       ]
     },
     {
       "id": 3,
-      "price": "$25",
-      "name": "normal subscription",
-      "duration": "month",
+      "price": "$370",
+      "offerPrice": "$300",
+      "name": "9 Months subscription",
+      "duration": "9 months",
       "details": [
-        "hovprimaryafshosejafn",
-        "thea loadst one ",
-        "we aree weriyy helthy broooo",
-        "comen one to use"
+        "12 visits",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
       ]
     },
     {
       "id": 4,
-      "price": "$360",
-      "name": "normal subscription",
-      "duration": "month",
+     "price": "$490",
+      "offerPrice": "$400",
+      "name": "1 Year subscription",
+      "duration": "1 Year",
       "details": [
-        "hovprimaryafshosejafn",
-        "thea loadst one ",
-        "we aree weriyy helthy broooo",
-        "comen one to use"
+        "16 visits",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
+      ]
+    },
+    {
+      "id": 5,
+     "price": "$40",
+      "name": "First visit",
+      "details": [
+        "Diet Plan",
+        "Body Composition Test"
+      ]
+    },
+    {
+      "id": 6,
+     "price": "$40",
+      "offerPrice": "$30",
+      "name": "Follow up consultation",
+      "details": [
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
+      ]
+    },
+    {
+      "id": 7,
+     "price": "$15",
+      "name": "Body composition package",
+      "details": [
+        "Body Composition Test",
+        "Medical Consultation"
+      ]
+    },
+    {
+      "id": 8,
+     "price": "$80",
+     "offerPrice": "$60",
+      "name": "Couples package",
+      "details": [
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
+      ]
+    },
+    {
+      "id": 9,
+     "price": "$120",
+     "offerPrice": "$80",
+      "name": "Friends package",
+      "details": [
+        "pay for 2 instead of 3",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
+      ]
+    },
+    {
+      "id": 10,
+     "price": "$40",
+     "offerPrice": "$26 per mbr",
+      "name": "Family members 3 & above",
+      "details": [
+        "35% discount",
+        "Diet Plan",
+        "Body Composition Test",
+        "Medical Consultation"
       ]
     }
   ],
