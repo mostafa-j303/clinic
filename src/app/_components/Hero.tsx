@@ -4,8 +4,22 @@ import data from "../../../public/data.json"
 function Hero() {
   return (
   
-<section className="w-[100%] bg-gradient-to-br from-secondary via-hovsecondary to-white bg-hero-img pt-20  flex flex-wrap justify-self-center justify-center  justify-items-center content-center">
-  <div className="mx-auto max-w-screen-xl   px-4  lg:flex  lg:items-center">
+<section
+  className={`w-full pt-20 flex flex-wrap justify-self-center justify-center justify-items-center content-center ${
+    !data?.images?.background ? "bg-gradient-to-br from-secondary via-hovsecondary to-white" : ""
+  }`}
+  style={
+    data?.images?.background
+      ? {
+          backgroundImage: `url(${data.images.background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundColor: "white",
+        }
+      : undefined
+  }
+>
+ <div className="mx-auto max-w-screen-xl   px-4  lg:flex  lg:items-center">
     <div className=" p-5 mx-auto max-w-xl text-center">
       <h1 className="text-3xl text-black font-extrabold sm:text-5xl">
         Understand User Flow.
@@ -35,7 +49,7 @@ function Hero() {
     </div>
   </div>
   <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    <Image className="md:bg-hovprimary pb-0  md:border-8 border-primary border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
+    <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
   </div>
   
 </section>

@@ -1,6 +1,7 @@
 {
 
   "images": {
+    "background":"/Image/bg1.png",
     "logo": "/Image/logo.jpg",
     "missoPic": "/Image/missopic.png"
   },
@@ -12,8 +13,8 @@
   "colors": {
     "primary": "#be75ff",
     "hovprimary": "#D09CFA",
-    "secondary": "#ffe188",
-    "hovsecondary": "#FFFFD0"
+    "secondary": "#ffffff",
+    "hovsecondary": "#ffffff"
   },
 
   "addressdetail": {
