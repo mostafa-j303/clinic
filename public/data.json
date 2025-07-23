@@ -19,7 +19,7 @@
 
   "addressdetail": {
     "address": "Lebanon, Beirut, Hamra, Pavillion street",
-    "building": "itani",
+    "building": "itani & tabara",
     "floor": "First floor"
   },
 
@@ -151,73 +151,59 @@
     }
   ],
 
-  "discount": "20%",
+  "discount": "0%",
 
   "delivery": "$5",
 
   "productes": [
     {
       "id": 1,
-      "name": "Product 1",
-      "price": "$99",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 1 so lite very healthy"
+      "name": "Diet jelly",
+      "price": "$0",
+      "image": "/Image/bloby-jelly-pack.jpeg",
+      "details": "1 jelly pack with the flavor of your choice , 0% fat sugar cholesterol"
     },
     {
       "id": 2,
-      "name": "Product 2",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
+      "name": "Sucarlose",
+      "price": "$0",
+      "image": "/Image/bloby-sugar.jpg",
+      "details": "no calorie sweetner"
     },
     {
       "id": 3,
-      "name": "Product 3",
-      "price": "$10",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 1"
+      "name": "Vanilla custard",
+      "price": "$0",
+      "image": "/Image/bloby-custard.jpeg",
+      "details": "Diet vanilla custard with 0% sugar"
     },
     {
       "id": 4,
-      "name": "Product 4",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
+      "name": "Chocolate custard",
+      "price": "$0",
+      "image": "/Image/bloby-chocolate-custard.jpg",
+      "details": "Diet chocolate custard with 0% sugar"
     },
     {
       "id": 5,
-      "name": "Product 5",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
+      "name": "Mango custard",
+      "price": "$0",
+      "image": "/Image/bloby-mango-custard.jpeg",
+      "details": "Diet mango custard with 0% sugar"
     },
     {
       "id": 6,
-      "name": "Product 6",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
+      "name": "Sugar syrup",
+      "price": "$0",
+      "image": "/Image/bloby-kater.jpeg",
+      "details": "Deit sugar syrup"
     },
     {
       "id": 7,
-      "name": "Product 7",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
-    },
-    {
-      "id": 8,
-      "name": "Product 8",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
-    },
-    {
-      "id": 9,
-      "name": "Product 9",
-      "price": "$20",
-      "image": "/Image/logo.jpg",
-      "details": "Details of Product 2"
+      "name": "Sweet challenge box",
+      "price": "$0",
+      "image": "/Image/bloby-sweet-box.jpeg",
+      "details": "1 sucarlose, 12 deit custard and 7 jelly pack (mixed flavors)"
     }
   ]
 

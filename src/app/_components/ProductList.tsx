@@ -97,11 +97,11 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
     >
       {productList.map((product) => (
         <SwiperSlide key={product.id} className="h-full flex-wrap">
-          <div className="transition ease-out duration-200 hover:z-40 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid">
+          <div className="transition ease-out duration-200 hover:z-40 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid mt-7">
             <img
               alt=""
               src={product.image}
-              className="max-w-fit w-full rounded-md object-fill"
+              className="w-full max-h-48 min-h-48 rounded-md object-fill "
             />
             <div className="flex justify-between px-4 pb-4 pt-0">
               <div className="flex flex-col mt-2 justify-between">

@@ -20,7 +20,7 @@ const ProductSection: React.FC = () => {
   const [productList, setProductList] = useState<Product[]>(initialProductList);
 
   return (
-    <div  className='bg-gradient-to-b from-white via-white to-hovprimary'>
+    <div  id="Products" className='bg-gradient-to-b from-white via-white to-hovprimary '>
       <ProductList productList={productList} />
     </div>
   );
