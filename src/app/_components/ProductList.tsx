@@ -97,26 +97,26 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
     >
       {productList.map((product) => (
         <SwiperSlide key={product.id} className="h-full flex-wrap">
-          <div className="transition ease-out duration-200 hover:z-40 mb-6 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid mt-7">
+          <div className="transition ease-out duration-200 hover:z-40  w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid ">
             <img
               alt=""
               src={product.image}
-              className="w-full max-h-48 min-h-48 rounded-md object-fill "
+              className="w-full max-h-44 min-h-44 rounded-md object-fill "
             />
-            <div className="flex justify-between px-4 pb-4 pt-0">
+            <div className="flex justify-between px-2 pb-4 pt-0">
               <div className="flex flex-col mt-2 justify-between">
                 <dl>
-                  <div className="text-xl items-end text-black">
+                  <div className="text-base items-end text-black">
                     {product.price}
                   </div>
-                  <div className="text-primary font-medium">{product.name}</div>
-                  <p className="text-gray-400 text-xs line-clamp-2 h-10 overflow-hidden">
+                  <div className="text-primary text-sm font-normal">{product.name}</div>
+                  <p className="text-gray-400 text-xs line-clamp-2 h-fit overflow-hidden ">
                     {product.details}
                   </p>
                 </dl>
                 <div>
                   <button
-                    className="mt-2 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-2 py-1 focus:outline-none focus:ring"
+                    className="mt-1 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-2 py-1 focus:outline-none focus:ring"
                     onClick={() =>
                       addToCart(product, productQuantities[product.id] || 1)
                     }

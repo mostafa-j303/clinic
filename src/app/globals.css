@@ -36,6 +36,7 @@ body {
 }
 
 .swiper-wrapper{
+  margin-top: 13px !important;
   flex-wrap: wrap !important;
 }
 .swiper-button-next,
