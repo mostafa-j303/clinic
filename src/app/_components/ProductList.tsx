@@ -90,7 +90,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
       navigation
       pagination={{ clickable: true }}
       breakpoints={{
-        768: { slidesPerView: 2, slidesPerGroup: 2 },
+        768: { slidesPerView: 3, slidesPerGroup: 3 },
         1024: { slidesPerView: 4, slidesPerGroup: 4 },
       }}
       className="w-full h-full"
@@ -101,16 +101,16 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
             <img
               alt=""
               src={product.image}
-              className="w-full max-h-44 min-h-44 rounded-md object-fill "
+              className="w-full max-h-40 min-h-40 rounded-md object-fill "
             />
             <div className="flex justify-between px-2 pb-3 pt-0">
               <div className="flex flex-col mt-2 justify-between">
                 <dl>
-                  <div className="text-base items-end text-black">
+                  <div className="text-sm items-end text-black">
                     {product.price}
                   </div>
-                  <div className="text-primary text-sm font-normal min-h-7 leading-3 mb-1 ">{product.name}</div>
-                  <p className="text-gray-400 text-xs line-clamp-3 min-h-8  h-fit overflow-hidden leading-3">
+                  <div className="text-primary text-[12px] font-normal min-h-6 max-h-6 leading-3 mb-1 ">{product.name}</div>
+                  <p className="text-gray-400 text-[10px] line-clamp-3 min-h-9 max-h-9 overflow-hidden leading-3">
                     {product.details}
                   </p>
                 </dl>
