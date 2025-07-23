@@ -103,20 +103,20 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
               src={product.image}
               className="w-full max-h-44 min-h-44 rounded-md object-fill "
             />
-            <div className="flex justify-between px-2 pb-4 pt-0">
+            <div className="flex justify-between px-2 pb-3 pt-0">
               <div className="flex flex-col mt-2 justify-between">
                 <dl>
                   <div className="text-base items-end text-black">
                     {product.price}
                   </div>
-                  <div className="text-primary text-sm font-normal">{product.name}</div>
-                  <p className="text-gray-400 text-xs line-clamp-2 h-fit overflow-hidden ">
+                  <div className="text-primary text-sm font-normal min-h-7 leading-3 mb-1 ">{product.name}</div>
+                  <p className="text-gray-400 text-xs line-clamp-3 min-h-8  h-fit overflow-hidden leading-3">
                     {product.details}
                   </p>
                 </dl>
                 <div>
                   <button
-                    className="mt-1 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-2 py-1 focus:outline-none focus:ring"
+                    className="mt-1 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-1 py-1 focus:outline-none focus:ring"
                     onClick={() =>
                       addToCart(product, productQuantities[product.id] || 1)
                     }
@@ -129,8 +129,8 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
                   </button>
                 </div>
               </div>
-              <div className="flex items-end justify-between flex-nowrap">
-                <div>
+              <div className="flex items-start mt-1 justify-between flex-nowrap">
+                <div >
                   <div className="flex flex-col items-center rounded border border-gray-200">
                     <Counter
                       initialCount={productQuantities[product.id] || 1}
