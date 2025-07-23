@@ -2,6 +2,7 @@
 
   "images": {
     "background":"/Image/bg1.png",
+    "background2":"/Image/bg2.jpeg",
     "logo": "/Image/logo.jpg",
     "missoPic": "/Image/missopic.png"
   },
