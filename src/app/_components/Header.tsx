@@ -16,9 +16,9 @@ const Header: React.FC = () => {
 
   return (
     <header id='home' className="z-50 fixed bg-white w-full">
-    <div className=" flex h-16  items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md mx-0 ">
+    <div className=" flex h-[70px]  items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md mx-0 ">
      <Link href='/#home'>
-<Image className='h-14 rounded-2xl' src={data.images.logo} alt={'logo'} width={120} height={60}></Image>
+<Image className='w-auto relative rounded-2xl' src={data.images.logo} alt={'logo'} width={120} height={60}></Image>
   
      </Link>
      
