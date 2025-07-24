@@ -7,23 +7,19 @@ export function openWhishApp(): void {
     /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
 
   if (isAndroid) {
-    window.open("whish://", "_blank");
-
+    window.location.href = "whish://"; // More reliable on Android
     setTimeout(() => {
       window.open(
         "https://play.google.com/store/apps/details?id=money.whish.android",
         "_blank"
       );
-    }, 1500);
+    }, 2000);
   } else if (isIOS) {
-    window.open("whish://", "_blank");
-
+    window.location.href = "whish://"; // Preferred for iOS
     setTimeout(() => {
-      window.open(
-        "https://apps.apple.com/lb/app/whish-money/id1284243483",
-        "_blank"
-      );
-    }, 1500);
+      window.location.href =
+        "https://apps.apple.com/lb/app/whish-money/id1284243483";
+    }, 2000);
   } else {
     window.open("https://apps.whish.money", "_blank");
   }
