@@ -292,9 +292,9 @@ const CartPage: React.FC = () => {
                   </div>
                   {paymentMethod === "Wish Money" && (
                     <div className="flex justify-between items-center">
-                      <span className="text-red-800 text-sm">
+                      <span className="text-red-800 text-sm leading-4">
                         {" "}
-                        Pay to wish Account: {data.social.wishnb}
+                        Pay to wish Account:<span className="block">{data.social.wishnb}</span> 
                       </span>
                       <button
                         type="button"
@@ -303,7 +303,7 @@ const CartPage: React.FC = () => {
                       >
                         <Image
                           className="rounded-md w-auto h-auto"
-                          src="/image/whish-money.png"
+                          src={data.images.whishlogo} 
                           alt="Open Whish"
                           width={40}
                           height={50}
