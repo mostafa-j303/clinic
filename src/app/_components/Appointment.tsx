@@ -201,7 +201,7 @@ function Appointment() {
                   <div className="flex justify-between items-center">
                     <span className="text-red-800 text-sm leading-4">
                       {" "}
-                      Pay to wish Account:<span className="block">{data.social.wishnb}</span>
+                      Pay to wish Account:<span className="block md:inline">{data.social.wishnb}</span>
                     </span>
                     <button
                       type="button"
