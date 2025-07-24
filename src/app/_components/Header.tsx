@@ -106,48 +106,48 @@ const Header: React.FC = () => {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="flex h-screen flex-col justify-between border-e border-gray-100 bg-secondary max-w-min max-h-min fixed rounded-br-lg">
+        <div className="flex h-screen flex-col justify-between border-e border-gray-100 bg-secondary max-w-min  fixed ">
           <div className="px-4 py-5">
             <ul className="mt-2 space-y-1 w-36">
               <li>
-                <a
+                <Link
                   href="/#home"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"Home"}
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#appointment"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"Appointment"}
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#Products"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"Products"}
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#aboutus"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"About Us"}
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#f"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"Contact Us"}
-                </a>
+                </Link>
               </li>
 
               {/* <li>
