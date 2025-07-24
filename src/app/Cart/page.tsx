@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useCart } from "../_context/CartContext";
+import { openWhishApp } from "../utils/openWhishApp";
 import data from "../../../public/data.json";
 import Link from "next/link";
 import LocationLoader from "../_components/Apploading"; // Adjust the path as needed
+import Image from "next/image";
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
@@ -288,8 +290,27 @@ const CartPage: React.FC = () => {
                       <option value="Wish Money">Wish Money</option>
                     </select>
                   </div>
-                  {paymentMethod === "Wish Money" && <span className="text-red-800 text-sm"> Pay to wish Account: {data.social.number}</span>}
-
+                  {paymentMethod === "Wish Money" && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-800 text-sm">
+                        {" "}
+                        Pay to wish Account: {data.social.wishnb}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={openWhishApp}
+                        className="p-2 rounded transition hover:opacity-80"
+                      >
+                        <Image
+                          className="rounded-md w-auto h-auto"
+                          src="/image/whish-money.png"
+                          alt="Open Whish"
+                          width={40}
+                          height={50}
+                        />
+                      </button>
+                    </div>
+                  )}
                   <div className="mt-2 flex space-x-2">
                     <button
                       onClick={fetchLocation}

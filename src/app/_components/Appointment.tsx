@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import data from "../../../public/data.json";
-
+import { openWhishApp } from "../utils/openWhishApp";
+import Image from "next/image";
 type AppointmentType = {
   id: number;
   price: string;
@@ -19,7 +20,6 @@ function Appointment() {
   const [lastName, setLastName] = useState("");
   const [date, setDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
-
 
   useEffect(() => {
     const storedName = localStorage.getItem("name") || "";
@@ -47,8 +47,11 @@ function Appointment() {
         Date: ${date}
         Payment Method: ${paymentMethod}
         Appointment: ${selectedAppointment.name}
-        Price: ${selectedAppointment.offerPrice? selectedAppointment.offerPrice: selectedAppointment.price
-      }
+        Price: ${
+          selectedAppointment.offerPrice
+            ? selectedAppointment.offerPrice
+            : selectedAppointment.price
+        }
       `;
       const whatsappUrl = `https://wa.me/${
         data.social.number
@@ -75,7 +78,7 @@ function Appointment() {
                 <span className="sr-only">Plan</span>
               </h2>
 
-              <p >
+              <p>
                 <strong
                   className={`font-bold  ${
                     appointment.offerPrice
@@ -194,8 +197,27 @@ function Appointment() {
                   <option value="Cash">Cash</option>
                   <option value="Wish Money">Wish Money</option>
                 </select>
-                {paymentMethod === "Wish Money" && <span className="text-red-800 text-sm"> Pay to wish Account: {data.social.number}</span>}
-
+                {paymentMethod === "Wish Money" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-red-800 text-sm">
+                      {" "}
+                      Pay to wish Account: {data.social.wishnb}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={openWhishApp}
+                      className="p-2 rounded transition hover:opacity-80"
+                    >
+                      <Image
+                      className="rounded-md w-auto h-auto"
+                        src="/image/whish-money.png"
+                        alt="Open Whish"
+                        width={40}
+                        height={50}
+                      />
+                    </button>
+                  </div>
+                )}
               </div>
               <button
                 type="button"

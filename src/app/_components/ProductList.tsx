@@ -92,6 +92,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList }) => {
       breakpoints={{
         768: { slidesPerView: 3, slidesPerGroup: 3 },
         1024: { slidesPerView: 4, slidesPerGroup: 4 },
+        1280: { slidesPerView: 5, slidesPerGroup: 5 },
       }}
       className="w-full h-full"
     >

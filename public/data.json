@@ -29,7 +29,8 @@
     "tiktok": "https://www.tiktok.com/@dietitianmaysa",
     "insta": "https://www.instagram.com/staywellclinic",
     "mail": "mostafajarjour612513@gmail.com",
-    "number": "96171310901"
+    "number": "96171310901",
+    "wishnb":"+961 71 310 901"
   },
 
   "appointment": [
@@ -160,51 +161,65 @@
     {
       "id": 1,
       "name": "Diet jelly",
-      "price": "$0",
+      "price": "$1.5",
       "image": "/Image/bloby-jelly-pack.jpeg",
       "details": "1 jelly pack with the flavor of your choice , 0% fat sugar cholesterol"
     },
     {
       "id": 2,
-      "name": "Sucarlose",
-      "price": "$0",
-      "image": "/Image/bloby-sugar.jpg",
-      "details": "no calorie sweetner"
+      "name": "Sucarlose for cooking",
+      "price": "$4.5",
+      "image": "/Image/logo.jpg",
+      "details": "Each sachet is 1/4 cup of sugar, one bag of 10 sachets"
     },
     {
       "id": 3,
+      "name": "Sweetener box ",
+      "price": "$4",
+      "image": "/Image/bloby-sucarlose.jpg",
+      "details": "50 sachets of sucarlose"
+    },
+    {
+      "id": 4,
       "name": "Vanilla custard",
-      "price": "$0",
+      "price": "$1",
       "image": "/Image/bloby-custard.jpeg",
       "details": "Diet vanilla custard with 0% sugar"
     },
     {
-      "id": 4,
+      "id": 5,
       "name": "Chocolate custard",
-      "price": "$0",
+      "price": "$1",
       "image": "/Image/bloby-chocolate-custard.jpg",
       "details": "Diet chocolate custard with 0% sugar"
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "Mango custard",
-      "price": "$0",
+      "price": "$1",
       "image": "/Image/bloby-mango-custard.jpeg",
       "details": "Diet mango custard with 0% sugar"
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "Sugar syrup",
-      "price": "$0",
+      "price": "$2.5",
       "image": "/Image/bloby-kater.jpeg",
-      "details": "Deit sugar syrup"
+      "details": "Each bag makes 200 ml of Ater"
     },
     {
-      "id": 7,
+      "id": 8,
+      "name": "Stevialana sweetener",
+      "price": "$15",
+      "image": "/Image/stevialana-sweetener.avif",
+      "details": ""
+    },
+    {
+      "id": 9,
       "name": "Sweet challenge box",
-      "price": "$0",
+      "price": "$25",
       "image": "/Image/bloby-sweet-box.jpeg",
-      "details": "1 sucarlose, 12 deit custard and 7 jelly pack (mixed flavors)"
+      "details": "It contains:6 jello/ 6 cust/ 1 box of sweet/ 1 ater/ 6 sachets"
     }
   ]
 
