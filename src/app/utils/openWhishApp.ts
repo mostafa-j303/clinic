@@ -20,7 +20,7 @@ export function openWhishApp(): void {
 
     setTimeout(() => {
       window.open(
-        "https://apps.apple.com/lb/app/whish/id6469056123",
+        "https://apps.apple.com/us/app/whish-money/id1284243483",
         "_blank"
       );
     }, 1500);
