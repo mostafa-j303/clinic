@@ -155,7 +155,7 @@
   ],
 
   "discount": "0%",
-
+  "minOrder": "$20",
   "delivery": "$5",
 
   "productes": [

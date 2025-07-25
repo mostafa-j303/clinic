@@ -6,6 +6,7 @@ import data from "../../../public/data.json";
 import Link from "next/link";
 import LocationLoader from "../_components/Apploading"; // Adjust the path as needed
 import Image from "next/image";
+import Alert from "../_components/Alert";
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
@@ -16,6 +17,9 @@ const CartPage: React.FC = () => {
   const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false); // New state
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   // Parse data from JSON file
   const parsedData = {
@@ -43,6 +47,7 @@ const CartPage: React.FC = () => {
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
+  const minOrder = parseFloat(data.minOrder.replace("$", ""));
 
   // Calculate subtotal
   const subtotal = cart.reduce(
@@ -140,7 +145,18 @@ const CartPage: React.FC = () => {
       !locationFetched ||
       cart.length < 1 // Corrected from cart.map.length to cart.length
     ) {
-      alert("Please fill out all required fields and fetch your location.");
+      setAlertMessage("Please fill out all required fields and fetch your location.");
+      setShowAlert(true);
+      return;
+    }
+    // ✅ Add this check for minimum order
+    if (total < minOrder) {
+      setAlertMessage(
+        `Minimum order is $${minOrder.toFixed(
+          2
+        )}. Your total is $${total.toFixed(2)}.`
+      );
+      setShowAlert(true);
       return;
     }
     const whatsappLink = prepareWhatsAppMessage();
@@ -149,6 +165,10 @@ const CartPage: React.FC = () => {
 
   return (
     <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
+      {showAlert && (
+        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+      )}
+
       <Link
         href={"/#home"}
         className="text-white m-1 bg-primary p-4 rounded-b-2xl  md:hidden"
@@ -254,6 +274,9 @@ const CartPage: React.FC = () => {
                       <dt>Total</dt>
                       <dd>${total.toFixed(2)}</dd>
                     </div>
+                    <div>
+                      <dt className="italic font-medium"> ⚠️ Total must be at least ${minOrder.toFixed(2)} to proceed with checkout.</dt>
+                    </div>
                   </dl>
                 </div>
                 <div className="flex flex-col">
@@ -294,7 +317,10 @@ const CartPage: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-red-800 text-sm leading-4">
                         {" "}
-                        Pay to wish Account:<span className="block md:inline">{data.social.wishnb}</span> 
+                        Pay to wish Account:
+                        <span className="block md:inline">
+                          {data.social.wishnb}
+                        </span>
                       </span>
                       <button
                         type="button"
@@ -303,7 +329,7 @@ const CartPage: React.FC = () => {
                       >
                         <Image
                           className="rounded-md w-auto h-auto"
-                          src={data.images.whishlogo} 
+                          src={data.images.whishlogo}
                           alt="Open Whish"
                           width={40}
                           height={50}
