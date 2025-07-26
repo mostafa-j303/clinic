@@ -16,6 +16,7 @@ export interface Product {
   price: string;
   image: string;
   details: string;
+  categories: string;
 }
 
 // Define the class ClientProducts implementing the Product interface
@@ -26,6 +27,7 @@ export class ClientProducts implements Product {
   image: string;
   details: string;
   quantity: number;
+  categories: string;
 
   constructor(product: Product, quantity: number) {
     this.id = product.id;
@@ -34,6 +36,7 @@ export class ClientProducts implements Product {
     this.image = product.image;
     this.details = product.details;
     this.quantity = quantity;
+    this.categories = product.categories;
   }
 }
 

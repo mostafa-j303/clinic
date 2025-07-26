@@ -157,10 +157,12 @@
   "discount": "0%",
   "minOrder": "$20",
   "delivery": "$5",
+  "categories": ["bloby","stevialana"],
 
   "productes": [
     {
       "id": 1,
+      "categories":"bloby",
       "name": "Diet jelly",
       "price": "$1.5",
       "image": "/Image/bloby-jelly-pack.jpeg",
@@ -169,6 +171,7 @@
     {
       "id": 2,
       "name": "Sucarlose for cooking",
+      "categories":"bloby",
       "price": "$4.5",
       "image": "/Image/logo.jpg",
       "details": "Each sachet is 1/4 cup of sugar, one bag of 10 sachets"
@@ -176,6 +179,7 @@
     {
       "id": 3,
       "name": "Sweetener box ",
+      "categories":"bloby",
       "price": "$4",
       "image": "/Image/bloby-sucarlose.jpg",
       "details": "50 sachets of sucarlose"
@@ -183,6 +187,7 @@
     {
       "id": 4,
       "name": "Vanilla custard",
+      "categories":"bloby",
       "price": "$1",
       "image": "/Image/bloby-custard.jpeg",
       "details": "Diet vanilla custard with 0% sugar"
@@ -190,6 +195,7 @@
     {
       "id": 5,
       "name": "Chocolate custard",
+      "categories":"bloby",
       "price": "$1",
       "image": "/Image/bloby-chocolate-custard.jpg",
       "details": "Diet chocolate custard with 0% sugar"
@@ -197,6 +203,7 @@
     {
       "id": 6,
       "name": "Mango custard",
+      "categories":"bloby",
       "price": "$1",
       "image": "/Image/bloby-mango-custard.jpeg",
       "details": "Diet mango custard with 0% sugar"
@@ -204,6 +211,7 @@
     {
       "id": 7,
       "name": "Sugar syrup",
+      "categories":"bloby",
       "price": "$2.5",
       "image": "/Image/bloby-kater.jpeg",
       "details": "Each bag makes 200 ml of Ater"
@@ -211,6 +219,7 @@
     {
       "id": 8,
       "name": "Stevialana sweetener",
+      "categories":"stevialana",
       "price": "$15",
       "image": "/Image/stevialana-sweetener.avif",
       "details": ""
@@ -218,6 +227,7 @@
     {
       "id": 9,
       "name": "Sweet challenge box",
+      "categories":"bloby",
       "price": "$25",
       "image": "/Image/bloby-sweet-box.jpeg",
       "details": "It contains:6 jello/ 6 cust/ 1 box of sweet/ 1 ater/ 6 sachets"
