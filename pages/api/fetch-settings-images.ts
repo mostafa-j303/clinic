@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Fetch images and settings
     const [imagesResult, settingsResult] = await Promise.all([
-      pool.query('SELECT id, filename, image FROM images ORDER BY id ASC'),
+      pool.query('SELECT id, mimetype, filename, image FROM images ORDER BY id ASC'),
       pool.query('SELECT * FROM settings LIMIT 1')
     ]);
 
@@ -18,11 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Convert bytea to base64 and map to known image names
     const expectedKeys = ['background', 'background2', 'logo', 'missoPic', 'whishlogo'];
 
-    imagesResult.rows.forEach((img, index) => {
-      if (index < expectedKeys.length) {
-        imageMap[expectedKeys[index]] = `data:image/jpeg;base64,${img.image.toString('base64')}`;
-      }
-    });
+   imagesResult.rows.forEach((img, index) => {
+  if (index < expectedKeys.length) {
+    imageMap[expectedKeys[index]] = `data:${img.mimetype};base64,${img.image.toString('base64')}`;
+  }
+});
 
     const response = {
       images: imageMap,
