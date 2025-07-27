@@ -10,9 +10,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.3",
     "lucide-react": "^0.399.0",
     "next": "15.2.4",
+    "pg": "^8.16.3",
     "react": "^18",
     "react-bootstrap": "^2.10.3",
     "react-dom": "^18",
@@ -21,7 +23,9 @@
     "swiper": "^11.2.10"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
+    "@types/pg": "^8.15.4",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-modal": "^3.16.3",
