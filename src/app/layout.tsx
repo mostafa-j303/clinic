@@ -1,11 +1,12 @@
 import data from "../../public/data.json";
 import type { Metadata } from "next";
-import  { Roboto } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Footer from "./_components/Footer";
 import Header from "./_components/Header";
 import { CartContextProvider } from "./_context/CartContext";
 import ScrollToTop from "./_components/ScrollToTop";
+import { SettingsProvider } from "./_context/SettingsContext";
 
 const inter = Roboto({ subsets: ["latin"], weight: "700" });
 
@@ -21,14 +22,16 @@ export default function RootLayout({
 }>) {
   return (
     <CartContextProvider>
-    <html lang="en">
-      <body className={inter.className }>
-        <Header></Header>
-        {children}
-        <ScrollToTop/>
-        <Footer></Footer></body>
-        
-    </html>
+      <html lang="en">
+        <body className={inter.className}>
+          <SettingsProvider>
+            <Header></Header>
+            {children}
+            <ScrollToTop />
+            <Footer></Footer>
+          </SettingsProvider>
+        </body>
+      </html>
     </CartContextProvider>
   );
 }

@@ -38,14 +38,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       name: row.name,
       price: row.price,
       details: row.details,
-      category: row.category,
+      categories: row.category,
       image: row.image_base64
         ? `data:${row.mimetype};base64,${row.image_base64}`
         : null,
       filename: row.filename || null
     }));
 
-    res.status(200).json({ products });
+   // Fetch categories
+const categoryQuery = `SELECT name FROM categories ORDER BY name ASC;`;
+const categoryResult = await pool.query(categoryQuery);
+
+// Map to simple array of category names
+const categories = categoryResult.rows.map(row => row.name);
+
+    res.status(200).json({ products , categories });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ error: 'Internal Server Error' });

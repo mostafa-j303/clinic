@@ -1,17 +1,24 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import data from "../../../public/data.json"
+import { useSettings } from "../_context/SettingsContext";
+import LocationLoader from "./Apploading";
 function Hero() {
+  const { settings, loading, error } = useSettings();
+  if (loading) return <LocationLoader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
   return (
   
 <section
   className={`w-full pt-20 flex flex-wrap justify-self-center justify-center justify-items-center content-center ${
-    !data?.images?.background ? "bg-gradient-to-br from-secondary via-hovsecondary to-white" : ""
+    !settings?.images?.background ? "bg-gradient-to-br from-secondary via-hovsecondary to-white" : ""
   }`}
   style={
-    data?.images?.background
+    settings?.images?.background
       ? {
-          backgroundImage: `url(${data.images.background})`,
+          backgroundImage: `url(${settings.images.background})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundColor: "white",
@@ -48,7 +55,7 @@ function Hero() {
     </div>
   </div>
   <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    {/* <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={data.images.missoPic} alt="Maysa" width={400} height={573} ></Image> */}
+    {/* <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={settings.images.missoPic} alt="Maysa" width={400} height={573} ></Image> */}
   </div>
   
 </section>

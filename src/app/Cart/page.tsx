@@ -7,6 +7,7 @@ import Link from "next/link";
 import LocationLoader from "../_components/Apploading"; // Adjust the path as needed
 import Image from "next/image";
 import Alert from "../_components/Alert";
+import { useSettings } from "../_context/SettingsContext";
 
 const CartPage: React.FC = () => {
   const { cart, setCart } = useCart();
@@ -21,10 +22,15 @@ const CartPage: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
+  const { settings, loading, error } = useSettings();
+  if (loading) return <LocationLoader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
+  
   // Parse data from JSON file
   const parsedData = {
-    discount: parseFloat(data.discount.replace("$", "")),
-    delivery: parseFloat(data.delivery.replace("$", "")),
+    discount: parseFloat(settings.discount.replace("$", "")),
+    delivery: parseFloat(settings.delivery.replace("$", "")),
   };
 
   useEffect(() => {
@@ -47,7 +53,7 @@ const CartPage: React.FC = () => {
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
-  const minOrder = parseFloat(data.minOrder.replace("$", ""));
+  const minOrder = parseFloat(settings.minOrder.replace("$", ""));
 
   // Calculate subtotal
   const subtotal = cart.reduce(
@@ -131,7 +137,7 @@ const CartPage: React.FC = () => {
       message += `\n\nLocation: ${locationLink}`;
     }
 
-    return `https://wa.me/${data.social.number}?text=${encodeURIComponent(
+    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
       message
     )}`;
   };
@@ -163,6 +169,7 @@ const CartPage: React.FC = () => {
     window.open(whatsappLink, "_blank");
   };
 
+ 
   return (
     <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
       {showAlert && (
@@ -319,7 +326,7 @@ const CartPage: React.FC = () => {
                         {" "}
                         Pay to wish Account:
                         <span className="block md:inline">
-                          {data.social.wishnb}
+                          {settings.social.wishnb}
                         </span>
                       </span>
                       <button
@@ -329,7 +336,7 @@ const CartPage: React.FC = () => {
                       >
                         <Image
                           className="rounded-md w-auto h-auto"
-                          src={data.images.whishlogo}
+                          src={settings.images.whishlogo}
                           alt="Open Whish"
                           width={40}
                           height={50}

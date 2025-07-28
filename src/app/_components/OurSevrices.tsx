@@ -1,7 +1,14 @@
+"use client";
 import React from "react";
 import data from "../../../public/data.json"
+import { useSettings } from "../_context/SettingsContext";
+import LocationLoader from "./Apploading";
 
 function OurSevrices() {
+  const { settings, loading, error } = useSettings();
+  if (loading) return <LocationLoader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
   return (
     <div>
       <section className="bg-gradient-to-b from-hovprimary via-primary to-hovsecondary text-white"

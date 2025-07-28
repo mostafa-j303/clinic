@@ -6,6 +6,8 @@ import { useCart } from "../_context/CartContext";
 import Cart from "./Cart";
 import Link from "next/link";
 import data from "../../../public/data.json";
+import { useSettings } from "../_context/SettingsContext";
+import LocationLoader from "./Apploading";
 const Header: React.FC = () => {
   const { cart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -16,6 +18,10 @@ const Header: React.FC = () => {
   };
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
+  const { settings, loading, error } = useSettings();
+  if (loading) return  <LocationLoader/>;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
   return (
     <header id="home" className="z-50 fixed bg-white w-full">
       <div className=" flex h-[70px]  items-center gap-8 px-4 sm:px-6 lg:px-8 shadow-md mx-0 ">
@@ -30,8 +36,8 @@ const Header: React.FC = () => {
 
         <Link href="/#home">
           <Image
-            className="w-auto relative rounded-2xl"
-            src={data.images.logo}
+            className="w-auto relative rounded-2xl max-h-14"
+            src={settings.images.logo}
             alt={"logo"}
             width={120}
             height={60}

@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import data from "../../../public/data.json";
 import { openWhishApp } from "../utils/openWhishApp";
 import Image from "next/image";
+import { useSettings } from '../_context/SettingsContext';
+import LocationLoader from "../_components/Apploading"; 
+
 type AppointmentType = {
   id: number;
   price: string;
@@ -13,6 +16,7 @@ type AppointmentType = {
 };
 
 function Appointment() {
+  const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentType | null>(null);
@@ -20,6 +24,27 @@ function Appointment() {
   const [lastName, setLastName] = useState("");
   const [date, setDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+
+  const { settings, loading, error } = useSettings();
+   const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
+
+
+
+   // Fetch appointments from API
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch("/api/fetch-appointment");
+        const data = await res.json();
+        setAppointments(data.appointments);
+        setFetched(true);
+      } catch (error) {
+        console.error("Failed to fetch appointments", error);
+      }
+    };
+
+    fetchAppointments();
+  }, [fetched]);
 
   useEffect(() => {
     const storedName = localStorage.getItem("name") || "";
@@ -54,12 +79,17 @@ function Appointment() {
         }
       `;
       const whatsappUrl = `https://wa.me/${
-        data.social.number
+        settings?.social.number
       }?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
       closeModal();
     }
   };
+
+
+  if (loading) return  <LocationLoader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
 
   return (
     <div
@@ -67,7 +97,7 @@ function Appointment() {
       className="bg-gradient-to-b from-hovprimary via-white to-hovsecondary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
     >
       <div className="grid grid-cols-2  gap-4 sm:grid-cols-3  md:grid-cols-3 lg:grid-cols-4  md:gap-8">
-        {data.appointment.map((appointment: AppointmentType) => (
+        {appointments.map((appointment: AppointmentType) => (
           <div
             key={appointment.id}
             className="flex flex-col justify-between  bg-white hover:box-content rounded-2xl border border-gray-300 p-2 pb-4 shadow-sm   hover:border-primary hover:border-2 transition duration-500 hover:scale-y-105"
@@ -201,7 +231,7 @@ function Appointment() {
                   <div className="flex justify-between items-center">
                     <span className="text-red-800 text-sm leading-4">
                       {" "}
-                      Pay to wish Account:<span className="block md:inline">{data.social.wishnb}</span>
+                      Pay to wish Account:<span className="block md:inline">{settings.social.wishnb}</span>
                     </span>
                     <button
                       type="button"
@@ -209,8 +239,8 @@ function Appointment() {
                       className="p-2 rounded transition hover:opacity-80"
                     >
                       <Image
-                      className="rounded-md w-auto h-auto"
-                        src={data.images.whishlogo}
+                      className="rounded-md w-auto h-auto max-w-10"
+                        src={settings.images.whishlogo}
                         alt="Open Whish"
                         width={40}
                         height={50}

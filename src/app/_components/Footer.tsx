@@ -4,21 +4,27 @@ import React, { useEffect, useState } from "react";
 import { FaTiktok, FaWhatsapp } from "react-icons/fa";
 import data from "../../../public/data.json";
 import { IoMail } from "react-icons/io5";
+import { useSettings } from "../_context/SettingsContext";
+import LocationLoader from "../_components/Apploading";
+
 
 function Footer() {
-  
+  const { settings, loading, error } = useSettings();
   const [mapError, setMapError] = useState(false);
 
   const handleMapError = () => {
     setMapError(true); // Set error state when iframe fails to load
   };
+  if (loading) return  <LocationLoader/>;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return null;
   return (
     <footer id="f" className="bg-white lg:grid lg:grid-cols-5">
       <div className="relative block h-32 lg:col-span-2 lg:h-full">
       <Link
             target="_blank"
             className="absolute bg-white opacity-70 z-40 w-full h-full text-black flex justify-center items-center text-xl font-extrabold"
-            href={data.myLocation}
+            href={settings.myLocation}
           > Click To See Location</Link>
       {!mapError ? (
           <iframe
@@ -34,7 +40,7 @@ function Footer() {
           <Link
             target="_blank"
             className="absolute bg-transparent z-50 w-full h-full"
-            href={data.myLocation}
+            href={settings.myLocation}
           ></Link>
         )}
       </div>
@@ -48,7 +54,7 @@ function Footer() {
               </span>
 
               <Link
-                href={`tel:+${data.social.number}`}
+                href={`tel:+${settings.social.number}`}
                 className="block text-2xl font-medium text-gray-900 hover:opacity-75 sm:text-3xl"
               >
                 (+961) 71 310 901
@@ -63,7 +69,7 @@ function Footer() {
             <ul className="mt-8 flex gap-6">
               <li>
                 <Link
-                  href={data.social.facebook}
+                  href={settings.social.facebook}
                   rel="noreferrer"
                   target="_blank"
                   className="text-gray-700 transition hover:opacity-75"
@@ -87,7 +93,7 @@ function Footer() {
 
               <li>
                 <Link
-                  href={data.social.insta}
+                  href={settings.social.insta}
                   rel="noreferrer"
                   target="_blank"
                   className="text-gray-700 transition hover:opacity-75"
@@ -111,7 +117,7 @@ function Footer() {
 
               <li>
                 <Link
-                  href={`mailto:${data.social.mail}`}
+                  href={`mailto:${settings.social.mail}`}
                   rel="noreferrer"
                   target="_blank"
                   className="text-gray-700 transition hover:opacity-75"
@@ -131,7 +137,7 @@ function Footer() {
 
               <li>
                 <Link
-                  href={`https://api.whatsapp.com/send/?phone=${data.social.number}`}
+                  href={`https://api.whatsapp.com/send/?phone=${settings.social.number}`}
                   rel="noreferrer"
                   target="_blank"
                   className="text-gray-700 transition hover:opacity-75"
@@ -174,15 +180,15 @@ function Footer() {
           <div className="text-black grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="p-5 bg-hovsecondary rounded-xl border-primary border-4">
               <h1 className="font-extrabold text-2xl">Our Address:</h1>
-              <p className="text-primary">{data.addressdetail.address}</p>
+              <p className="text-primary">{settings.addressdetail.address}</p>
               <div className="flex">
                 <h1 className="font-bold">Building Name: </h1>
-                <p className="text-primary pl-1">{data.addressdetail.building}</p>
+                <p className="text-primary pl-1">{settings.addressdetail.building}</p>
               </div>
 
               <div className="flex">
                 <h1 className="font-bold">Floor number: </h1>
-                <span className="text-primary pl-1">{data.addressdetail.floor}</span>
+                <span className="text-primary pl-1">{settings.addressdetail.floor}</span>
               </div>
             </div>
 
@@ -195,7 +201,7 @@ function Footer() {
             <p className="mt-4 text-xs text-gray-500 sm:mt-0">
               All rights reserved for Mostafa Jarjour, 2024.
             </p>
-            <p className="text-gray-600 text-sm">{data.webtitle}</p>
+            <p className="text-gray-600 text-sm">{settings.webtitle}</p>
           </div>
         </div>
       </div>
