@@ -39,16 +39,20 @@ const handleEditProduct = (product: Product) => {
   setShowModal(true);
 };
 
-
+//for add and edit product 
 const handleSaveProduct = async (product: any) => {
   const formData = new FormData();
-  formData.append("file", product.image);
+
+  const isEdit = !!product.id;
+  if (product.image instanceof File) {
+    formData.append("file", product.image);
+  }
+
   formData.append("name", product.name);
   formData.append("price", product.price);
   formData.append("details", product.details);
   formData.append("categories", product.category);
 
-  const isEdit = !!product.id;
   if (isEdit) {
     formData.append("id", product.id);
   }
@@ -60,11 +64,11 @@ const handleSaveProduct = async (product: any) => {
     });
 
     const data = await res.json();
-    const reader = new FileReader();
 
-    reader.onloadend = () => {
-      const imageBase64 = reader.result as string;
+    // Find existing product image base64 if no new image and product.image is empty or not base64
+    const existingProduct = products.find((p) => p.id === product.id);
 
+    const finalizeSave = (imageBase64: string) => {
       const updatedProduct = {
         id: data.id || Date.now(),
         name: product.name,
@@ -74,20 +78,33 @@ const handleSaveProduct = async (product: any) => {
         image: imageBase64,
       };
 
-      if (isEdit) {
-        setProducts((prev) =>
-          prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-        );
-        setAlertMessage("Product updated successfully");
-      } else {
-        setProducts((prev) => [...prev, updatedProduct]);
-        setAlertMessage("Product added successfully");
-      }
+      setProducts((prev) =>
+        isEdit
+          ? prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+          : [...prev, updatedProduct]
+      );
 
+      setAlertMessage(isEdit ? "Product updated successfully" : "Product added successfully");
       setShowAlert(true);
     };
 
-    reader.readAsDataURL(product.image);
+    if (product.image instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        finalizeSave(reader.result as string);
+      };
+      reader.readAsDataURL(product.image);
+    } else if (typeof product.image === "string" && product.image.startsWith("data:image")) {
+      // Reuse existing base64 string
+      finalizeSave(product.image);
+    } else if (existingProduct) {
+      // Use existing product image base64 from current state
+      finalizeSave(existingProduct.image);
+    } else {
+      // fallback empty or placeholder image
+      finalizeSave("");
+    }
+
     setFetched(false);
   } catch (err) {
     console.error("Failed to save product", err);

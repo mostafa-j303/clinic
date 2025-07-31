@@ -20,17 +20,18 @@ const [price, setPrice] = useState(initialProduct?.price?.replace("$", "") || ""
 const [image, setImage] = useState<File | null>(null);
 const [details, setDetails] = useState(initialProduct?.details || "");
 
+const isEdit = Boolean(initialProduct);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!category || !name || !price || !image || !details) {
+    if (!category || !name || !price || !details || (!isEdit && !image)) {
       alert("All fields are required");
       return;
     }
 
     const product = {
-      id: initialProduct?.id, // for edit
+      ...(isEdit && { id: initialProduct?.id }),
       category,
       name,
       price: `$${price}`,
@@ -86,7 +87,7 @@ const [details, setDetails] = useState(initialProduct?.details || "");
             accept="image/*"
             onChange={(e) => setImage(e.target.files?.[0] || null)}
             className="w-full bg-hovprimary p-2"
-            required
+            required={!isEdit}
           />
 
           <textarea

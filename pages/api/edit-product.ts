@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
 
   const { fields, files } = data;
+
   const id = parseInt(fields.id?.[0], 10);
   const name = fields.name?.[0] ?? "";
   const price = fields.price?.[0] ?? "";
@@ -41,7 +42,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const pool = getPool();
 
-    // Get category ID
     const catRes = await pool.query("SELECT id FROM categories WHERE name = $1", [categories]);
     const category_id = catRes.rows?.[0]?.id;
 
@@ -49,14 +49,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    // Update product
+    // Update the product fields
     await pool.query(
-      `UPDATE products SET name = $1, price = $2, details = $3, category_id = $4 WHERE id = $5`,
+      `UPDATE products
+       SET name = $1, price = $2, details = $3, category_id = $4
+       WHERE id = $5`,
       [name, price, details, category_id, id]
     );
 
+    // If a new file is uploaded, replace the image
     if (file) {
-      // Delete existing image and insert new one
       await pool.query(`DELETE FROM product_images WHERE product_id = $1`, [id]);
 
       const imageBuffer = fs.readFileSync(file.filepath);
