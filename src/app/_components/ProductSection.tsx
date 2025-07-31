@@ -1,40 +1,94 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import ProductList from './ProductList';
-import LocationLoader from "../_components/Apploading"; 
+"use client";
+import React, { useEffect, useState } from "react";
+import ProductList from "./ProductList";
+import LocationLoader from "../_components/Apploading";
+import Separator from "./Sparator";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useAdminAuth } from "../_context/AdminAuthContext";
+import AddProductModal from "./AddProductModal";
+import Alert from "./Alert";
 
 // Define the type for a product
 interface Product {
   id: number;
   name: string;
   price: string;
-  image: string ;
+  image: string;
   details: string;
   categories: string;
 }
 
 const ProductSection: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>(['All']);
+  const [categories, setCategories] = useState<string[]>(["All"]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
+  const { isAdmin, login, logout } = useAdminAuth();
+  const [showModal, setShowModal] = useState(false);// show add product modal
 
+  const [alertMessage, setAlertMessage] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+
+const handleSaveProduct = async (product: any) => {
+    console.log("Saving product:", product);
+    const formData = new FormData();
+    formData.append("file", product.image);
+    formData.append("name", product.name);
+    formData.append("price", product.price);
+    formData.append("details", product.details);
+    formData.append("categories", product.category);
+    try {
+      const res = await fetch("/api/add-product", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      console.log("Product added:", data);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageBase64 = reader.result as string;
+        const newProduct: Product = {
+          id: Date.now(), // Temp ID
+          name: product.name,
+          price: product.price,
+          details: product.details,
+          categories: product.category,
+          image: imageBase64,
+        };
+        // ✅ Ensure this happens *after* FileReader is done
+        setProducts((prev) => [...prev, newProduct]);
+
+        setAlertMessage("Product added successfully");
+        setShowAlert(true);
+      };
+      reader.readAsDataURL(product.image);
+      // Optionally refresh categories list
+      setFetched(false);
+    } catch (err) {
+      console.error("Failed to save product", err);
+    }
+  };
+
+  //delete product moved by props to the product list to delete product from the productlist file 
+  const handleDeleteProduct = (id: number) => {
+  setProducts((prev) => prev.filter((p) => p.id !== id));
+};
 
   useEffect(() => {
     const fetchProductsAndCategories = async () => {
       try {
-        const response = await fetch('/api/fetch-products');
-        if (!response.ok) throw new Error('Failed to fetch products');
+        const response = await fetch("/api/fetch-products");
+        if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
         setProducts(data.products);
-        setCategories(['All', ...data.categories]);
+        setCategories(["All", ...data.categories]);
         setFetched(true);
       } catch (err: any) {
         console.error(err);
-        setError(err.message || 'Something went wrong');
+        setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -45,24 +99,35 @@ const ProductSection: React.FC = () => {
 
   // Filter products based on the selected category
   const filteredProducts =
-    selectedCategory === 'All'
+    selectedCategory === "All"
       ? products
       : products.filter((product) =>
-          product.categories?.toLowerCase().includes(selectedCategory.toLowerCase())
+          product.categories?.trim()
+            ?.toLowerCase()
+            .includes(selectedCategory.trim().toLowerCase())
         );
 
   if (loading) {
     return <LocationLoader />;
-
   }
 
   if (error) {
-    return <div className="text-center py-10 bg-secondary text-red-500">Error: {error}</div>;
+    return (
+      <div className="text-center py-10 bg-secondary text-red-500">
+        Error: {error}
+      </div>
+    );
   }
 
   return (
-    <div id="Products" className="bg-gradient-to-b from-white via-white to-hovprimary">
-      <div className="mb-2 pt-4 flex items-center text-center justify-center">
+    <div
+      id="Products"
+      className="bg-gradient-to-b from-white via-white to-hovprimary "
+    >
+      {showAlert && (
+        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+      )}
+      <div className="mb-2 pt-4 flex items-center text-center justify-center gap-2">
         <label
           htmlFor="category-select"
           className="text-lg font-bold text-gray-700 mr-2 italic"
@@ -81,8 +146,58 @@ const ProductSection: React.FC = () => {
             </option>
           ))}
         </select>
+        {isAdmin && (
+          <button className="text-white rounded-lg bg-green-500 p-2" onClick={() => setShowModal(true)}>
+            {" "}
+            <Plus />
+          </button>
+        )}
       </div>
-      <ProductList productList={filteredProducts} />
+      <ProductList productList={filteredProducts} onDeleteProduct={handleDeleteProduct} />
+      {showModal && (
+        <AddProductModal
+          onClose={() => setShowModal(false)}
+          onSave={handleSaveProduct}
+          categories={categories}
+        />
+      )}
+      {isAdmin && (
+        <div className="px-4 py-4 bg-white ">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-extrabold mb-4 text-gray-700 capitalize">
+              Categories :{" "}
+            </h2>
+            <button className="text-white rounded-lg bg-green-500 p-2 mb-2">
+              {" "}
+              <Plus />
+            </button>
+          </div>
+
+          <ul className="space-y-2 mb-8">
+            {categories
+              .filter((cat) => cat !== "All")
+              .map((category, index) => (
+                <li
+                  key={index}
+                  className="flex justify-between items-center bg-blue-50 p-3 rounded shadow-sm border border-gray-200"
+                >
+                  <span className="text-gray-800 font-medium capitalize">
+                    {category}
+                  </span>
+                  <div className="space-x-2 flex gap-1">
+                    <button className="text-white rounded-lg bg-blue-500 p-2">
+                      {" "}
+                      <Pencil />
+                    </button>
+                    <button className="text-white rounded-lg bg-red-500 p-2">
+                      <Trash2 />
+                    </button>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 import data from "../../../public/data.json";
 import { openWhishApp } from "../utils/openWhishApp";
 import Image from "next/image";
-import { useSettings } from '../_context/SettingsContext';
-import LocationLoader from "../_components/Apploading"; 
+import { useSettings } from "../_context/SettingsContext";
+import LocationLoader from "../_components/Apploading";
+import { useAdminAuth } from "../_context/AdminAuthContext";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 type AppointmentType = {
   id: number;
@@ -26,11 +28,10 @@ function Appointment() {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
 
   const { settings, loading, error } = useSettings();
-   const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
+  const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
+  const { isAdmin, login, logout } = useAdminAuth();
 
-
-
-   // Fetch appointments from API
+  // Fetch appointments from API
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -86,8 +87,7 @@ function Appointment() {
     }
   };
 
-
-  if (loading) return  <LocationLoader />;
+  if (loading) return <LocationLoader />;
   if (error) return <div>Error: {error}</div>;
   if (!settings) return null;
 
@@ -155,8 +155,27 @@ function Appointment() {
                 Book now
               </button>
             </div>
+            {isAdmin && (
+              <div className="flex justify-center gap-1 mt-2 flex-row-reverse">
+                <button className="text-white rounded-lg bg-red-500 p-2">
+                  <Trash2 />
+                </button>
+                <button className="text-white rounded-lg bg-blue-500 p-2">
+                  {" "}
+                  <Pencil />
+                </button>
+              </div>
+            )}
           </div>
         ))}
+        {/* Fake card at the end for admin */}
+        {isAdmin && (
+          <div className="flex items-center justify-center bg-green-100 hover:box-content rounded-2xl border border-dashed border-green-500 p-2  shadow-sm hover:border-green-600 hover:border-2 transition duration-500 hover:scale-y-105">
+            <button className="text-white rounded-lg bg-green-400 text-9xl w-full h-full flex justify-center items-center text-center p-3 hover:text-black hover:bg-green-300 duration-500">
+              <Plus className="text-7xl size-20"/>
+            </button>
+          </div>
+        )}
       </div>
 
       {modalIsOpen && selectedAppointment && (
@@ -231,7 +250,10 @@ function Appointment() {
                   <div className="flex justify-between items-center">
                     <span className="text-red-800 text-sm leading-4">
                       {" "}
-                      Pay to wish Account:<span className="block md:inline">{settings.social.wishnb}</span>
+                      Pay to wish Account:
+                      <span className="block md:inline">
+                        {settings.social.wishnb}
+                      </span>
                     </span>
                     <button
                       type="button"
@@ -239,7 +261,7 @@ function Appointment() {
                       className="p-2 rounded transition hover:opacity-80"
                     >
                       <Image
-                      className="rounded-md w-auto h-auto max-w-10"
+                        className="rounded-md w-auto h-auto max-w-10"
                         src={settings.images.whishlogo}
                         alt="Open Whish"
                         width={40}

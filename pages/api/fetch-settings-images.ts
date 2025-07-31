@@ -6,10 +6,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const pool = await poolPromise;
 
-    // Fetch images and settings
+    // Fetch images and settings using stored procedures
     const [imagesResult, settingsResult] = await Promise.all([
-      pool.query('SELECT id, mimetype, filename, image FROM images ORDER BY id ASC'),
-      pool.query('SELECT * FROM settings LIMIT 1')
+      pool.query('SELECT * FROM get_image_data()'),
+      // pool.query('SELECT id, mimetype, filename, image FROM images ORDER BY id ASC'),
+      pool.query('SELECT * FROM get_settings_data()'),
+      // pool.query('SELECT * FROM settings LIMIT 1')
     ]);
 
     const settings = settingsResult.rows[0];
@@ -37,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       addressdetail: {
         address: settings.address,
         building: settings.building,
-        floor: settings.floor
+        floor: settings.floor,
       },
       social: {
         facebook: settings.facebook,
@@ -45,11 +47,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         insta: settings.instagram,
         mail: settings.mail,
         number: settings.phone_number,
-        wishnb: settings.wahtsapp_number
+        wishnb: settings.whatsapp_number,
       },
       discount: settings.discount,
       minOrder: settings.min_order,
-      delivery: settings.delivery
+      delivery: settings.delivery,
     };
 
     res.status(200).json(response);

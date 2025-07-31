@@ -9,27 +9,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const pool = getPool();
+   const query =  `SELECT * FROM view_products_with_image `;
 
-    const query = `
-      SELECT 
-        p.id,
-        p.name,
-        p.price,
-        p.details,
-        c.name AS category,
-        pi.filename,
-        pi.mimetype,
-        encode(pi.image, 'base64') AS image_base64
-      FROM products p
-      JOIN categories c ON p.category_id = c.id
-      LEFT JOIN LATERAL (
-        SELECT * 
-        FROM product_images 
-        WHERE product_id = p.id 
-        ORDER BY id ASC 
-        LIMIT 1
-      ) pi ON true;
-    `;
+    // const query = `
+    //   SELECT 
+    //     p.id,
+    //     p.name,
+    //     p.price,
+    //     p.details,
+    //     c.name AS category,
+    //     pi.filename,
+    //     pi.mimetype,
+    //     encode(pi.image, 'base64') AS image_base64
+    //   FROM products p
+    //   JOIN categories c ON p.category_id = c.id
+    //   LEFT JOIN LATERAL (
+    //     SELECT * 
+    //     FROM product_images 
+    //     WHERE product_id = p.id 
+    //     ORDER BY id ASC 
+    //     LIMIT 1
+    //   ) pi ON true;
+    // `;
 
     const { rows } = await pool.query(query);
 
@@ -46,7 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
    // Fetch categories
-const categoryQuery = `SELECT name FROM categories ORDER BY name ASC;`;
+const categoryQuery = `SELECT * FROM get_all_category_names();`;
+// const categoryQuery = `SELECT name FROM categories ORDER BY name ASC;`;
 const categoryResult = await pool.query(categoryQuery);
 
 // Map to simple array of category names

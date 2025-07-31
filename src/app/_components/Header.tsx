@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../_context/CartContext";
@@ -8,6 +8,9 @@ import Link from "next/link";
 import data from "../../../public/data.json";
 import { useSettings } from "../_context/SettingsContext";
 import LocationLoader from "./Apploading";
+import AdminForm from "./AdminForm";
+import { useAdminAuth } from "../_context/AdminAuthContext";
+
 const Header: React.FC = () => {
   const { cart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -17,9 +20,16 @@ const Header: React.FC = () => {
     setIsCartOpen((prevState) => !prevState);
   };
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+  const [showAdminForm, setShowAdminForm] = useState(false);
+
+  const handleLoginClick = () => {
+    setShowAdminForm(true);
+  };
+
+  const { isAdmin, login, logout } = useAdminAuth();
 
   const { settings, loading, error } = useSettings();
-  if (loading) return  <LocationLoader/>;
+  if (loading) return <LocationLoader />;
   if (error) return <div>Error: {error}</div>;
   if (!settings) return null;
   return (
@@ -96,63 +106,26 @@ const Header: React.FC = () => {
                   Contact Us{" "}
                 </Link>
               </li>
-               <li className="relative group">
-  <details className="group [&_summary::-webkit-details-marker]:hidden">
-    <summary className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1 text-gray-500 hover:text-gray-700">
-      <span className="text-sm font-medium">Admin</span>
-      <span className="shrink-0 transition duration-300 group-open:-rotate-180 ml-1">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </span>
-    </summary>
-
-    <ul className="absolute z-50 mt-2 w-40 space-y-1 bg-white border border-gray-200 rounded-lg shadow-md p-2">
-      <li>
-        <Link
-          href="#"
-          className="block rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-        >
-          Login
-        </Link>
-      </li>
-      <li>
-        <Link
-          href="#"
-          className="block rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-        >
-          + Product
-        </Link>
-      </li>
-      <li>
-        <Link
-          href="#"
-          className="block rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-        >
-          + Categories
-        </Link>
-      </li>
-      <li>
-        <Link
-          href="#"
-          className="block rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-        >
-          + Client
-        </Link>
-      </li>
-    </ul>
-  </details>
-</li>
-
+              <li>
+                      {isAdmin ? (
+                        <button
+                          onClick={() => {
+                            fetch("/api/admin/logout").then(() => logout());
+                          }}
+                          className="block w-full rounded-lg px-4 py-2 text-sm text-gray-700 bg-hovprimary  hover:bg-gray-100 hover:text-gray-800"
+                        >
+                          Logout
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleLoginClick}
+                          className="block w-full rounded-lg px-4 py-2 text-sm text-gray-700 bg-hovprimary hover:bg-gray-100 hover:text-gray-800"
+                        >
+                          Login
+                        </button>
+                      )}
+              </li>
+              
             </ul>
           </nav>
 
@@ -220,72 +193,28 @@ const Header: React.FC = () => {
                   {"Cart"}
                 </Link>
               </li>
-
-              <li>
-                <details className="group [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-                    <span className="text-sm font-medium"> Admin </span>
-
-                    <span className="shrink-0 transition duration-300 group-open:-rotate-180">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="size-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </summary>
-
-                  <ul className="mt-2 space-y-1 px-4">
-                    <li>
-                      <Link
-                        href="#"
-                        className=" w-full block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        Login
-                      </Link>
-                    </li>
-
-                    <li>
-                      <Link
-                        href="#"
-                        className="w-full block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        + Product
-                      </Link>
-                    </li>
-
-                    <li>
-                      <Link
-                        href="#"
-                        className="w-full block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        + Categoris
-                      </Link>
-                    </li>
-
-                    <li>
-                      <Link
-                        href="#"
-                        className="w-full block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        + Client
-                      </Link>
-                    </li>
-                  </ul>
-                </details>
-              </li>
+               {isAdmin ? (
+                        <button
+                          onClick={() => {
+                            fetch("/api/admin/logout").then(() => logout());
+                          }}
+                          className="block w-full rounded-lg px-4 py-2 text-sm bg-hovprimary text-gray-700 hover:bg-gray-100 hover:text-gray-800"
+                        >
+                          Logout
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleLoginClick}
+                          className="block w-full rounded-lg px-4 py-2 text-sm bg-hovprimary text-gray-700 hover:bg-gray-100 hover:text-gray-800"
+                        >
+                          Login
+                        </button>
+                      )}
             </ul>
           </div>
         </div>
       )}
-
+      {showAdminForm && <AdminForm onClose={() => setShowAdminForm(false)} />}
       {isCartOpen && <Cart setIsCartOpen={setIsCartOpen} />}
     </header>
   );

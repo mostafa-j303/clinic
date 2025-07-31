@@ -7,6 +7,7 @@ import Header from "./_components/Header";
 import { CartContextProvider } from "./_context/CartContext";
 import ScrollToTop from "./_components/ScrollToTop";
 import { SettingsProvider } from "./_context/SettingsContext";
+import { AdminAuthProvider } from "./_context/AdminAuthContext";
 
 const inter = Roboto({ subsets: ["latin"], weight: "700" });
 
@@ -21,17 +22,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <CartContextProvider>
+     
+       <CartContextProvider>
       <html lang="en">
         <body className={inter.className}>
+          
           <SettingsProvider>
+            <AdminAuthProvider>
             <Header></Header>
             {children}
             <ScrollToTop />
             <Footer></Footer>
+            </AdminAuthProvider>
           </SettingsProvider>
+           
         </body>
       </html>
     </CartContextProvider>
+    
+   
   );
 }
