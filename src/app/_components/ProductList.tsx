@@ -47,9 +47,10 @@ export class ClientProducts implements Product {
 interface ProductListProps {
   productList: Product[];
   onDeleteProduct: (id: number) => void;
+  onEditProduct: (product: Product) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct}) => {
+const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct, onEditProduct}) => {
 
   const [productQuantities, setProductQuantities] = useState<{
     [key: number]: number;
@@ -207,7 +208,9 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct}
                     >
                       <Trash2 />
                     </button>
-                    <button className="text-white rounded-lg bg-blue-500 p-2">
+                    <button className="text-white rounded-lg bg-blue-500 p-2"
+                    onClick={() => onEditProduct(product)}
+                    >
                       {" "}
                       <Pencil />
                     </button>

@@ -5,18 +5,21 @@ interface AddProductModalProps {
   onClose: () => void;
   onSave: (product: any) => void;
   categories: string[];
+  initialProduct?: any; // 👈 optional for editing
 }
 
 const AddProductModal: React.FC<AddProductModalProps> = ({
   onClose,
   onSave,
-  categories
+  categories,
+  initialProduct
 }) => {
-  const [category, setCategory] = useState("");
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState(""); // Will convert to $string on save
-  const [image, setImage] = useState<File | null>(null);
-  const [details, setDetails] = useState("");
+  const [category, setCategory] = useState(initialProduct?.categories || "");
+const [name, setName] = useState(initialProduct?.name || "");
+const [price, setPrice] = useState(initialProduct?.price?.replace("$", "") || "");
+const [image, setImage] = useState<File | null>(null);
+const [details, setDetails] = useState(initialProduct?.details || "");
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +30,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     }
 
     const product = {
+      id: initialProduct?.id, // for edit
       category,
       name,
       price: `$${price}`,
@@ -41,7 +45,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center p-2">
       <div className="bg-white p-2 rounded-xl shadow-lg w-full max-w-lg">
-        <h2 className="text-lg text-gray-800 font-extrabold text-center uppercase mb-4 p-3">Add New Product</h2>
+        <h2 className="text-lg text-gray-800 font-extrabold text-center uppercase mb-4 p-3"> {initialProduct ? "Edit Product" : "Add New Product"}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <select
             value={category}

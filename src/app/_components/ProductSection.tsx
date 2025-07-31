@@ -32,45 +32,68 @@ const ProductSection: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
 
-const handleSaveProduct = async (product: any) => {
-    console.log("Saving product:", product);
-    const formData = new FormData();
-    formData.append("file", product.image);
-    formData.append("name", product.name);
-    formData.append("price", product.price);
-    formData.append("details", product.details);
-    formData.append("categories", product.category);
-    try {
-      const res = await fetch("/api/add-product", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      console.log("Product added:", data);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageBase64 = reader.result as string;
-        const newProduct: Product = {
-          id: Date.now(), // Temp ID
-          name: product.name,
-          price: product.price,
-          details: product.details,
-          categories: product.category,
-          image: imageBase64,
-        };
-        // ✅ Ensure this happens *after* FileReader is done
-        setProducts((prev) => [...prev, newProduct]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-        setAlertMessage("Product added successfully");
-        setShowAlert(true);
+const handleEditProduct = (product: Product) => {
+  setEditingProduct(product);
+  setShowModal(true);
+};
+
+
+const handleSaveProduct = async (product: any) => {
+  const formData = new FormData();
+  formData.append("file", product.image);
+  formData.append("name", product.name);
+  formData.append("price", product.price);
+  formData.append("details", product.details);
+  formData.append("categories", product.category);
+
+  const isEdit = !!product.id;
+  if (isEdit) {
+    formData.append("id", product.id);
+  }
+
+  try {
+    const res = await fetch(`/api/${isEdit ? "edit-product" : "add-product"}`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      const imageBase64 = reader.result as string;
+
+      const updatedProduct = {
+        id: data.id || Date.now(),
+        name: product.name,
+        price: product.price,
+        details: product.details,
+        categories: product.category,
+        image: imageBase64,
       };
-      reader.readAsDataURL(product.image);
-      // Optionally refresh categories list
-      setFetched(false);
-    } catch (err) {
-      console.error("Failed to save product", err);
-    }
-  };
+
+      if (isEdit) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+        );
+        setAlertMessage("Product updated successfully");
+      } else {
+        setProducts((prev) => [...prev, updatedProduct]);
+        setAlertMessage("Product added successfully");
+      }
+
+      setShowAlert(true);
+    };
+
+    reader.readAsDataURL(product.image);
+    setFetched(false);
+  } catch (err) {
+    console.error("Failed to save product", err);
+  }
+};
+
 
   //delete product moved by props to the product list to delete product from the productlist file 
   const handleDeleteProduct = (id: number) => {
@@ -153,12 +176,13 @@ const handleSaveProduct = async (product: any) => {
           </button>
         )}
       </div>
-      <ProductList productList={filteredProducts} onDeleteProduct={handleDeleteProduct} />
+      <ProductList productList={filteredProducts} onDeleteProduct={handleDeleteProduct} onEditProduct={handleEditProduct} />
       {showModal && (
         <AddProductModal
-          onClose={() => setShowModal(false)}
+          onClose={() => {setShowModal(false), setEditingProduct(null);}}
           onSave={handleSaveProduct}
           categories={categories}
+          initialProduct={editingProduct}
         />
       )}
       {isAdmin && (
