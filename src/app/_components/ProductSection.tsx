@@ -7,8 +7,10 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import AddProductModal from "./AddProductModal";
 import Alert from "./Alert";
+import AddEditCategoryModal from "./AddEditCategorieModal";
+import ConfirmationModal from "./ConfirmationModal";
 
-// Define the type for a product
+// Define types
 interface Product {
   id: number;
   name: string;
@@ -17,117 +19,191 @@ interface Product {
   details: string;
   categories: string;
 }
+interface Category {
+  id?: number;
+  name: string;
+}
 
 const ProductSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>(["All"]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
-  const { isAdmin, login, logout } = useAdminAuth();
-  const [showModal, setShowModal] = useState(false);// show add product modal
+  const [fetched, setFetched] = useState(false);
+  const { isAdmin } = useAdminAuth();
+  const [showModal, setShowModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-const handleEditProduct = (product: Product) => {
-  setEditingProduct(product);
-  setShowModal(true);
-};
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+    null
+  );
 
-//for add and edit product 
-const handleSaveProduct = async (product: any) => {
-  const formData = new FormData();
+  // ✅ Add/Edit Category
+  const handleSaveCategory = async (category: Category) => {
+    const isEdit = !!category.id;
 
-  const isEdit = !!product.id;
-  if (product.image instanceof File) {
-    formData.append("file", product.image);
-  }
+    const res = await fetch(
+      `/api/${isEdit ? "edit-category" : "add-category"}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(category),
+      }
+    );
 
-  formData.append("name", product.name);
-  formData.append("price", product.price);
-  formData.append("details", product.details);
-  formData.append("categories", product.category);
-
-  if (isEdit) {
-    formData.append("id", product.id);
-  }
-
-  try {
-    const res = await fetch(`/api/${isEdit ? "edit-product" : "add-product"}`, {
-      method: "POST",
-      body: formData,
-    });
+    if (!res.ok) {
+      console.error("Failed to save category");
+      return;
+    }
 
     const data = await res.json();
 
-    // Find existing product image base64 if no new image and product.image is empty or not base64
-    const existingProduct = products.find((p) => p.id === product.id);
+    setCategories((prev) => {
+      if (isEdit) {
+        return prev.map((cat) =>
+          cat.id === category.id ? { ...cat, name: category.name } : cat
+        );
+      } else {
+        return [...prev, { id: data.id, name: category.name }];
+      }
+    });
 
-    const finalizeSave = (imageBase64: string) => {
-      const updatedProduct = {
-        id: data.id || Date.now(),
-        name: product.name,
-        price: product.price,
-        details: product.details,
-        categories: product.category,
-        image: imageBase64,
-      };
+    setAlertMessage(isEdit ? "Category updated" : "Category added");
+    setShowAlert(true);
+    setEditingCategory(null);
+  };
 
-      setProducts((prev) =>
-        isEdit
-          ? prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-          : [...prev, updatedProduct]
-      );
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setShowModal(true);
+  };
 
-      setAlertMessage(isEdit ? "Product updated successfully" : "Product added successfully");
-      setShowAlert(true);
-    };
+  // ✅ Add/Edit Product
+  const handleSaveProduct = async (product: any) => {
+    const formData = new FormData();
+    const isEdit = !!product.id;
 
     if (product.image instanceof File) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        finalizeSave(reader.result as string);
-      };
-      reader.readAsDataURL(product.image);
-    } else if (typeof product.image === "string" && product.image.startsWith("data:image")) {
-      // Reuse existing base64 string
-      finalizeSave(product.image);
-    } else if (existingProduct) {
-      // Use existing product image base64 from current state
-      finalizeSave(existingProduct.image);
-    } else {
-      // fallback empty or placeholder image
-      finalizeSave("");
+      formData.append("file", product.image);
     }
 
-    setFetched(false);
-  } catch (err) {
-    console.error("Failed to save product", err);
-  }
-};
+    formData.append("name", product.name);
+    formData.append("price", product.price);
+    formData.append("details", product.details);
+    formData.append("categories", product.category);
 
+    if (isEdit) {
+      formData.append("id", product.id);
+    }
 
-  //delete product moved by props to the product list to delete product from the productlist file 
+    try {
+      const res = await fetch(
+        `/api/${isEdit ? "edit-product" : "add-product"}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+
+      const existingProduct = products.find((p) => p.id === product.id);
+
+      const finalizeSave = (imageBase64: string) => {
+        const updatedProduct = {
+          id: data.id || Date.now(),
+          name: product.name,
+          price: product.price,
+          details: product.details,
+          categories: product.category,
+          image: imageBase64,
+        };
+
+        setProducts((prev) =>
+          isEdit
+            ? prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+            : [...prev, updatedProduct]
+        );
+
+        setAlertMessage(
+          isEdit ? "Product updated successfully" : "Product added successfully"
+        );
+        setShowAlert(true);
+      };
+
+      if (product.image instanceof File) {
+        const reader = new FileReader();
+        reader.onloadend = () => finalizeSave(reader.result as string);
+        reader.readAsDataURL(product.image);
+      } else if (
+        typeof product.image === "string" &&
+        product.image.startsWith("data:image")
+      ) {
+        finalizeSave(product.image);
+      } else if (existingProduct) {
+        finalizeSave(existingProduct.image);
+      } else {
+        finalizeSave("");
+      }
+
+      setFetched(false);
+    } catch (err) {
+      console.error("Failed to save product", err);
+    }
+  };
+
   const handleDeleteProduct = (id: number) => {
-  setProducts((prev) => prev.filter((p) => p.id !== id));
-};
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    try {
+      const res = await fetch(
+        `/api/delete-category?id=${categoryToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || "Failed to delete category");
+        return;
+      }
+      setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
+      setAlertMessage("Category deleted successfully");
+      setShowAlert(true);
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+      alert("An error occurred while deleting the category.");
+    } finally {
+      setShowDeleteConfirm(false);
+      setCategoryToDelete(null);
+    }
+  };
 
   useEffect(() => {
     const fetchProductsAndCategories = async () => {
       try {
         const response = await fetch("/api/fetch-products");
         if (!response.ok) throw new Error("Failed to fetch products");
+
         const data = await response.json();
+
         setProducts(data.products);
-        setCategories(["All", ...data.categories]);
+        setCategories([{ id: -1, name: "All" }, ...data.categories]); // Add "All"
         setFetched(true);
+        console.log(data.categories);
       } catch (err: any) {
-        console.error(err);
         setError(err.message || "Something went wrong");
       } finally {
         setLoading(false);
@@ -137,19 +213,16 @@ const handleSaveProduct = async (product: any) => {
     fetchProductsAndCategories();
   }, [fetched]);
 
-  // Filter products based on the selected category
   const filteredProducts =
     selectedCategory === "All"
       ? products
-      : products.filter((product) =>
-          product.categories?.trim()
-            ?.toLowerCase()
-            .includes(selectedCategory.trim().toLowerCase())
+      : products.filter(
+          (product) =>
+            product.categories.trim().toLowerCase() ===
+            selectedCategory.trim().toLowerCase()
         );
 
-  if (loading) {
-    return <LocationLoader />;
-  }
+  if (loading) return <LocationLoader />;
 
   if (error) {
     return (
@@ -161,12 +234,13 @@ const handleSaveProduct = async (product: any) => {
 
   return (
     <div
+      className="bg-gradient-to-b from-white via-white to-hovprimary"
       id="Products"
-      className="bg-gradient-to-b from-white via-white to-hovprimary "
     >
       {showAlert && (
         <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
       )}
+
       <div className="mb-2 pt-4 flex items-center text-center justify-center gap-2">
         <label
           htmlFor="category-select"
@@ -181,56 +255,88 @@ const handleSaveProduct = async (product: any) => {
           className="border border-gray-300 rounded px-2 py-2 text-sm shadow-sm sm:text-sm text-black"
         >
           {categories.map((cat, index) => (
-            <option key={index} value={cat}>
-              {cat}
+            <option key={index} value={cat.name}>
+              {cat.name}
             </option>
           ))}
         </select>
+
         {isAdmin && (
-          <button className="text-white rounded-lg bg-green-500 p-2" onClick={() => setShowModal(true)}>
-            {" "}
+          <button
+            className="text-white rounded-lg bg-green-500 p-2"
+            onClick={() => setShowModal(true)}
+          >
             <Plus />
           </button>
         )}
       </div>
-      <ProductList productList={filteredProducts} onDeleteProduct={handleDeleteProduct} onEditProduct={handleEditProduct} />
+
+      <ProductList
+        productList={filteredProducts}
+        onDeleteProduct={handleDeleteProduct}
+        onEditProduct={handleEditProduct}
+      />
+
       {showModal && (
         <AddProductModal
-          onClose={() => {setShowModal(false), setEditingProduct(null);}}
+          onClose={() => {
+            setShowModal(false);
+            setEditingProduct(null);
+          }}
           onSave={handleSaveProduct}
-          categories={categories}
+          categories={categories.map((c) => c.name)}
           initialProduct={editingProduct}
         />
       )}
+
       {isAdmin && (
-        <div className="px-4 py-4 bg-white ">
+        <div className="px-4 py-4 bg-white">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-extrabold mb-4 text-gray-700 capitalize">
-              Categories :{" "}
+              Categories:
             </h2>
-            <button className="text-white rounded-lg bg-green-500 p-2 mb-2">
-              {" "}
+            <button
+              className="text-white rounded-lg bg-green-500 p-2 mb-2"
+              onClick={() => {
+                setEditingCategory(null);
+                setShowCategoryModal(true);
+              }}
+            >
               <Plus />
             </button>
           </div>
 
           <ul className="space-y-2 mb-8">
             {categories
-              .filter((cat) => cat !== "All")
+              .filter((cat) => cat.name !== "All")
               .map((category, index) => (
                 <li
                   key={index}
                   className="flex justify-between items-center bg-blue-50 p-3 rounded shadow-sm border border-gray-200"
                 >
                   <span className="text-gray-800 font-medium capitalize">
-                    {category}
+                    {category.name}
                   </span>
                   <div className="space-x-2 flex gap-1">
-                    <button className="text-white rounded-lg bg-blue-500 p-2">
-                      {" "}
+                    <button
+                      className="text-white rounded-lg bg-blue-500 p-2"
+                      onClick={() => {
+                        setEditingCategory({
+                          id: category.id,
+                          name: category.name,
+                        });
+                        setShowCategoryModal(true);
+                      }}
+                    >
                       <Pencil />
                     </button>
-                    <button className="text-white rounded-lg bg-red-500 p-2">
+                    <button
+                      className="text-white rounded-lg bg-red-500 p-2"
+                      onClick={() => {
+                        setCategoryToDelete(category);
+                        setShowDeleteConfirm(true);
+                      }}
+                    >
                       <Trash2 />
                     </button>
                   </div>
@@ -238,6 +344,24 @@ const handleSaveProduct = async (product: any) => {
               ))}
           </ul>
         </div>
+      )}
+
+      {showCategoryModal && (
+        <AddEditCategoryModal
+          onClose={() => setShowCategoryModal(false)}
+          onSave={handleSaveCategory}
+          initialCategory={editingCategory ?? undefined}
+        />
+      )}
+      {showDeleteConfirm && categoryToDelete && (
+        <ConfirmationModal
+          text={`Are you sure you want to delete the category "${categoryToDelete.name}"?`}
+          onConfirm={confirmDeleteCategory}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setCategoryToDelete(null);
+          }}
+        />
       )}
     </div>
   );

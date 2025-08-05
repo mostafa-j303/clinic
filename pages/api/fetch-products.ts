@@ -51,8 +51,7 @@ const categoryQuery = `SELECT * FROM get_all_category_names();`;
 // const categoryQuery = `SELECT name FROM categories ORDER BY name ASC;`;
 const categoryResult = await pool.query(categoryQuery);
 
-// Map to simple array of category names
-const categories = categoryResult.rows.map(row => row.name);
+const categories = categoryResult.rows; // ✅ Now array of { id, name }
 
     res.status(200).json({ products , categories });
   } catch (error) {
@@ -60,3 +59,9 @@ const categories = categoryResult.rows.map(row => row.name);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+// CREATE OR REPLACE FUNCTION get_all_category_names()
+// RETURNS TABLE(id INTEGER, name TEXT)
+// LANGUAGE sql
+// AS $$
+//     SELECT id, name FROM categories ORDER BY name ASC;
+// $$;
