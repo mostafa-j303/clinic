@@ -7,6 +7,9 @@ import { useSettings } from "../_context/SettingsContext";
 import LocationLoader from "../_components/Apploading";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import AppointmentFormModal from "./AppointmentFormModal";
+import ConfirmationModal from "./ConfirmationModal";
+import Alert from "./Alert";
 
 type AppointmentType = {
   id: number;
@@ -30,6 +33,72 @@ function Appointment() {
   const { settings, loading, error } = useSettings();
   const [fetched, setFetched] = useState(false); // ✅ flag to avoid double fetch
   const { isAdmin, login, logout } = useAdminAuth();
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editData, setEditData] = useState<AppointmentType | null>(null);
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<number | null>(
+    null
+  );
+
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  const openAddModal = () => {
+    setEditData(null);
+    setFormOpen(true);
+  };
+
+  const openEditModal = (appointment: AppointmentType) => {
+    setEditData(appointment);
+    setFormOpen(true);
+  };
+
+  const handleSaveAppointment = async (appointmentData: AppointmentType) => {
+    const isEdit = !!appointmentData.id;
+    const method = isEdit ? "PUT" : "POST";
+    const endpoint = isEdit ? `/api/edit-appointment` : `/api/add-appointment`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(appointmentData),
+      });
+
+      if (!res.ok) throw new Error("Failed to save appointment");
+
+      const data = await res.json();
+
+      const savedAppointment: AppointmentType = {
+        id: data.id ?? appointmentData.id,
+        name: appointmentData.name,
+        price: appointmentData.price,
+        offerPrice: appointmentData.offerPrice,
+        duration: appointmentData.duration,
+        details: appointmentData.details,
+      };
+
+      setAppointments((prev) =>
+        isEdit
+          ? prev.map((app) =>
+              app.id === savedAppointment.id ? savedAppointment : app
+            )
+          : [...prev, savedAppointment]
+      );
+
+      setFormOpen(false);
+      setEditData(null);
+      setAlertMessage(
+        `Appointment ${isEdit ? "updated" : "added"} successfully`
+      );
+    } catch (err) {
+      console.error("Failed to save appointment", err);
+      setAlertMessage("An error occurred while saving the appointment.");
+    }
+  };
 
   // Fetch appointments from API
   useEffect(() => {
@@ -84,6 +153,36 @@ function Appointment() {
       }?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
       closeModal();
+    }
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setAppointmentToDelete(id);
+    setShowConfirmation(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!appointmentToDelete) return;
+
+    try {
+      const res = await fetch(
+        `/api/delete-appointment?id=${appointmentToDelete}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to delete appointment");
+
+      setAppointments((prev) =>
+        prev.filter((a) => a.id !== appointmentToDelete)
+      );
+    } catch (error) {
+      console.error("Delete failed", error);
+      alert("Failed to delete appointment.");
+    } finally {
+      setShowConfirmation(false);
+      setAppointmentToDelete(null);
     }
   };
 
@@ -157,10 +256,16 @@ function Appointment() {
             </div>
             {isAdmin && (
               <div className="flex justify-center gap-1 mt-2 flex-row-reverse">
-                <button className="text-white rounded-lg bg-red-500 p-2">
+                <button
+                  className="text-white rounded-lg bg-red-500 p-2"
+                  onClick={() => handleDeleteClick(appointment.id)}
+                >
                   <Trash2 />
                 </button>
-                <button className="text-white rounded-lg bg-blue-500 p-2">
+                <button
+                  className="text-white rounded-lg bg-blue-500 p-2"
+                  onClick={() => openEditModal(appointment)}
+                >
                   {" "}
                   <Pencil />
                 </button>
@@ -171,12 +276,39 @@ function Appointment() {
         {/* Fake card at the end for admin */}
         {isAdmin && (
           <div className="flex items-center justify-center bg-green-100 hover:box-content rounded-2xl border border-dashed border-green-500 p-2  shadow-sm hover:border-green-600 hover:border-2 transition duration-500 hover:scale-y-105">
-            <button className="text-white rounded-lg bg-green-400 text-9xl w-full h-full flex justify-center items-center text-center p-3 hover:text-black hover:bg-green-300 duration-500">
-              <Plus className="text-7xl size-20"/>
+            <button
+              className="text-white rounded-lg bg-green-400 text-9xl w-full h-full flex justify-center items-center text-center p-3 hover:text-black hover:bg-green-300 duration-500"
+              onClick={openAddModal}
+            >
+              <Plus className="text-7xl size-20" />
             </button>
           </div>
         )}
       </div>
+
+      <AppointmentFormModal
+        isOpen={formOpen}
+        onClose={() => {
+          setFormOpen(false);
+          setEditData(null);
+        }}
+        onSave={handleSaveAppointment}
+        initialData={editData}
+      />
+
+      {showConfirmation && (
+        <ConfirmationModal
+          text="Are you sure you want to delete this appointment?"
+          onConfirm={confirmDelete}
+          onCancel={() => {
+            setShowConfirmation(false);
+            setAppointmentToDelete(null);
+          }}
+        />
+      )}
+      {alertMessage && (
+        <Alert value={alertMessage} onClose={() => setAlertMessage(null)} />
+      )}
 
       {modalIsOpen && selectedAppointment && (
         <div className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-50">

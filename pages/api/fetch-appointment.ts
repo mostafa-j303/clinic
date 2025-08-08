@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 //         a.offer_price AS "offerPrice",
 //         a.name,
 //         a.duration,
-//         COALESCE(json_agg(ad.detail) FILTER (WHERE ad.detail IS NOT NULL), '[]') AS details
+//         COALESCE(json_agg(ad.detail ORDER BY ad.id) FILTER (WHERE ad.detail IS NOT NULL), '[]') AS details
 //       FROM appointments a
 //       LEFT JOIN appointment_details ad ON a.id = ad.appointment_id
 //       GROUP BY a.id, a.price, a.offer_price, a.name, a.duration
@@ -28,3 +28,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
    
+// CREATE FUNCTION get_appointments()
+// RETURNS TABLE (
+//     id INTEGER,
+//     price TEXT,
+//     offerPrice TEXT,
+//     name TEXT,
+//     duration TEXT,
+//     details JSON
+// )
+// LANGUAGE sql
+// AS $$
+//     SELECT 
+//         a.id,
+//         a.price,
+//         a.offer_price AS "offerPrice",
+//         a.name,
+//         a.duration,
+//         COALESCE(
+//             json_agg(ad.detail ORDER BY ad.id) FILTER (WHERE ad.detail IS NOT NULL),
+//             '[]'
+//         ) AS details
+//     FROM appointments a
+//     LEFT JOIN appointment_details ad ON a.id = ad.appointment_id
+//     GROUP BY a.id, a.price, a.offer_price, a.name, a.duration;
+// $$;
