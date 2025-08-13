@@ -10,29 +10,22 @@ import Alert from "../_components/Alert";
 import { useSettings } from "../_context/SettingsContext";
 
 const CartPage: React.FC = () => {
+  // ────── Hooks ──────
   const { cart, setCart } = useCart();
+  const { settings, loading, error } = useSettings();
+
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
-  const [fetchingLocation, setFetchingLocation] = useState(false); // New state
+  const [fetchingLocation, setFetchingLocation] = useState(false);
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
-  const { settings, loading, error } = useSettings();
-  if (loading) return <LocationLoader />;
-  if (error) return <div>Error: {error}</div>;
-  if (!settings) return null;
-  
-  // Parse data from JSON file
-  const parsedData = {
-    discount: parseFloat(settings.discount.replace("$", "")),
-    delivery: parseFloat(settings.delivery.replace("$", "")),
-  };
-
+  // ────── Effects ──────
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedName = localStorage.getItem("name");
@@ -50,27 +43,14 @@ const CartPage: React.FC = () => {
     }
   }, []);
 
+  // ────── Handlers ──────
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
-  const minOrder = parseFloat(settings.minOrder.replace("$", ""));
-
-  // Calculate subtotal
-  const subtotal = cart.reduce(
-    (acc, item) =>
-      acc + parseFloat(item.price.replace("$", "")) * item.quantity,
-    0
-  );
-
-  // Calculate discount amount
-  const discountAmount = subtotal * (parsedData.discount / 100);
-
-  // Calculate total including discount and delivery charge
-  const total = subtotal - discountAmount + parsedData.delivery;
 
   const fetchLocation = () => {
     if (navigator.geolocation) {
-      setFetchingLocation(true); // Start fetching
+      setFetchingLocation(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
@@ -78,13 +58,13 @@ const CartPage: React.FC = () => {
           setLocationLink(googleMapsLink);
           setLocationFetched(true);
           localStorage.setItem("locationLink", googleMapsLink);
-          setFetchingLocation(false); // Finished fetching
+          setFetchingLocation(false);
         },
         (error) => {
           if (error.code === error.PERMISSION_DENIED) {
             alert("Please allow location access to fetch your location.");
           }
-          setFetchingLocation(false); // Finished fetching (even if denied)
+          setFetchingLocation(false);
         }
       );
     } else {
@@ -92,14 +72,12 @@ const CartPage: React.FC = () => {
     }
   };
 
-  // Clear location
   const clearLocation = () => {
     setLocationLink(null);
     setLocationFetched(false);
     localStorage.removeItem("locationLink");
   };
 
-  // Handle input changes and save to local storage
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setName(value);
@@ -118,8 +96,22 @@ const CartPage: React.FC = () => {
     localStorage.setItem("address", value);
   };
 
-  // Prepare WhatsApp message
   const prepareWhatsAppMessage = () => {
+    if (!settings) return "#";
+
+    const parsedData = {
+      discount: parseFloat(settings.discount.replace("$", "")),
+      delivery: parseFloat(settings.delivery.replace("$", "")),
+    };
+
+    const subtotal = cart.reduce(
+      (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      0
+    );
+
+    const discountAmount = subtotal * (parsedData.discount / 100);
+    const total = subtotal - discountAmount + parsedData.delivery;
+
     let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nPayment Method: ${paymentMethod}\nTotal: $${total.toFixed(
       2
     )}\n\nItems:\n`;
@@ -137,39 +129,60 @@ const CartPage: React.FC = () => {
       message += `\n\nLocation: ${locationLink}`;
     }
 
-    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
-      message
-    )}`;
+    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(message)}`;
   };
 
-  // Handle checkout
   const handleCheckout = () => {
-    if (
-      !name ||
-      !lastName ||
-      !address ||
-      !locationFetched ||
-      cart.length < 1 // Corrected from cart.map.length to cart.length
-    ) {
+    if (!name || !lastName || !address || !locationFetched || cart.length < 1) {
       setAlertMessage("Please fill out all required fields and fetch your location.");
       setShowAlert(true);
       return;
     }
-    // ✅ Add this check for minimum order
+
+    if (!settings) return;
+
+    const minOrder = parseFloat(settings.minOrder.replace("$", ""));
+    const parsedData = {
+      discount: parseFloat(settings.discount.replace("$", "")),
+      delivery: parseFloat(settings.delivery.replace("$", "")),
+    };
+    const subtotal = cart.reduce(
+      (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      0
+    );
+    const discountAmount = subtotal * (parsedData.discount / 100);
+    const total = subtotal - discountAmount + parsedData.delivery;
+
     if (total < minOrder) {
       setAlertMessage(
-        `Minimum order is $${minOrder.toFixed(
-          2
-        )}. Your total is $${total.toFixed(2)}.`
+        `Minimum order is $${minOrder.toFixed(2)}. Your total is $${total.toFixed(2)}.`
       );
       setShowAlert(true);
       return;
     }
+
     const whatsappLink = prepareWhatsAppMessage();
     window.open(whatsappLink, "_blank");
   };
 
- 
+  // ────── Conditional Rendering inside JSX ──────
+  if (loading) return <LocationLoader />;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return <div>No settings found.</div>;
+
+  const parsedData = {
+    discount: parseFloat(settings.discount.replace("$", "")),
+    delivery: parseFloat(settings.delivery.replace("$", "")),
+  };
+  const subtotal = cart.reduce(
+    (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+    0
+  );
+  const discountAmount = subtotal * (parsedData.discount / 100);
+  const total = subtotal - discountAmount + parsedData.delivery;
+  const minOrder = parseFloat(settings.minOrder.replace("$", ""));
+
+  // ────── JSX ──────
   return (
     <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
       {showAlert && (

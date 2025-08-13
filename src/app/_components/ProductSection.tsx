@@ -202,7 +202,6 @@ const ProductSection: React.FC = () => {
         setProducts(data.products);
         setCategories([{ id: -1, name: "All" }, ...data.categories]); // Add "All"
         setFetched(true);
-        console.log(data.categories);
       } catch (err: any) {
         setError(err.message || "Something went wrong");
       } finally {

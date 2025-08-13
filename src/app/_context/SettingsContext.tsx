@@ -32,13 +32,15 @@ interface Settings {
 interface SettingsContextType {
   settings: Settings | null;
   loading: boolean;
-  error: string | null;
+  error: string | null; 
+  setSettings?: React.Dispatch<React.SetStateAction<Settings | null>>
 }
 
 const SettingsContext = createContext<SettingsContextType>({
   settings: null,
   loading: true,
   error: null,
+  setSettings: () => {},
 });
 
 export const useSettings = () => useContext(SettingsContext);
@@ -70,7 +72,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
   }, [fetched]);
 
   return (
-    <SettingsContext.Provider value={{ settings, loading, error }}>
+    <SettingsContext.Provider value={{ settings, loading, error ,setSettings }}>
       {children}
     </SettingsContext.Provider>
   );
