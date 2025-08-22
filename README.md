@@ -37,3 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 library :
 npm install swiper
+
+Restore databse :
+go to pgadmin 4 --> Open pgAdmin 4 and connect to your server --> In the Object Explorere (left sidebar) --> Expand your server --> Render DB --> Databases --> Right-click on the database jarjourdb or the db we have create on render etc.. or create db and right click on it --> Choose Restore --> choose the back up file , format custom .backup or plain .sql .
+the back up files are in the misso-clinic folder .

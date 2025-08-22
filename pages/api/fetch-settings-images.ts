@@ -60,3 +60,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+// CREATE OR REPLACE FUNCTION public.get_image_data()
+// RETURNS TABLE (
+//     id integer,
+//     filename text,
+//     mimetype text,
+//     image bytea
+// )
+// LANGUAGE plpgsql
+// AS $$
+// BEGIN
+//   RETURN QUERY
+//   SELECT
+//     i.id,
+//     i.filename::TEXT,
+//     i.mimetype::TEXT,
+//     i.image::bytea
+//   FROM images i
+//   ORDER BY i.id ASC;
+// END;
+// $$;
+
+// CREATE OR REPLACE FUNCTION public.get_settings_data()
+// RETURNS TABLE (
+//     my_location text,
+//     web_title text,
+//     primary_color text,
+//     hover_primary text,
+//     secondary_color text,
+//     hover_secondary text,
+//     address text,
+//     building text,
+//     floor text,
+//     facebook text,
+//     tiktok text,
+//     instagram text,
+//     mail text,
+//     phone_number text,
+//     whatsapp_number text,
+//     discount text,
+//     min_order text,
+//     delivery text
+// )
+// LANGUAGE plpgsql
+// AS $$
+// BEGIN
+//   RETURN QUERY
+//   SELECT
+//     s.my_location,
+//     s.web_title,
+//     s.primary_color,
+//     s.hover_primary,
+//     s.secondary_color,
+//     s.hover_secondary,
+//     s.address,
+//     s.building,
+//     s.floor,
+//     s.facebook,
+//     s.tiktok,
+//     s.instagram,
+//     s.mail,
+//     s.phone_number,
+//     s.whatsapp_number,
+//     s.discount,
+//     s.min_order,
+//     s.delivery
+//   FROM settings s
+//   LIMIT 1;
+// END;
+// $$;
