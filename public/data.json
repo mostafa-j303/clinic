@@ -151,6 +151,14 @@
         "Body Composition Test",
         "consultation"
       ]
+    },
+    {
+      "id": 11,
+     "price": "$10",
+      "name": "Online consultation package",
+      "details": [
+        "consultation"
+      ]
     }
   ],
 
