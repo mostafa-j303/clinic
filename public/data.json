@@ -4,7 +4,7 @@
     "background":"/Image/bg1.png",
     "background2":"/Image/bg2.jpeg",
     "logo": "/Image/logo.jpg",
-    "missoPic": "/Image/missopic.png",
+    "missoPic": "/Image/misso-pic1.png",
     "whishlogo":"/Image/whish-money.png"
   },
 
@@ -21,7 +21,7 @@
 
   "addressdetail": {
     "address": "Lebanon, Beirut, Hamra, Pavillion street",
-    "building": "itani & tabara",
+    "building": "Itani & Yamout",
     "floor": "First floor"
   },
 
@@ -165,7 +165,7 @@
   "discount": "0%",
   "minOrder": "$20",
   "delivery": "$5",
-  "categories": ["bloby","stevialana"],
+  "categories": ["bloby","stevialana","Electronic scales"],
 
   "productes": [
     {
@@ -239,6 +239,14 @@
       "price": "$25",
       "image": "/Image/bloby-sweet-box.jpeg",
       "details": "It contains:6 jello/ 6 cust/ 1 box of sweet/ 1 ater/ 6 sachets"
+    },
+    {
+      "id": 10,
+      "name": "Camry Electronic scale",
+      "categories":"Electronic scales",
+      "price": "$20",
+      "image": "/Image/camry-electronic-scale-weights.jpeg",
+      "details": "Personal scale Weight, Weights till 180 kg"
     }
   ]
 
