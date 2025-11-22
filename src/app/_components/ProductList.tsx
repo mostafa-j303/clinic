@@ -131,6 +131,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
           onCancel={() => setShowConfirmation(false)}
         />
       )}
+      <div className="px-4">
       <Swiper
         modules={[Navigation, Pagination, Grid]}
         spaceBetween={15}
@@ -152,13 +153,13 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
       >
         {productList.map((product) => (
           <SwiperSlide key={product.id} className="h-full flex-wrap">
-            <div className="transition ease-out duration-200 hover:z-40  w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid ">
+            <div className="transition ease-out duration-200 hover:z-40 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid ">
               <img
                 alt=""
                 src={product.image}
-                className="w-full max-h-40 min-h-40 rounded-md object-fill "
+                className="w-full max-h-36 min-h-36 rounded-md rounded-b-none object-fill border-b-0 border-primary "
               />
-              <div className="flex justify-between px-2 pb-3 pt-0 flex-col">
+              <div className="flex justify-between px-2 pb-3 pt-0 flex-col rounded-md rounded-t-none border-t-0 border-primary ">
                 <div className="flex justify-between ">
                   <div className="flex flex-col mt-2 justify-between">
                     <dl>
@@ -179,10 +180,10 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
                           addToCart(product, productQuantities[product.id] || 1)
                         }
                       >
-                        <span className="absolute inset-y-0 left-0 w-[2px] bg-hovprimary transition-all duration-500 group-hover:w-full group-active:bg-primary"></span>
-                        <span className="flex relative text-sm font-medium text-primary transition-colors group-hover:text-white">
+                        <span className="absolute inset-y-0 left-0 w-[0px] bg-hovprimary transition-all duration-500 group-hover:w-full group-active:bg-primary"></span>
+                        <span className="flex relative text-sm font-medium text-primary transition-colors group-hover:text-white text-center items-center">
                           Add
-                          <ShoppingCart className="pl-1 pb-2" />
+                          <ShoppingCart className="pl-1 size-5" />
                         </span>
                       </button>
                     </div>
@@ -221,6 +222,7 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
           </SwiperSlide>
         ))}
       </Swiper>
+      </div>
     </>
   );
 };

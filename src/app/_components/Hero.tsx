@@ -55,7 +55,7 @@ function Hero() {
     </div>
   </div>
   <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    {/* <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={settings.images.missoPic} alt="Maysa" width={400} height={573} ></Image> */}
+    <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={settings.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
   </div>
   
 </section>

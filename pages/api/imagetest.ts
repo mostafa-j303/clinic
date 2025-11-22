@@ -12,7 +12,7 @@ async function uploadImage(filePath: string) {
   const imageBuffer = fs.readFileSync(filePath);
 
   const query = `
-    INSERT INTO (filename, mimetype, image)
+    INSERT INTO images (filename, mimetype, image)
     VALUES ($1, $2, $3)
     RETURNING id
   `;
@@ -31,7 +31,7 @@ async function batchUpload() {
       {filePath: './public/Image/bg1.png' },
       {filePath: './public/Image/bg2.jpeg' },
       {filePath: './public/Image/logo.jpg' },
-      {filePath: './public/Image/missopic.png' },
+      {filePath: './public/Image/misso-pic1.png' },
       {filePath: './public/Image/whish-money.png' },
     ];
 

@@ -193,7 +193,7 @@ function Appointment() {
   return (
     <div
       id="appointment"
-      className="bg-gradient-to-b from-hovprimary via-white to-hovsecondary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+      className="bg-gradient-to-b from-hovsecondary via-white to-hovprimary mx-auto shadow-2xl shadow-primary px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
     >
       <div className="grid grid-cols-2  gap-4 sm:grid-cols-3  md:grid-cols-3 lg:grid-cols-4  md:gap-8">
         {appointments.map((appointment: AppointmentType) => (
