@@ -5,13 +5,17 @@ let pool: Pool | null = null;
 
 export function connectToDatabase() {
   if (!pool) {
-    pool = new Pool({
-      user: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      host: process.env.DATABASE_HOST,       // e.g., 'localhost' or your server IP
-      port: parseInt(process.env.DATABASE_PORT || '5432'), // PostgreSQL default port
-      database: process.env.DATABASE_NAME,
-      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    // pool = new Pool({
+    //   user: process.env.DATABASE_USER,
+    //   password: process.env.DATABASE_PASSWORD,
+    //   host: process.env.DATABASE_HOST,       // e.g., 'localhost' or your server IP
+    //   port: parseInt(process.env.DATABASE_PORT || '5432'), // PostgreSQL default port
+    //   database: process.env.DATABASE_NAME,
+    //   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    // });
+      pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // Render requires SSL
     });
   }
 
