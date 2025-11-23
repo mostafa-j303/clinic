@@ -24,26 +24,26 @@ async function uploadImage(filePath: string) {
 }
 
 // Example: upload multiple images mapped to product IDs
-async function batchUpload() {
-  try {
-    // Example mapping: productId => local image file path
-    const uploads = [
-      {filePath: './public/Image/bg1.png' },
-      {filePath: './public/Image/bg2.jpeg' },
-      {filePath: './public/Image/logo.jpg' },
-      {filePath: './public/Image/misso-pic1.png' },
-      {filePath: './public/Image/whish-money.png' },
-    ];
+// async function batchUpload() {
+//   try {
+//     // Example mapping: productId => local image file path
+//     const uploads = [
+//       {filePath: './public/Image/bg1.png' },
+//       {filePath: './public/Image/bg2.jpeg' },
+//       {filePath: './public/Image/logo.jpg' },
+//       {filePath: './public/Image/misso-pic1.png' },
+//       {filePath: './public/Image/whish-money.png' },
+//     ];
 
-    for (const {filePath } of uploads) {
-      const imageId = await uploadImage( filePath);
-      console.log(`Uploaded image ${imageId}`);
-    }
-  } catch (err) {
-    console.error('Upload error:', err);
-  } finally {
-    await pool.end();
-  }
-}
+//     for (const {filePath } of uploads) {
+//       const imageId = await uploadImage( filePath);
+//       console.log(`Uploaded image ${imageId}`);
+//     }
+//   } catch (err) {
+//     console.error('Upload error:', err);
+//   } finally {
+//     await pool.end();
+//   }
+// }
 
-batchUpload();
+// batchUpload();
