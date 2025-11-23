@@ -41,3 +41,7 @@ npm install swiper
 Restore databse :
 go to pgadmin 4 --> Open pgAdmin 4 and connect to your server --> In the Object Explorere (left sidebar) --> Expand your server --> Render DB --> Databases --> Right-click on the database jarjourdb or the db we have create on render etc.. or create db and right click on it --> Choose Restore --> choose the back up file , format custom .backup or plain .sql .
 the back up files are in the misso-clinic folder .
+
+
+to change vercel branch : go to vercel project --> setting --> Environments --> change branch name and readeploye 
+to change dbatabe info in the vercel : go to vercel project --> setting --> Environments varialbe --> edit the DATABASE_URL to the new external url value you take it from render .
