@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
    
+
 // CREATE FUNCTION get_appointments()
 // RETURNS TABLE (
 //     id INTEGER,
