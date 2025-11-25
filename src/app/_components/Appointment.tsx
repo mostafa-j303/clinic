@@ -14,7 +14,7 @@ import Alert from "./Alert";
 type AppointmentType = {
   id: number;
   price: string;
-  offerPrice?: string;
+  offerprice?: string;
   name: string;
   duration?: string;
   details: string[];
@@ -76,7 +76,7 @@ function Appointment() {
         id: data.id ?? appointmentData.id,
         name: appointmentData.name,
         price: appointmentData.price,
-        offerPrice: appointmentData.offerPrice,
+        offerprice: appointmentData.offerprice,
         duration: appointmentData.duration,
         details: appointmentData.details,
       };
@@ -108,6 +108,7 @@ function Appointment() {
         const data = await res.json();
         setAppointments(data.appointments);
         setFetched(true);
+        console.log(data.appointments)
       } catch (error) {
         console.error("Failed to fetch appointments", error);
       }
@@ -143,8 +144,8 @@ function Appointment() {
         Payment Method: ${paymentMethod}
         Appointment: ${selectedAppointment.name}
         Price: ${
-          selectedAppointment.offerPrice
-            ? selectedAppointment.offerPrice
+          selectedAppointment.offerprice
+            ? selectedAppointment.offerprice
             : selectedAppointment.price
         }
       `;
@@ -210,16 +211,16 @@ function Appointment() {
               <p>
                 <strong
                   className={`font-bold  ${
-                    appointment.offerPrice
+                    appointment.offerprice
                       ? "line-through text-base text-gray-700"
                       : "text-xl text-primary"
                   }`}
                 >
                   {appointment.price}
                 </strong>
-                {appointment.offerPrice && (
+                {appointment.offerprice && (
                   <span className="text-xl font-medium text-primary ">
-                    /{appointment.offerPrice}
+                    /{appointment.offerprice}
                   </span>
                 )}
               </p>

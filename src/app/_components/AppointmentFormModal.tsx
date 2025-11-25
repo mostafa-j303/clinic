@@ -15,7 +15,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
 }) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [offerPrice, setOfferPrice] = useState("");
+  const [offerprice, setofferprice] = useState("");
   const [duration, setDuration] = useState("");
   const [details, setDetails] = useState("");
 
@@ -23,14 +23,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   if (initialData) {
     setName(initialData.name || "");
     setPrice(initialData.price || "");
-    setOfferPrice(initialData.offerPrice || "");
+    setofferprice(initialData.offerprice || "");
     setDuration(initialData.duration || "");
     setDetails(initialData.details?.join(";\n") || "");
   } else {
     // Clear fields when no initialData
     setName("");
     setPrice("");
-    setOfferPrice("");
+    setofferprice("");
     setDuration("");
     setDetails("");
   }
@@ -47,7 +47,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       id: initialData?.id,
       name,
       price,
-      offerPrice,
+      offerprice,
       duration,
       details: formattedDetails,
     };
@@ -89,8 +89,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
           <input
             className="w-full p-2 border rounded text-gray-600"
             placeholder="Optional Offer Price"
-            value={offerPrice}
-            onChange={(e) => setOfferPrice(e.target.value)}
+            value={offerprice}
+            onChange={(e) => setofferprice(e.target.value)}
           />
           <input
             className="w-full p-2 border rounded text-gray-600"
