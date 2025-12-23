@@ -8,6 +8,8 @@ import LocationLoader from "../_components/Apploading"; // Adjust the path as ne
 import Image from "next/image";
 import Alert from "../_components/Alert";
 import { useSettings } from "../_context/SettingsContext";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const CartPage: React.FC = () => {
   // ────── Hooks ──────
@@ -18,12 +20,15 @@ const CartPage: React.FC = () => {
   const [lastName, setLastName] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [phone, setPhone] = useState("");
   const [locationLink, setLocationLink] = useState<string | null>(null);
   const [locationFetched, setLocationFetched] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false);
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ────── Effects ──────
   useEffect(() => {
@@ -32,6 +37,7 @@ const CartPage: React.FC = () => {
       const storedLastName = localStorage.getItem("lastName");
       const storedAddress = localStorage.getItem("address");
       const storedLocationLink = localStorage.getItem("locationLink");
+      const storedPhone = localStorage.getItem("phone");
 
       if (storedName) setName(storedName);
       if (storedLastName) setLastName(storedLastName);
@@ -40,6 +46,7 @@ const CartPage: React.FC = () => {
         setLocationLink(storedLocationLink);
         setLocationFetched(true);
       }
+      if (storedPhone) setPhone(storedPhone);
     }
   }, []);
 
@@ -96,6 +103,24 @@ const CartPage: React.FC = () => {
     localStorage.setItem("address", value);
   };
 
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    localStorage.setItem("phone", value);
+  };
+  const normalizePhone = (input: string): string | null => {
+    // Remove everything except digits and +
+    let value = input.replace(/[^\d+]/g, "");
+    // Allow only one +
+    if ((value.match(/\+/g) || []).length > 1) return null;
+    // + must be first character
+    if (value.includes("+") && !value.startsWith("+")) return null;
+    // Remove +
+    value = value.replace("+", "");
+    // Validate length (E.164 recommendation: 6–15 digits)
+    if (value.length < 9 || value.length > 15) return null;
+    return `+${value}`;
+  };
+
   const prepareWhatsAppMessage = () => {
     if (!settings) return "#";
 
@@ -105,7 +130,8 @@ const CartPage: React.FC = () => {
     };
 
     const subtotal = cart.reduce(
-      (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      (acc, item) =>
+        acc + parseFloat(item.price.replace("$", "")) * item.quantity,
       0
     );
 
@@ -128,17 +154,52 @@ const CartPage: React.FC = () => {
     if (locationFetched && locationLink) {
       message += `\n\nLocation: ${locationLink}`;
     }
-
-    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(message)}`;
+    console.log(cart);
+    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
+      message
+    )}`;
   };
 
-  const handleCheckout = () => {
-    if (!name || !lastName || !address || !locationFetched || cart.length < 1) {
-      setAlertMessage("Please fill out all required fields and fetch your location.");
+  const sendOrderToDatabase = async () => {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        lastName,
+        phone,
+        paymentMethod,
+        address,
+        locationLink,
+        cart: cart.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send order");
+    }
+    return data;
+  };
+
+  const handleCheckout = async () => {
+    if (isSubmitting) return;
+    if (
+      !name ||
+      !lastName ||
+      !address ||
+      !locationFetched ||
+      !phone ||
+      cart.length < 1
+    ) {
+      setAlertMessage(
+        "Please fill out all required fields and fetch your location."
+      );
       setShowAlert(true);
       return;
     }
-
     if (!settings) return;
 
     const minOrder = parseFloat(settings.minOrder.replace("$", ""));
@@ -147,7 +208,8 @@ const CartPage: React.FC = () => {
       delivery: parseFloat(settings.delivery.replace("$", "")),
     };
     const subtotal = cart.reduce(
-      (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      (acc, item) =>
+        acc + parseFloat(item.price.replace("$", "")) * item.quantity,
       0
     );
     const discountAmount = subtotal * (parsedData.discount / 100);
@@ -155,14 +217,38 @@ const CartPage: React.FC = () => {
 
     if (total < minOrder) {
       setAlertMessage(
-        `Minimum order is $${minOrder.toFixed(2)}. Your total is $${total.toFixed(2)}.`
+        `Minimum order is $${minOrder.toFixed(
+          2
+        )}. Your total is $${total.toFixed(2)}.`
       );
       setShowAlert(true);
       return;
     }
 
-    const whatsappLink = prepareWhatsAppMessage();
-    window.open(whatsappLink, "_blank");
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) {
+      setAlertMessage("Please enter a valid phone number.");
+      setShowAlert(true);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await sendOrderToDatabase();
+
+      setAlertMessage("Order has been sent successfully.");
+      setShowAlert(true);
+
+      // const whatsappLink = prepareWhatsAppMessage();
+      // window.open(whatsappLink, "_blank");
+
+      setCart([]);
+    } catch (error) {
+      setAlertMessage("Failed to send order. Please try again.");
+      setShowAlert(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ────── Conditional Rendering inside JSX ──────
@@ -175,7 +261,8 @@ const CartPage: React.FC = () => {
     delivery: parseFloat(settings.delivery.replace("$", "")),
   };
   const subtotal = cart.reduce(
-    (acc, item) => acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+    (acc, item) =>
+      acc + parseFloat(item.price.replace("$", "")) * item.quantity,
     0
   );
   const discountAmount = subtotal * (parsedData.discount / 100);
@@ -295,7 +382,11 @@ const CartPage: React.FC = () => {
                       <dd>${total.toFixed(2)}</dd>
                     </div>
                     <div>
-                      <dt className="italic font-medium"> ⚠️ Total must be at least ${minOrder.toFixed(2)} to proceed with checkout.</dt>
+                      <dt className="italic font-medium">
+                        {" "}
+                        ⚠️ Total must be at least ${minOrder.toFixed(2)} to
+                        proceed with checkout.
+                      </dt>
                     </div>
                   </dl>
                 </div>
@@ -314,6 +405,20 @@ const CartPage: React.FC = () => {
                     onChange={handleLastNameChange}
                     className="border border-t-gray-400 p-2 text-black outline-none "
                   />
+                  <PhoneInput
+                    country={"lb"}
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    inputProps={{
+                      name: "phone",
+                      required: true,
+                    }}
+                    dropdownClass="custom-dropdown"
+                    enableSearch
+                    containerClass="w-full"
+                    inputClass="!w-full !py-2 !pl-12 !text-black !border !rounded"
+                  />
+
                   <textarea
                     placeholder="Enter your address detail"
                     value={address}
@@ -392,7 +497,9 @@ const CartPage: React.FC = () => {
                       !lastName ||
                       !address ||
                       !locationFetched ||
-                      cart.length < 1
+                      !phone ||
+                      cart.length < 1 ||
+                      isSubmitting
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-primary hover:bg-hovprimary"
                     } text-white px-4 py-2 rounded`}
@@ -401,10 +508,12 @@ const CartPage: React.FC = () => {
                       !lastName ||
                       !address ||
                       !locationFetched ||
-                      cart.length < 1
+                      !phone ||
+                      cart.length < 1 ||
+                      isSubmitting
                     }
                   >
-                    Send Order
+                    {isSubmitting ? "Sending..." : "Send Order"}
                   </button>
                 </div>
 

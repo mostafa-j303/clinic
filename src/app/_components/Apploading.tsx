@@ -16,7 +16,7 @@ const AppLoading: React.FC = () => {
   const progressPercent = ((LOADING_DURATION - count) / LOADING_DURATION) * 100;
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-black bg-opacity-30 flex flex-col items-center justify-center z-50">
+    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-black flex flex-col items-center justify-center z-50">
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full p-5 bg-white shadow-lg">
           <LoaderPinwheel className="w-10 h-10 text-primary" />
