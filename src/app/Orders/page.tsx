@@ -33,7 +33,7 @@ type Order = {
   items: OrderItem[];
 };
 
-export default function SettingsPage() {
+export default function OrdersPage() {
   const { settings, loading, error } = useSettings();
   const { isAdmin, isChecking } = useAdminAuth();
   const router = useRouter();

@@ -121,44 +121,44 @@ const CartPage: React.FC = () => {
     return `+${value}`;
   };
 
-  const prepareWhatsAppMessage = () => {
-    if (!settings) return "#";
+  // const prepareWhatsAppMessage = () => {
+  //   if (!settings) return "#";
 
-    const parsedData = {
-      discount: parseFloat(settings.discount.replace("$", "")),
-      delivery: parseFloat(settings.delivery.replace("$", "")),
-    };
+  //   const parsedData = {
+  //     discount: parseFloat(settings.discount.replace("$", "")),
+  //     delivery: parseFloat(settings.delivery.replace("$", "")),
+  //   };
 
-    const subtotal = cart.reduce(
-      (acc, item) =>
-        acc + parseFloat(item.price.replace("$", "")) * item.quantity,
-      0
-    );
+  //   const subtotal = cart.reduce(
+  //     (acc, item) =>
+  //       acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+  //     0
+  //   );
 
-    const discountAmount = subtotal * (parsedData.discount / 100);
-    const total = subtotal - discountAmount + parsedData.delivery;
+  //   const discountAmount = subtotal * (parsedData.discount / 100);
+  //   const total = subtotal - discountAmount + parsedData.delivery;
 
-    let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nPayment Method: ${paymentMethod}\nTotal: $${total.toFixed(
-      2
-    )}\n\nItems:\n`;
+  //   let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nPayment Method: ${paymentMethod}\nTotal: $${total.toFixed(
+  //     2
+  //   )}\n\nItems:\n`;
 
-    cart.forEach((item) => {
-      message += `${item.name} - ${item.quantity} x ${item.price}\n`;
-    });
+  //   cart.forEach((item) => {
+  //     message += `${item.name} - ${item.quantity} x ${item.price}\n`;
+  //   });
 
-    message += `\nSubtotal: $${subtotal.toFixed(2)}`;
-    message += `\nDiscount: -$${discountAmount.toFixed(2)}`;
-    message += `\nDelivery Charge: $${parsedData.delivery.toFixed(2)}`;
-    message += `\nTotal: $${total.toFixed(2)}`;
+  //   message += `\nSubtotal: $${subtotal.toFixed(2)}`;
+  //   message += `\nDiscount: -$${discountAmount.toFixed(2)}`;
+  //   message += `\nDelivery Charge: $${parsedData.delivery.toFixed(2)}`;
+  //   message += `\nTotal: $${total.toFixed(2)}`;
 
-    if (locationFetched && locationLink) {
-      message += `\n\nLocation: ${locationLink}`;
-    }
-    console.log(cart);
-    return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
-      message
-    )}`;
-  };
+  //   if (locationFetched && locationLink) {
+  //     message += `\n\nLocation: ${locationLink}`;
+  //   }
+  //   console.log(cart);
+  //   return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
+  //     message
+  //   )}`;
+  // };
 
   const sendOrderToDatabase = async () => {
     const response = await fetch("/api/orders", {
