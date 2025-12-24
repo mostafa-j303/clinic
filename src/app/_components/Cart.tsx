@@ -1,4 +1,4 @@
-// _components/Cart.tsx
+// _components/Cart
 import React from "react";
 import { useCart } from "../_context/CartContext";
 import Link from "next/link";
