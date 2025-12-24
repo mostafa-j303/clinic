@@ -17,3 +17,18 @@ export function getSession(req: NextApiRequest, res: NextApiResponse) {
 export interface NextApiRequestWithSession extends NextApiRequest {
   session: IronSession<{ isAdmin?: boolean }>;
 }
+
+
+export async function requireAdmin(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const session = await getSession(req, res);
+
+  if (!session || !session.isAdmin) {
+    res.status(403).json({ message: "Forbidden" });
+    return null;
+  }
+
+  return session;
+}

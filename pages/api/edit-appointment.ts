@@ -1,10 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '../../lib/db';
+import { requireAdmin } from '../../lib/session';
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
+
+ const session = await requireAdmin(req, res);
+  if (!session) return;
 
   const { id, name, price, offerPrice, duration, details } = req.body;
 

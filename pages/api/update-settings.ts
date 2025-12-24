@@ -1,11 +1,15 @@
 // pages/api/update-settings.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { poolPromise } from "../../lib/db";
+import { requireAdmin } from "../../lib/session";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
+
+ const session = await requireAdmin(req, res);
+  if (!session) return;
 
   try {
     const {

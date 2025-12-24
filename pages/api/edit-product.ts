@@ -4,6 +4,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm } from "formidable";
 import fs from "fs";
 import { getPool } from "../../lib/db";
+import { requireAdmin } from '../../lib/session';
 
 // Disable default body parser
 export const config = {
@@ -16,6 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
+
+ const session = await requireAdmin(req, res);
+  if (!session) return;
 
   const form = new IncomingForm({ keepExtensions: true, multiples: true });
 

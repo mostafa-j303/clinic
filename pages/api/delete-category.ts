@@ -1,10 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getPool } from '../../lib/db';
+import { requireAdmin } from '../../lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
+
+ const session = await requireAdmin(req, res);
+  if (!session) return;
 
   try {
     const { id } = req.query;
