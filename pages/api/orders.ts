@@ -30,7 +30,7 @@ if (!phoneRegex.test(phone)) {
     const orderResult = await client.query(
       `
       INSERT INTO orders (name, last_name, phone, payment_method, address, location_link, status)
-      VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+      VALUES ($1, $2, $3, $4, $5, $6, 'Pending')
       RETURNING id
       `,
       [name, lastName, phone, paymentMethod, address, locationLink]

@@ -106,17 +106,40 @@ const Header: React.FC = () => {
                   Contact Us{" "}
                 </Link>
               </li>
-               {isAdmin && (
-              <li>
-                <Link
-                  className="text-gray-500 transition hover:text-gray-500/75"
-                  href="/Setting"
-                >
-                  {" "}
-                  Setting{" "}
-                </Link>
-              </li>
-               )}
+              {isAdmin && (
+      <li className="relative group">
+        <button className="text-gray-500 transition hover:text-gray-500/75 flex items-center gap-1">
+          Admin
+          <svg
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {/* Dropdown menu */}
+        <ul className="absolute hidden group-hover:block bg-white shadow-lg rounded  w-32">
+          <li>
+            <Link
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              href="/Setting"
+            >
+              Setting
+            </Link>
+          </li>
+          <li>
+            <Link
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              href="/Orders"
+            >
+              Orders
+            </Link>
+          </li>
+        </ul>
+      </li>
+    )}
               <li>
                       {isAdmin ? (
                         <button
@@ -140,7 +163,7 @@ const Header: React.FC = () => {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-2">
             <div className="sm:flex sm:gap-4">
               <button
                 className="flex justify-around items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-hovprimary"
@@ -212,6 +235,17 @@ const Header: React.FC = () => {
                 >
                   {" "}
                   Setting{" "}
+                </Link>
+              </li>
+               )}
+               {isAdmin && (
+              <li>
+                <Link
+                  href="/Orders"
+                  className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                >
+                  {" "}
+                  Orders{" "}
                 </Link>
               </li>
                )}
