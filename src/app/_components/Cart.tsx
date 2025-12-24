@@ -86,7 +86,7 @@ const Cart: React.FC<CartProps> = ({setIsCartOpen}) => {
       </div>
       <div className=" space-y-4 text-center ">
         <Link 
-        href={"/Cart"} 
+        href={"/cart"} 
         className="w-full block rounded-b-md  bg-white px-5 py-3 text-sm text-black hover:bg-hovsecondary hover:text-primary transition duration-500"
         onClick={handleViewCartClick}
         >
