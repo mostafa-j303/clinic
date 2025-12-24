@@ -129,14 +129,14 @@ const Header: React.FC = () => {
               Setting
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               href="/Orders"
             >
               Orders
             </Link>
-          </li>
+          </li> */}
         </ul>
       </li>
     )}
@@ -238,7 +238,7 @@ const Header: React.FC = () => {
                 </Link>
               </li>
                )}
-               {isAdmin && (
+               {/* {isAdmin && (
               <li>
                 <Link
                   href="/Orders"
@@ -248,7 +248,7 @@ const Header: React.FC = () => {
                   Orders{" "}
                 </Link>
               </li>
-               )}
+               )} */}
                {isAdmin ? (
                         <button
                           onClick={() => {
