@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../_context/CartContext";
-import Cart from "./Cart";
+import Cart from "../_components/Cart";
 import Link from "next/link";
 import data from "../../../public/data.json";
 import { useSettings } from "../_context/SettingsContext";
