@@ -15,8 +15,8 @@ const Alert: React.FC<AlertProps> = ({ value, onClose }) => {
       setIsClosing(true);
       setTimeout(() => {
         onClose();
-      }, 300); // Duration of the animation
-    }, 1500); // Duration before animation starts
+      }, 700); // Duration of the animation
+    }, 1000); // Duration before animation starts
 
     return () => clearTimeout(timer); // Clean up the timer on unmount
   }, [onClose]);
