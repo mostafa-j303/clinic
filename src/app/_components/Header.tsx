@@ -124,7 +124,7 @@ const Header: React.FC = () => {
           <li>
             <Link
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              href="/setting"
+              href="/Setting"
             >
               Setting
             </Link>
@@ -132,7 +132,7 @@ const Header: React.FC = () => {
           <li>
             <Link
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              href="/orders"
+              href="/Orders"
             >
               Orders
             </Link>
@@ -221,7 +221,7 @@ const Header: React.FC = () => {
               </li>
               <li>
                 <Link
-                  href="/cart"
+                  href="/Cart"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {"Cart"}
@@ -230,7 +230,7 @@ const Header: React.FC = () => {
               {isAdmin && (
               <li>
                 <Link
-                  href="/setting"
+                  href="/Setting"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {" "}
@@ -241,7 +241,7 @@ const Header: React.FC = () => {
                {isAdmin && (
               <li>
                 <Link
-                  href="/orders"
+                  href="/Orders"
                   className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                 >
                   {" "}
