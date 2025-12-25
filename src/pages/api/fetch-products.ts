@@ -1,6 +1,6 @@
 // pages/api/products.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getPool } from '../../lib/db'; // Adjust this path to where your db.ts is located
+import { getPool } from '../../../lib/db'; // Adjust this path to where your db.ts is located
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

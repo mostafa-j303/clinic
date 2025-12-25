@@ -1,7 +1,7 @@
 // pages/api/delete-product.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getPool } from '../../lib/db';
-import { requireAdmin } from '../../lib/session';
+import { getPool } from '../../../lib/db';
+import { requireAdmin } from '../../../lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {

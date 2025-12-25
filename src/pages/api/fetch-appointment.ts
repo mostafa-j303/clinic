@@ -1,6 +1,6 @@
 // pages/api/appointments.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../lib/db';
+import { connectToDatabase } from '../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

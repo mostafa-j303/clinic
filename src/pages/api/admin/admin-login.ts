@@ -1,7 +1,7 @@
 // pages/api/admin-login.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from '../../../lib/session';
-import { poolPromise } from '../../../lib/db';
+import { getSession } from '../../../../lib/session';
+import { poolPromise } from '../../../../lib/db';
 import bcrypt from 'bcrypt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

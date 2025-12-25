@@ -1,7 +1,7 @@
 // pages/api/delete-appointment.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../lib/db';
-import { requireAdmin } from '../../lib/session';
+import { connectToDatabase } from '../../../lib/db';
+import { requireAdmin } from '../../../lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {

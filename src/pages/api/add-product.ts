@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm, File } from "formidable";
 import fs from "fs";
-import { getPool } from "../../lib/db";
+import { getPool } from "../../../lib/db";
 import getFieldValue from "@/app/utils/getFieldValue";
-import { requireAdmin } from '../../lib/session';
+import { requireAdmin } from '../../../lib/session';
 
 // Disable default body parser
 export const config = {

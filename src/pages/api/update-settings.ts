@@ -1,7 +1,7 @@
 // pages/api/update-settings.ts
 import { NextApiRequest, NextApiResponse } from "next";
-import { poolPromise } from "../../lib/db";
-import { requireAdmin } from "../../lib/session";
+import { poolPromise } from "../../../lib/db";
+import { requireAdmin } from "../../../lib/session";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PUT") {

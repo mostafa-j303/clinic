@@ -1,6 +1,6 @@
 // pages/api/settings.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import { poolPromise } from '../../lib/db';
+import { poolPromise } from '../../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

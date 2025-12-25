@@ -3,8 +3,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm } from "formidable";
 import fs from "fs";
-import { getPool } from "../../lib/db";
-import { requireAdmin } from '../../lib/session';
+import { getPool } from "../../../lib/db";
+import { requireAdmin } from '../../../lib/session';
 
 // Disable default body parser
 export const config = {

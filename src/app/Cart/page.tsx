@@ -4,14 +4,14 @@ import { useCart } from "../_context/CartContext";
 import { openWhishApp } from "../utils/openWhishApp";
 import data from "../../../public/data.json";
 import Link from "next/link";
-import LocationLoader from "../_components/Apploading"; // Adjust the path as needed
+import LocationLoader from "../_components/Apploading"; 
 import Image from "next/image";
 import Alert from "../_components/Alert";
 import { useSettings } from "../_context/SettingsContext";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-const CartPage: React.FC = () => {
+export default function CartPage(){
   // ────── Hooks ──────
   const { cart, setCart } = useCart();
   const { settings, loading, error } = useSettings();
@@ -529,4 +529,3 @@ const CartPage: React.FC = () => {
   );
 };
 
-export default CartPage;

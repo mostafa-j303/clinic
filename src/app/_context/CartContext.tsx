@@ -1,5 +1,5 @@
 'use client'
-// _context/CartContext.tsx
+// _context/CartContext
 import React, { createContext, useContext, useState } from 'react';
 import { ClientProducts } from '../_components/ProductList';
 

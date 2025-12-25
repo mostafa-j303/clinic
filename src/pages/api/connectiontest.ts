@@ -1,6 +1,6 @@
 // pages/api/test-connection.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase, getPool } from '../../lib/db'; // adjust path if needed
+import { connectToDatabase, getPool } from '../../../lib/db'; // adjust path if needed
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
