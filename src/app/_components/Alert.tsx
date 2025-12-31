@@ -28,7 +28,7 @@ const Alert: React.FC<AlertProps> = ({ value, onClose }) => {
   }, [isClosing]);
 
   return (
-    <div className='fixed inset-0 flex flex-col  items-center justify-start bg-black bg-opacity-50 z-50 '>
+    <div className='fixed inset-0 flex flex-col  items-center justify-start bg-black bg-opacity-50 z-[51] '>
       <div role="alert" className={`fixed top-4 right-4 rounded-xl border border-gray-100 bg-white p-4 transition-all transform ${
           isClosing ? 'translate-y-[-150%]' : 'translate-y-0'
         }`}>

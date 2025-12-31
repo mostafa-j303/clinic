@@ -10,6 +10,8 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import AppointmentFormModal from "./AppointmentFormModal";
 import ConfirmationModal from "./ConfirmationModal";
 import Alert from "./Alert";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 type AppointmentType = {
   id: number;
@@ -27,6 +29,7 @@ function Appointment() {
     useState<AppointmentType | null>(null);
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
 
@@ -41,6 +44,8 @@ function Appointment() {
   const [appointmentToDelete, setAppointmentToDelete] = useState<number | null>(
     null
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
@@ -108,7 +113,7 @@ function Appointment() {
         const data = await res.json();
         setAppointments(data.appointments);
         setFetched(true);
-        console.log(data.appointments)
+        console.log(data.appointments);
       } catch (error) {
         console.error("Failed to fetch appointments", error);
       }
@@ -120,6 +125,8 @@ function Appointment() {
   useEffect(() => {
     const storedName = localStorage.getItem("name") || "";
     const storedLastName = localStorage.getItem("lastName") || "";
+    const storedPhone = localStorage.getItem("phone") || "";
+    setPhone(storedPhone);
     setName(storedName);
     setLastName(storedLastName);
   }, []);
@@ -133,27 +140,81 @@ function Appointment() {
     setModalIsOpen(false);
   };
 
-  const handleSubmit = () => {
+  const normalizePhone = (input: string): string | null => {
+  // Remove everything except digits and +
+  let value = input.replace(/[^\d+]/g, "");
+  // Allow only one +
+  if ((value.match(/\+/g) || []).length > 1) return null;
+  // + must be first character
+  if (value.includes("+") && !value.startsWith("+")) return null;
+  // Remove +
+  value = value.replace("+", "");
+  // Validate length (E.164 recommendation: 6–15 digits)
+  if (value.length < 9 || value.length > 15) return null;
+  return `+${value}`;
+};
+
+
+  const handleSubmit = async () => {
+    const normalizedPhone = normalizePhone(phone);
+  if (!normalizedPhone) {
+    setAlertMessage("Invalid phone number. Please check the format.");
+    return;
+  }
     localStorage.setItem("name", name);
     localStorage.setItem("lastName", lastName);
+    localStorage.setItem("phone", phone);
     if (selectedAppointment) {
-      const message = `Appointment Info:
-        Name: ${name}
-        Last Name: ${lastName}
-        Date: ${date}
-        Payment Method: ${paymentMethod}
-        Appointment: ${selectedAppointment.name}
-        Price: ${
-          selectedAppointment.offerprice
-            ? selectedAppointment.offerprice
-            : selectedAppointment.price
-        }
-      `;
-      const whatsappUrl = `https://wa.me/${
-        settings?.social.number
-      }?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, "_blank");
-      closeModal();
+       setIsSubmitting(true); // ✅ disable button
+      const priceUsed =
+        selectedAppointment.offerprice ? selectedAppointment.offerprice : selectedAppointment.price;
+
+        console.log(selectedAppointment)
+
+      try {
+        const res = await fetch("/api/create-appointment-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: name,
+            lastName: lastName,
+            phone: normalizedPhone,
+            appointmentId: selectedAppointment.id,
+            appointmentName: selectedAppointment.name,
+            selectedDate: date,
+            paymentMethod,
+            priceUsed,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Insert failed");
+        setAlertMessage("Appointment request sent successfully.");
+
+        // const message = `Appointment Info:
+        //   Name: ${name}
+        //   Last Name: ${lastName}
+        //   Phone: ${phone}
+        //   Date: ${date}
+        //   Payment Method: ${paymentMethod}
+        //   Appointment: ${selectedAppointment.name}
+        //   Price: ${
+        //     selectedAppointment.offerprice
+        //       ? selectedAppointment.offerprice
+        //       : selectedAppointment.price
+        //   }
+        // `;
+
+        // const whatsappUrl = `https://wa.me/${
+        //   settings?.social.number
+        // }?text=${encodeURIComponent(message)}`;
+        // window.open(whatsappUrl, "_blank");
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        setAlertMessage("Failed to submit appointment. Please try again.");
+      }finally {
+    setIsSubmitting(false); // ✅ re-enable button
+  }
     }
   };
 
@@ -310,10 +371,9 @@ function Appointment() {
       {alertMessage && (
         <Alert value={alertMessage} onClose={() => setAlertMessage(null)} />
       )}
-
       {modalIsOpen && selectedAppointment && (
-        <div className="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-8 w-96">
+        <div className="fixed inset-0 z-[50] flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-8 w-96 ">
             <h2 className="text-lg font-medium text-gray-900 mb-4">
               Appointment for {selectedAppointment.name}
             </h2>
@@ -348,6 +408,29 @@ function Appointment() {
                   className="p-3 text-gray-600 mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
                 />
               </div>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone Number
+                </label>
+                <PhoneInput
+                    country={"lb"}
+                    value={phone}
+                    onChange={(value) => setPhone(value)}
+                    inputProps={{
+                      name: "phone",
+                      required: true,
+                    }}
+                    dropdownClass="custom-dropdown"
+                    enableSearch
+                    containerClass="w-full"
+                    inputClass="!w-full !py-2 !pl-12 !text-black !border !rounded"
+                  />
+
+              </div>
+               
               <div>
                 <label
                   htmlFor="date"
@@ -407,14 +490,14 @@ function Appointment() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!name || !lastName || !date}
+                disabled={!name || !lastName || !date || !phone|| isSubmitting}
                 className={`mt-4 block w-full font-medium py-2 rounded-md ${
-                  !name || !lastName || !date
+                  !name || !lastName || !date || !phone || isSubmitting
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : "bg-primary text-white cursor-pointer"
                 }`}
               >
-                Send via WhatsApp
+                 {isSubmitting ? "Sending..." : "Send Request"}
               </button>
               <button
                 type="button"
