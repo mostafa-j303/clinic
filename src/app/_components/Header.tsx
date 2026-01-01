@@ -137,6 +137,14 @@ const Header: React.FC = () => {
               Orders
             </Link>
           </li>
+          <li>
+            <Link
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              href="/Appointments"
+            >
+              Appointment Requests
+            </Link>
+          </li>
         </ul>
       </li>
     )}
@@ -249,6 +257,17 @@ const Header: React.FC = () => {
                 </Link>
               </li>
                )}
+              {isAdmin && (
+              <li>
+                <Link
+                  href="/Appointments"
+                  className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                >
+                  {" "}
+                  Appointment Requests{" "}
+                </Link>
+              </li>
+               )} 
                {isAdmin ? (
                         <button
                           onClick={() => {
