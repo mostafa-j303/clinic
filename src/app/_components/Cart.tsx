@@ -49,7 +49,7 @@ const Cart: React.FC<CartProps> = ({ setIsCartOpen }) => {
   const isEmpty = cart.length === 0;
 
   return (
-    <div className="fixed top-14 right-4 md:right-8 w-full max-w-sm bg-white rounded-lg shadow-2xl z-40 border border-gray-200 flex flex-col max-h-[calc(100vh-100px)] overflow-hidden">
+    <div className="fixed top-14 right-4 md:right-8 w-full max-w-sm bg-white rounded-lg shadow-2xl z-40 border border-gray-200 flex flex-col max-h-[500px] overflow-hidden">
       {/* Header */}
       <div className="bg-primary text-white px-4 py-3 flex items-center gap-2">
         <ShoppingCart size={20} />
