@@ -1,98 +1,152 @@
-// _components/Cart
-import React from "react";
+import React, { useMemo } from "react";
 import { useCart } from "../_context/CartContext";
 import Link from "next/link";
+import { Trash2, ShoppingCart } from "lucide-react";
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number | string;
+  details: string;
+  image: string;
+  quantity: number;
+}
 
 interface CartProps {
   setIsCartOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Cart: React.FC<CartProps> = ({setIsCartOpen}) => {
+const Cart: React.FC<CartProps> = ({ setIsCartOpen }) => {
   const { cart, setCart } = useCart();
 
   const handleRemove = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
+
   const handleViewCartClick = () => {
-    setIsCartOpen(false); // Close the cart on click
+    setIsCartOpen(false);
   };
 
+  const totalPrice = useMemo(() => {
+    const total = cart.reduce((acc, item) => {
+      let price: number;
+      
+      // Remove $ and any non-numeric characters, then parse
+      if (typeof item.price === "string") {
+        price = parseFloat(item.price.replace(/[^\d.-]/g, ""));
+      } else {
+        price = item.price;
+      }
+      
+      // Return 0 if price is NaN, otherwise add to total
+      return acc + (isNaN(price) ? 0 : price * (item.quantity || 1));
+    }, 0);
+    
+    // Return "0.00" if total is NaN or invalid
+    return isNaN(total) ? "0.00" : total.toFixed(2);
+  }, [cart]);
+
+  const isEmpty = cart.length === 0;
 
   return (
-    <div className="absolute top-14 right-0 min-w-[300px] flex flex-col justify-between bg-hovprimary h-[300px] w-[250px] z-10 rounded-md border-none shadow-sm  mx-5 ">
-      <div>
-        <h3 className="bg-primary p-4 pb-2 text-lg font-semibold rounded-t-sm">Shopping Cart:</h3>
-        {cart.length === 0 ? (
-          <p className="mt-4 m-2 bg-white text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">No products added yet.</p>
-        ) : (
-          <div className="">
-            <ul className="max-h-52 overflow-auto">
-              {cart.map((item, index) => (
-                <div key={index} className="mt-1 p-1 space-y-6 bg-secondary ">
-                  <ul className="space-y-4">
-                    <li className="flex items-center gap-1">
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="size-16 rounded-sm object-fill"
-                      />
-                      <div>
-                        <h3 className="text-xs text-gray-900">{item.name}</h3>
-                        <dl className="mt-0.5 space-y-px text-[10px] text-gray-600">
-                          <div>{item.details}</div>
-                        </dl>
-                        <h6 className="text-xs">{item.price}</h6>
-                      </div>
-                      <div className="flex flex-1 items-center justify-end gap-2">
-                        <form>
-                          <label htmlFor="Line1Qty" className="sr-only"> Quantity </label>
-                          <input
-                            disabled
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            id="Line1Qty"
-                            className="h-8 w-12 rounded border-gray-200 bg-gray-50 p-0 text-center text-xs text-gray-600 [-moz-appearance:_textfield] focus:outline-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                          />
-                        </form>
-                        <button
-                          className="p-2 bg-hovprimary rounded-xl text-gray-600 transition hover:text-red-600"
-                          onClick={() => handleRemove(item.id)}
-                        >
-                          <span className="sr-only">Remove item</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="h-4 w-4"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              ))}
-            </ul>
+    <div className="fixed top-14 right-4 md:right-8 w-full max-w-sm bg-white rounded-lg shadow-2xl z-40 border border-gray-200 flex flex-col max-h-[calc(100vh-100px)] overflow-hidden">
+      {/* Header */}
+      <div className="bg-primary text-white px-4 py-3 flex items-center gap-2">
+        <ShoppingCart size={20} />
+        <h3 className="text-lg font-semibold">Shopping Cart</h3>
+        <span className="ml-auto bg-white text-primary px-2.5 py-0.5 rounded-full text-sm font-bold">
+          {cart.length}
+        </span>
+      </div>
+
+      {/* Cart Items */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        {isEmpty ? (
+          <div className="flex flex-col items-center justify-center h-full py-12 px-4">
+            <ShoppingCart size={48} className="text-gray-300 mb-3" />
+            <p className="text-gray-500 text-center">No products added yet.</p>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Start shopping to add items to your cart
+            </p>
           </div>
+        ) : (
+          <ul className="space-y-2 p-3">
+            {cart.map((item: CartItem) => (
+              <li
+                key={item.id}
+                className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition"
+              >
+                <div className="flex gap-3">
+                  {/* Product Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 rounded-md object-cover"
+                    />
+                  </div>
+
+                  {/* Product Details */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">
+                      {item.name}
+                    </h4>
+                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                      {item.details}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm font-bold text-primary">
+                        {item.price}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                        Qty: {item.quantity || 1}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => handleRemove(item.id)}
+                    className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                    aria-label={`Remove ${item.name}`}
+                    title="Remove item"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-      <div className=" space-y-4 text-center ">
-        <Link 
-        href={"/Cart"} 
-        className="w-full block rounded-b-md  bg-white px-5 py-3 text-sm text-black hover:bg-hovsecondary hover:text-primary transition duration-500"
-        onClick={handleViewCartClick}
+
+      {/* Footer */}
+      {!isEmpty && (
+        <div className="bg-white border-t border-gray-200 px-4 py-3 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold text-gray-700">Total:</span>
+            <span className="text-lg font-bold text-primary">${totalPrice}</span>
+          </div>
+        </div>
+      )}
+
+      {/* View Cart Button */}
+      {isEmpty ? (
+        <button
+          onClick={handleViewCartClick}
+          className="w-full bg-primary hover:bg-hovprimary text-white font-semibold py-3 px-4 transition-colors rounded-b-lg text-center text-sm"
         >
-          View My Cart
+          Continue Shopping
+        </button>
+      ) : (
+        <Link
+          href="/Cart"
+          onClick={handleViewCartClick}
+          className="w-full bg-primary hover:bg-hovprimary text-white font-semibold py-3 px-4 transition-colors rounded-b-lg text-center text-sm block"
+        >
+          View Full Cart
         </Link>
-      </div>
+      )}
     </div>
   );
 };

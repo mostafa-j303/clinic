@@ -9,6 +9,7 @@ import AddProductModal from "./AddProductModal";
 import Alert from "./Alert";
 import AddEditCategoryModal from "./AddEditCategorieModal";
 import ConfirmationModal from "./ConfirmationModal";
+import Loading from "./Loding";
 
 // Define types
 interface Product {
@@ -221,7 +222,7 @@ const ProductSection: React.FC = () => {
             selectedCategory.trim().toLowerCase()
         );
 
-  if (loading) return <LocationLoader />;
+  if (loading) return <Loading variant="grid" message="Loading products..."/>;
 
   if (error) {
     return (
@@ -233,7 +234,7 @@ const ProductSection: React.FC = () => {
 
   return (
     <div
-      className="bg-gradient-to-b from-white via-white to-hovprimary"
+      className="bg-gradient-to-b from-white via-white to-hovprimary pb-12"
       id="Products"
     >
       {showAlert && (

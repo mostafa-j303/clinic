@@ -1,79 +1,157 @@
-// Alert.tsx
 import React, { useEffect, useState } from 'react';
+import { Check, X, AlertCircle, Info } from 'lucide-react';
+
+//4 alert types - success, error, info, warning with unique colors and icons
 
 interface AlertProps {
   value: string;
   onClose: () => void;
+  type?: 'success' | 'error' | 'info' | 'warning';
+  autoCloseDuration?: number;
+  showBackdrop?: boolean;
 }
 
-const Alert: React.FC<AlertProps> = ({ value, onClose }) => {
-  const [isVisible, setIsVisible] = useState<boolean>(true);
-  const [isClosing, setIsClosing] = useState<boolean>(false);
+const Alert: React.FC<AlertProps> = ({
+  value,
+  onClose,
+  type = 'success',
+  autoCloseDuration = 3000,
+  showBackdrop = false,
+}) => {
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsClosing(true);
       setTimeout(() => {
         onClose();
-      }, 700); // Duration of the animation
-    }, 1000); // Duration before animation starts
+      }, 300); // Animation duration
+    }, autoCloseDuration);
 
-    return () => clearTimeout(timer); // Clean up the timer on unmount
-  }, [onClose]);
+    return () => clearTimeout(timer);
+  }, [onClose, autoCloseDuration]);
 
-  useEffect(() => {
-    if (isClosing) {
-      setIsVisible(false);
-    }
-  }, [isClosing]);
+  // Color configurations based on type
+  const alertConfig = {
+    success: {
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      icon: Check,
+      iconColor: 'text-green-600',
+      textColor: 'text-green-800',
+      progressBg: 'bg-green-500',
+      title: 'Success',
+    },
+    error: {
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      icon: X,
+      iconColor: 'text-red-600',
+      textColor: 'text-red-800',
+      progressBg: 'bg-red-500',
+      title: 'Error',
+    },
+    info: {
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      icon: Info,
+      iconColor: 'text-blue-600',
+      textColor: 'text-blue-800',
+      progressBg: 'bg-blue-500',
+      title: 'Info',
+    },
+    warning: {
+      bg: 'bg-yellow-50',
+      border: 'border-yellow-200',
+      icon: AlertCircle,
+      iconColor: 'text-yellow-600',
+      textColor: 'text-yellow-800',
+      progressBg: 'bg-yellow-500',
+      title: 'Warning',
+    },
+  };
+
+  const config = alertConfig[type];
+  const IconComponent = config.icon;
 
   return (
-    <div className='fixed inset-0 flex flex-col  items-center justify-start bg-black bg-opacity-50 z-[51] '>
-      <div role="alert" className={`fixed top-4 right-4 rounded-xl border border-gray-100 bg-white p-4 transition-all transform ${
-          isClosing ? 'translate-y-[-150%]' : 'translate-y-0'
-        }`}>
-      <div className="flex items-start gap-4">
-        <span className="text-primary">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="h-6 w-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    <>
+      {/* Backdrop - Optional */}
+      {showBackdrop && (
+        <div
+          className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+            isClosing ? 'opacity-0' : 'opacity-100'
+          } bg-black/30 backdrop-blur-xs`}
+          onClick={() => {
+            setIsClosing(true);
+            setTimeout(onClose, 300);
+          }}
+        />
+      )}
+
+      {/* Alert Container */}
+      <div
+        role="alert"
+        className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${
+          isClosing ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
+        }`}
+      >
+        {/* Alert Card */}
+        <div className={`${config.bg} ${config.border} border-l-4 rounded-lg shadow-lg p-4 max-w-md w-full md:w-96`}>
+          <div className="flex items-start gap-3">
+            {/* Icon */}
+            <div className={`flex-shrink-0 mt-0.5 ${config.iconColor}`}>
+              <IconComponent size={20} className="stroke-[2.5]" />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-semibold text-sm ${config.textColor}`}>
+                {config.title}
+              </h3>
+              <p className={`mt-1 text-sm ${config.textColor} opacity-90 break-words`}>
+                {value}
+              </p>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setIsClosing(true);
+                setTimeout(onClose, 300);
+              }}
+              className={`flex-shrink-0 inline-flex p-1 rounded-md ${config.iconColor} hover:opacity-70 transition-opacity`}
+              aria-label="Close alert"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div className={`mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden`}>
+            <div
+              className={`h-full ${config.progressBg} rounded-full animate-pulse`}
+              style={{
+                animation: `shrink ${autoCloseDuration}ms linear forwards`,
+              }}
             />
-          </svg>
-        </span>
-
-        <div className="flex-1">
-          <strong className="block font-medium text-gray-900"> Alert </strong>
-
-          <p className="mt-1 text-sm text-gray-700">{value}</p>
+          </div>
         </div>
-
-        <button onClick={onClose} className="text-gray-500 transition hover:text-gray-600">
-          <span className="sr-only">Dismiss popup</span>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="h-6 w-6"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
-    </div>
-    </div>
-    
+
+      {/* Animation Keyframes */}
+      <style jsx>{`
+        @keyframes shrink {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+      `}</style>
+    </>
   );
 };
+
 export default Alert;

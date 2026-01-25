@@ -1,64 +1,128 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import data from "../../../public/data.json"
 import { useSettings } from "../_context/SettingsContext";
-import LocationLoader from "./Apploading";
+import { ArrowRight, CheckCircle } from "lucide-react";
+
 function Hero() {
   const { settings, loading, error } = useSettings();
-  if (loading) return <LocationLoader />;
-  if (error) return <div>Error: {error}</div>;
+
+  if (error) return <div className="text-red-500 text-center py-20">Error: {error}</div>;
   if (!settings) return null;
+
   return (
-  
-<section
-  className={`w-full pt-20 flex flex-wrap justify-self-center justify-center justify-items-center content-center ${
-    !settings?.images?.background ? "bg-gradient-to-br from-secondary via-hovsecondary to-white" : ""
-  }`}
-  style={
-    settings?.images?.background
-      ? {
-          backgroundImage: `url(${settings.images.background})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundColor: "white",
-        }
-      : undefined
-  }
->
- <div className="mx-auto max-w-screen-xl   px-4  lg:flex  lg:items-center">
-    <div className=" p-5 mx-auto max-w-xl text-center">
-      <h1 className="text-3xl text-black font-extrabold sm:text-5xl">
-       Welcome
-        <strong className="font-extrabold text-primary sm:block"> to Your Trusted Nutrition Partner </strong>
-      </h1>
+    <section
+      id="hero"
+      className="w-full min-h-screen  flex items-center justify-center relative overflow-hidden pt-20"
+      style={
+        settings?.images?.background
+          ? {
+              backgroundImage: `url(${settings.images.background})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundAttachment: "fixed",
+            }
+          : {
+              background: "linear-gradient(135deg, var(--secondary) 0%, var(--hovsecondary) 50%, white 100%)",
+            }
+      }
+    >
+      {/* Overlay for better text readability */}
+      {settings?.images?.background && (
+        <div className="absolute inset-0 bg-white/10" />
+      )}
 
-      <p className="mt-4 sm:text-xl/relaxed text-black">
-       Helping you build healthy habits, one meal at a time. Personalized plans, expert advice, and support tailored just for you.
-      </p>
+      {/* Content Container */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          
+          {/* Left Content */}
+          <div className="flex flex-col justify-center space-y-6 text-center lg:text-left bg-white px-12 py-12 rounded-3xl shadow-2xl">
+            {/* Badge */}
+            <div className="flex justify-center lg:justify-start">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full">
+                <CheckCircle size={16} />
+                <span className="text-sm font-semibold">Trusted Nutrition Expert</span>
+              </div>
+            </div>
 
-      <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <Link
-          className="block w-full rounded bg-primary px-12 py-3 text-sm font-medium text-white shadow hover:bg-hovprimary focus:outline-none focus:ring active:bg-primary sm:w-auto"
-          href="#appointment"
-        >
-          Book Now
-        </Link>
+            {/* Main Heading */}
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Welcome to Your
+                <span className="block text-primary mt-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                  Trusted Nutrition Partner
+                </span>
+              </h1>
+            </div>
 
-        <Link
-          className="block w-full rounded bg-white px-12 py-3 text-sm font-medium text-primary shadow hover:text-hovprimary focus:outline-none focus:ring active:text-primary sm:w-auto"
-          href="#Products"
-        >
-          See Our Products
-        </Link>
+            {/* Description */}
+            <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-xl">
+              Helping you build healthy habits, one meal at a time. Personalized plans, expert advice, and support tailored just for you.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Link
+                href="#appointment"
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-hovprimary hover:to-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Book Now
+                <ArrowRight size={18} />
+              </Link>
+              
+              <Link
+                href="#Products"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-primary hover:text-hovprimary border-2 border-primary font-semibold py-3 px-8 rounded-lg transition-all duration-300 shadow hover:shadow-lg"
+              >
+                See Our Products
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-6 pt-4 justify-center lg:justify-start text-sm">
+              <div>
+                <p className="text-2xl font-bold text-primary">1000+</p>
+                <p className="text-gray-600">Happy Clients</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-primary">5★</p>
+                <p className="text-gray-600">Rating</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-primary">24/7</p>
+                <p className="text-gray-600">Support</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Image */}
+          <div className="relative flex items-end justify-center h-full min-h-[500px] lg:min-h-[600px]">
+            {/* Image Container with decorative elements */}
+            <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-4">
+              {/* Decorative circles */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
+              
+              {/* Image */}
+              <div className="relative z-10">
+                <Image
+                  src={settings.images.missoPic}
+                  alt="Nutrition Expert"
+                  width={400}
+                  height={573}
+                  priority
+                  className="w-full h-auto rounded-t-3xl rounded-b-3xl shadow-2xl object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-  <div className="flex mr-5 items-end justify-self-center justify-center  justify-items-center content-center">
-    <Image className=" border-b-3 border-b-hovsecondary rounded-tr-[190px] rounded-tl-[700px] "  src={settings.images.missoPic} alt="Maysa" width={400} height={573} ></Image>
-  </div>
-  
-</section>
+
+      
+    </section>
   );
 }
 

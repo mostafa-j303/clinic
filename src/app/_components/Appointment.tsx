@@ -12,6 +12,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import Alert from "./Alert";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import Loading from "./Loding";
 
 type AppointmentType = {
   id: number;
@@ -113,7 +114,6 @@ function Appointment() {
         const data = await res.json();
         setAppointments(data.appointments);
         setFetched(true);
-        console.log(data.appointments);
       } catch (error) {
         console.error("Failed to fetch appointments", error);
       }
@@ -248,7 +248,7 @@ function Appointment() {
     }
   };
 
-  if (loading) return <LocationLoader />;
+ if (loading) return <Loading variant="grid" message="Loading appointments..." />;
   if (error) return <div>Error: {error}</div>;
   if (!settings) return null;
 

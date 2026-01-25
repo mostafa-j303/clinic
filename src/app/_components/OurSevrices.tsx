@@ -1,99 +1,140 @@
 "use client";
 import React from "react";
-import data from "../../../public/data.json"
+import data from "../../../public/data.json";
 import { useSettings } from "../_context/SettingsContext";
-import LocationLoader from "./Apploading";
+import Loading from "./Loding";
+import { Award, GraduationCap, Heart, Stethoscope } from "lucide-react";
 
-function OurSevrices() {
+function OurServices() {
   const { settings, loading, error } = useSettings();
-  if (loading) return <LocationLoader />;
-  if (error) return <div>Error: {error}</div>;
+
+  if (loading) return <Loading message="Loading services..." variant="list" />;
+  if (error) return <div className="text-red-500 text-center py-20">Error: {error}</div>;
   if (!settings) return null;
+
+  const services = [
+    {
+      icon: GraduationCap,
+      title: "Education & Expertise",
+      description:
+        "Over 9 years of dedicated experience in nutritional therapy with intensive clinical training. Expertise spans renal nutrition, diabetes management, maternal nutrition, food safety, eating disorders, and gastrointestinal disorders.",
+    },
+    {
+      icon: Heart,
+      title: "Passionate Approach",
+      description:
+        "Committed to translating evidence-based nutrition into practical strategies that empower individuals to improve their health and quality of life through tailored dietary interventions.",
+    },
+    {
+      icon: Stethoscope,
+      title: "Clinical Excellence",
+      description:
+        "Licensed dietitian with comprehensive clinical training and continuous professional development. Staying current with evolving practices in dietetics and nutritional therapy.",
+    },
+  ];
+
   return (
-    <div>
-      <section className="bg-gradient-to-b from-hovprimary via-primary to-hovsecondary text-white"
+    <section
+      id="aboutus"
+      className="relative w-full py-16 sm:py-20 lg:py-24 overflow-hidden"
       style={
-          data?.images?.background
-            ? {
-                backgroundImage: `url(${data.images.background2})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundColor: "white",
-              }
-            : undefined
-        }
-      >
-        <div className="  px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-          <div className="bg-white text-black p-5 border-hovprimary border-4 rounded-xl max-w-xl">
-            <h2 id="aboutus" className="text-3xl font-bold sm:text-4xl">
-              Professional Background
-            </h2>
+        data?.images?.background2
+          ? {
+              backgroundImage: `url(${data.images.background2})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : { background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)" }
+      }
+    >
+      {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-white/95" />
 
-            <p className="mt-4 text-gray-600">
-              &nbsp;&nbsp;&nbsp;&nbsp; I am a licensed dietitian with over nine years of dedicated
-              experience in the field of nutritional therapy. My foundation was
-              built through intensive clinical training at a hospital, where I
-              completed a comprehensive 6-month internship that deepened my
-              understanding of medical nutrition therapy and patient-centered
-              care.
-            </p>
-          </div>
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Professional Background
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Licensed dietitian with over 9 years of dedicated experience in nutritional therapy,
+            combining clinical expertise with a passion for patient care.
+          </p>
+        </div>
 
-          <div className=" mt-8 grid grid-cols-1 items-start gap-8 md:mt-16 md:grid-cols-2 md:gap-12 lg:grid-cols-3 justify-center">
-            <div className=" flex items-start gap-1">
-              {/* <span className="shrink-0 rounded-lg bg-secondary text-black p-4">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-                  ></path>
-                </svg>
-              </span> */}
-
-              <div className="bg-white border-4 border-hovprimary  p-3 rounded-lg">
-                <h2 className="text-lg text-black font-bold">
-                  Education and Expertise
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-600 leading-relaxed">
-                  &nbsp;&nbsp;&nbsp;&nbsp; Over the years, I have consistently earned colloquium credits,
-                  staying current with evolving practices in dietetics. My
-                  expertise spans a wide range of clinical and community
-                  nutrition areas, including renal nutrition, diabetes
-                  management, maternal nutrition (including pregnancy and
-                  lactation), food safety, eating disorders, and
-                  gastrointestinal tract diseases, among others.
-                </p>
-              </div>
-            </div>
-
-            <div className=" flex items-start gap-1">
-              
-
-              <div className="bg-white border-4 border-hovprimary  p-3 rounded-lg">
-                <p className="mt-1 text-sm text-gray-600 leading-relaxed">
-                  &nbsp;&nbsp;&nbsp;&nbsp; Passionate about translating evidence-based nutrition into
-                  practical strategies, I aim to empower individuals to improve
-                  their health and quality of life through tailored dietary
-                  interventions.
-                </p>
-              </div>
+        {/* Main Description Card */}
+        <div className="bg-gradient-to-br from-primary/5 to-blue-100/30 border-2 border-primary rounded-xl p-6 sm:p-8 mb-12 sm:mb-16">
+          <div className="flex items-start gap-4">
+            <Award className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+                Foundation Built on Excellence
+              </h3>
+              <p className="text-gray-700 leading-relaxed text-base sm:text-lg">
+                I am a licensed dietitian with over nine years of dedicated experience in the field
+                of nutritional therapy. My foundation was built through intensive clinical training at
+                a hospital, where I completed a comprehensive 6-month internship that deepened my
+                understanding of medical nutrition therapy and patient-centered care.
+              </p>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {services.map((service, index) => {
+            const IconComponent = service.icon;
+            return (
+              <div
+                key={index}
+                className="group bg-white rounded-xl border-2 border-gray-200 hover:border-primary p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                {/* Icon */}
+                <div className="flex items-center justify-center w-14 h-14 bg-primary/10 group-hover:bg-primary rounded-lg mb-5 transition-colors duration-300">
+                  <IconComponent className="w-7 h-7 text-primary group-hover:text-white transition-colors duration-300" />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {service.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {service.description}
+                </p>
+
+                {/* Accent line */}
+                <div className="mt-4 h-1 w-0 bg-primary group-hover:w-12 transition-all duration-300" />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Specializations */}
+        <div className="mt-12 sm:mt-16 bg-gray-50 rounded-xl p-6 sm:p-8 border border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Areas of Expertise</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              "Renal Nutrition",
+              "Diabetes Management",
+              "Maternal Nutrition",
+              "Pregnancy & Lactation",
+              "Food Safety",
+              "Eating Disorders",
+              "Gastrointestinal Disorders",
+              "Medical Nutrition Therapy",
+              "Community Nutrition",
+            ].map((specialty, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-primary rounded-full" />
+                <span className="text-gray-700 font-medium">{specialty}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
-export default OurSevrices;
+export default OurServices;
