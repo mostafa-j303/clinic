@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 :root {
+  --color-primary: #be75ff;
+  --color-hovprimary: #D09CFA;
+  --color-secondary: #ffffff;
+  --color-hovsecondary: #ffffff;
+}
+:root {
   --foreground-rgb: 0, 0, 0;
   --color-primary: theme('colors.primary');
   --color-secondary: theme('colors.secondary');

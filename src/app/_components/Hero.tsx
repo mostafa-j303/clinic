@@ -50,7 +50,7 @@ function Hero() {
             <div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Welcome to Your
-                <span className="block text-primary mt-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                <span className="block text-primary mt-2 bg-gradient-to-r from-primary to-blue-600 bg-clip-text ">
                   Trusted Nutrition Partner
                 </span>
               </h1>

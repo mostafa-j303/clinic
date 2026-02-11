@@ -8,7 +8,7 @@ import { CartContextProvider } from "./_context/CartContext";
 import ScrollToTop from "./_components/ScrollToTop";
 import { SettingsProvider } from "./_context/SettingsContext";
 import { AdminAuthProvider } from "./_context/AdminAuthContext";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import AppLoading from "./_components/Apploading";
 import { useSettings } from "./_context/SettingsContext";
 
@@ -20,7 +20,18 @@ function AppContent({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { loading } = useSettings();
+  const {settings, loading } = useSettings();
+
+  useEffect(() => {
+  if (!settings?.colors) return;
+
+  const root = document.documentElement;
+
+  root.style.setProperty("--color-primary", settings.colors.primary);
+  root.style.setProperty("--color-hovprimary", settings.colors.hovprimary);
+  root.style.setProperty("--color-secondary", settings.colors.secondary);
+  root.style.setProperty("--color-hovsecondary", settings.colors.hovsecondary);
+}, [settings]);
 
   // Show loading screen while settings are being fetched
   if (loading) {
