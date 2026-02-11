@@ -1,12 +1,19 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSettings } from "../_context/SettingsContext";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import Alert from "../_components/Alert";
 import { MaterialReactTable } from "material-react-table";
 import { MRT_ColumnDef } from "material-react-table";
-import { Trash2 } from "lucide-react";
+import {
+  Trash2,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Send,
+} from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import ConfirmationModal from "../_components/ConfirmationModal";
 
@@ -34,6 +41,260 @@ type Order = {
   items: OrderItem[];
 };
 
+// Memoized Status Badge Component
+const StatusBadge = React.memo(({ status }: { status: string }) => {
+  const getStatusConfig = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return {
+          bg: "bg-yellow-50",
+          border: "border-yellow-200",
+          text: "text-yellow-700",
+          icon: Clock,
+        };
+      case "sent":
+        return {
+          bg: "bg-blue-50",
+          border: "border-blue-200",
+          text: "text-blue-700",
+          icon: Send,
+        };
+      case "delivered":
+        return {
+          bg: "bg-green-50",
+          border: "border-green-200",
+          text: "text-green-700",
+          icon: CheckCircle2,
+        };
+      case "cancelled":
+        return {
+          bg: "bg-red-50",
+          border: "border-red-200",
+          text: "text-red-700",
+          icon: XCircle,
+        };
+      default:
+        return {
+          bg: "bg-gray-50",
+          border: "border-gray-200",
+          text: "text-gray-700",
+          icon: Clock,
+        };
+    }
+  };
+
+  const config = getStatusConfig(status);
+  const IconComponent = config.icon;
+
+  return (
+    <span
+      className={`px-3 py-1.5 rounded-lg text-sm font-semibold border inline-flex items-center gap-1.5 ${config.bg} ${config.border} ${config.text}`}
+    >
+      <IconComponent size={16} />
+      {status}
+    </span>
+  );
+});
+
+StatusBadge.displayName = "StatusBadge";
+
+// Memoized Order Detail Panel
+const OrderDetailPanel = React.memo(
+  ({
+    order,
+    onSendWhatsApp,
+    onCheckLocation,
+    onMarkDelivered,
+    onCancelOrder,
+    onDelete,
+  }: {
+    order: Order;
+    onSendWhatsApp: (order: Order) => void;
+    onCheckLocation: (url: string) => void;
+    onMarkDelivered: (id: number) => void;
+    onCancelOrder: (id: number) => void;
+    onDelete: (id: number) => void;
+  }) => {
+    const isFinalStatus =
+      order.status === "Delivered" || order.status === "Cancelled";
+
+    return (
+      <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Order Items */}
+          <div className="lg:col-span-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="text-xl">📦</span> Order Items
+            </h3>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                      Product
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                      Price
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                      Qty
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item) => (
+                    <tr
+                      key={item.productId}
+                      className="border-b border-gray-100 hover:bg-blue-50 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-sm text-gray-800 font-medium">
+                        {item.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 text-center">
+                        {item.price}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 text-center font-semibold">
+                        {item.quantity}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="font-semibold text-gray-800">
+                  ${order.subtotal.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Discount:</span>
+                <span className="font-semibold text-gray-800">
+                  -{order.discount.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Delivery:</span>
+                <span className="font-semibold text-gray-800">
+                  ${order.delivery.toFixed(2)}
+                </span>
+              </div>
+              <div className="border-t border-gray-200 pt-2 flex justify-between">
+                <span className="font-bold text-gray-900">Total:</span>
+                <span className="font-bold text-lg text-blue-600">
+                  ${order.total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Address & Location */}
+          <div className="lg:col-span-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <MapPin size={20} /> Delivery Address
+            </h3>
+            <textarea
+              disabled
+              value={order.address}
+              className="w-full h-32 p-4 border border-gray-200 rounded-lg resize-none text-gray-700 bg-gray-50 text-sm font-medium mb-4"
+            />
+            <button
+              onClick={() => onCheckLocation(order.locationLink)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg flex gap-2 justify-center items-center transition-colors mb-4"
+            >
+              <MapPin size={18} />
+              View on Map
+            </button>
+
+            {/* Payment & Order Info */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3 mb-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Payment Method
+                </p>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {order.paymentMethod}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Order Date
+                </p>
+                <p className="text-sm font-semibold text-gray-800 mt-1">
+                  {new Date(order.createdAt).toLocaleString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              disabled={order.status !== "Pending"}
+              onClick={() => onSendWhatsApp(order)}
+              className={`px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all ${
+                order.status !== "Pending"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg"
+              }`}
+            >
+              <FaWhatsapp size={18} />
+              <span className="hidden sm:inline">WhatsApp</span>
+            </button>
+
+            <button
+              disabled={isFinalStatus}
+              onClick={() => onMarkDelivered(order.id)}
+              className={`px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all ${
+                isFinalStatus
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg"
+              }`}
+            >
+              <CheckCircle2 size={18} />
+              <span className="hidden sm:inline">Delivered</span>
+            </button>
+
+            <button
+              disabled={isFinalStatus}
+              onClick={() => onCancelOrder(order.id)}
+              className={`px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all ${
+                isFinalStatus
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg"
+              }`}
+            >
+              <XCircle size={18} />
+              <span className="hidden sm:inline">Cancel</span>
+            </button>
+
+            <button
+              onClick={() => onDelete(order.id)}
+              className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center bg-red-600 hover:bg-red-700 text-white transition-all shadow-md hover:shadow-lg"
+            >
+              <Trash2 size={18} />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+OrderDetailPanel.displayName = "OrderDetailPanel";
+
 export default function OrdersPage() {
   const { settings, loading, error } = useSettings();
   const { isAdmin, isChecking } = useAdminAuth();
@@ -42,20 +303,15 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
-  const isFinalStatus = (status: string) =>
-    status === "Delivered" || status === "Cancelled";
 
-  // Redirect if not admin
   useEffect(() => {
     if (!isChecking && !isAdmin) {
       router.push("/");
     }
   }, [isChecking, isAdmin, router]);
 
-  // Fetch orders from API
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -71,7 +327,8 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-  const sendOrderByWhatsApp = async (order: Order) => {
+  // Memoized WhatsApp handler
+  const sendOrderByWhatsApp = useCallback(async (order: Order) => {
     let message = `Hello ${order.customerName}, 👋\n\n`;
     message += `Your order has been placed successfully and is currently *pending confirmation*.\n`;
     message += `Please review the details below and reply *CONFIRM* to proceed with delivery.\n\n`;
@@ -105,12 +362,11 @@ export default function OrdersPage() {
     )}`;
 
     window.open(whatsappUrl, "_blank");
-
-    // ✅ Update DB + UI immediately
     await updateStatus(order.id, "Sent");
-  };
+  }, []);
 
-  const updateStatus = async (orderId: number, status: string) => {
+  // Memoized status update handler
+  const updateStatus = useCallback(async (orderId: number, status: string) => {
     await fetch("/api/admin/update-order-status", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -120,24 +376,10 @@ export default function OrdersPage() {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
-  };
+  }, []);
 
-  const getStatusClasses = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "sent":
-        return "bg-orange-100 text-orange-800 border-orange-300";
-      case "delivered":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  const confirmDeleteOrder = async () => {
+  // Memoized delete handler
+  const confirmDeleteOrder = useCallback(async () => {
     if (!orderToDelete) return;
 
     try {
@@ -152,9 +394,7 @@ export default function OrdersPage() {
       if (!res.ok) {
         throw new Error(data.message || "Failed to delete order");
       }
-      // Remove order from UI
       setOrders((prev) => prev.filter((order) => order.id !== orderToDelete));
-
       setAlertMessage("Order deleted successfully");
       setShowAlert(true);
     } catch (err: any) {
@@ -164,82 +404,110 @@ export default function OrdersPage() {
       setShowConfirmModal(false);
       setOrderToDelete(null);
     }
-  };
+  }, [orderToDelete]);
 
-  const columns = React.useMemo<MRT_ColumnDef<Order>[]>(
+  // Memoized columns
+  const columns = useMemo<MRT_ColumnDef<Order>[]>(
     () => [
-      { header: "ID", accessorKey: "id" },
+      {
+        header: "ID",
+        accessorKey: "id",
+        size: 60,
+        Cell: ({ cell }) => (
+          <span className="font-mono font-bold text-gray-900">
+            #{cell.getValue<number>()}
+          </span>
+        ),
+      },
       {
         header: "Customer",
         accessorFn: (row) => `${row.customerName} ${row.customerLastName}`,
+        Cell: ({ row }) => (
+          <div className="font-medium text-gray-900">
+            {row.original.customerName} {row.original.customerLastName}
+          </div>
+        ),
       },
-      { header: "Phone", accessorKey: "phone" },
-      { header: "Payment", accessorKey: "paymentMethod" },
+      {
+        header: "Phone",
+        accessorKey: "phone",
+        Cell: ({ cell }) => (
+          <a
+            href={`tel:${cell.getValue<string>()}`}
+            className="text-blue-600 hover:underline text-sm font-medium"
+          >
+            {cell.getValue<string>()}
+          </a>
+        ),
+      },
+      {
+        header: "Payment",
+        accessorKey: "paymentMethod",
+        Cell: ({ cell }) => (
+          <span className="text-sm font-medium text-gray-700">
+            {cell.getValue<string>()}
+          </span>
+        ),
+      },
       {
         header: "Status",
         accessorKey: "status",
-        Cell: ({ cell }) => {
-          const status = cell.getValue<string>();
-          return (
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-semibold border inline-block ${getStatusClasses(
-                status
-              )}`}
-            >
-              {status}
-            </span>
-          );
-        },
+        Cell: ({ cell }) => <StatusBadge status={cell.getValue<string>()} />,
       },
       {
-        header: "Subtotal",
-        accessorKey: "subtotal",
-        Cell: ({ cell }) => `$${cell.getValue<number>().toFixed(2)}`,
-      },
-      {
-        header: "Discount",
-        accessorKey: "discount",
-        Cell: ({ cell }) => `${cell.getValue<number>().toFixed(2)}%`,
-      },
-      {
-        header: "Delivery",
-        accessorKey: "delivery",
-        Cell: ({ cell }) => `$${cell.getValue<number>().toFixed(2)}`,
-      },
-      {
-        header: "Total",
+        header: "Amount",
         accessorKey: "total",
-        Cell: ({ cell }) => `$${cell.getValue<number>().toFixed(2)}`,
+        Cell: ({ cell }) => (
+          <span className="font-bold text-gray-900">
+            ${cell.getValue<number>().toFixed(2)}
+          </span>
+        ),
       },
       {
-        header: "Created At",
+        header: "Date",
         accessorKey: "createdAt",
         Cell: ({ cell }) => {
           const value = cell.getValue<string>();
-          return new Date(value).toLocaleString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+          return (
+            <span className="text-sm text-gray-600">
+              {new Date(value).toLocaleString(undefined, {
+                month: "short",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          );
         },
       },
     ],
     []
   );
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 max-w-md">
+          {error}
+        </div>
+      </div>
+    );
 
   return (
-    <div className="p-6 mx-auto bg-white">
+    <div className="min-h-screen bg-gray-50">
       {showAlert && (
         <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
       )}
       {showConfirmModal && (
         <ConfirmationModal
-          text="Are you sure you want to delete this order ?"
+          text="Are you sure you want to delete this order?"
           onCancel={() => {
             setShowConfirmModal(false);
             setOrderToDelete(null);
@@ -248,102 +516,77 @@ export default function OrdersPage() {
         />
       )}
 
-      <h1 className="text-2xl font-bold mb-4 text-gray-600 mt-14">Orders</h1>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
+          <p className="text-gray-600 mt-2">
+            Manage and track customer orders
+          </p>
+          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+              {orders.length} orders
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <MaterialReactTable
-        columns={columns}
-        data={orders}
-        renderDetailPanel={({ row }) => (
-          <div className="flex flex-row gap-4 p-4 items-start">
-            <div>
-              <h3 className="font-bold mb-2">Order Items</h3>
-              <table className="w-fit border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2 border">Product Name</th>
-                    <th className="p-2 border">Price</th>
-                    <th className="p-2 border">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {row.original.items.map((item) => (
-                    <tr key={item.productId}>
-                      <td className="p-2 border">{item.name}</td>
-                      <td className="p-2 border">{item.price}</td>
-                      <td className="p-2 border">{item.quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-semibold text-gray-700">
-                Customer Address
-              </label>
-              <textarea
-                disabled
-                value={row.original.address}
-                className="w-full h-32 p-2 border rounded resize-none text-gray-700"
-              />
-            </div>
-            <div className="flex flex-col gap-2 mt-6">
-              <button
-                disabled={row.original.status !== "Pending"}
-                onClick={() => sendOrderByWhatsApp(row.original)}
-                className={`px-4 py-2 rounded mt-1 flex gap-2 justify-center items-center text-white
-                ${
-                  row.original.status !== "Pending"
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-green-500 hover:bg-green-600"
-                }`}
-              >
-                Send By WhatsApp <FaWhatsapp size={20} />
-              </button>
-              <button
-                onClick={() => window.open(row.original.locationLink, "_blank")}
-                className="bg-primary hover:bg-hovprimary text-white px-4 py-2 rounded mt-1 flex gap-2 justify-center items-center"
-              >
-                Check Location
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded mt-1 flex gap-2 justify-center items-center"
-                onClick={() => {
-                  setOrderToDelete(row.original.id);
+      {/* Table Container */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <MaterialReactTable
+            columns={columns}
+            data={orders}
+            renderDetailPanel={({ row }) => (
+              <OrderDetailPanel
+                order={row.original}
+                onSendWhatsApp={sendOrderByWhatsApp}
+                onCheckLocation={(url) => window.open(url, "_blank")}
+                onMarkDelivered={(id) => updateStatus(id, "Delivered")}
+                onCancelOrder={(id) => updateStatus(id, "Cancelled")}
+                onDelete={(id) => {
+                  setOrderToDelete(id);
                   setShowConfirmModal(true);
                 }}
-              >
-                Delete Order <Trash2 size={20} />
-              </button>
-            </div>
-            <div className="flex flex-col gap-2 mt-7">
-              <button
-                disabled={isFinalStatus(row.original.status)}
-                onClick={() => updateStatus(row.original.id, "Delivered")}
-                className={`px-4 py-2 rounded text-white
-                  ${
-                    isFinalStatus(row.original.status)
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-              >
-                Mark as Delivered
-              </button>
-              <button
-                disabled={isFinalStatus(row.original.status)}
-                onClick={() => updateStatus(row.original.id, "Cancelled")}
-                className={`px-4 py-2 rounded text-white
-                  ${
-                    isFinalStatus(row.original.status)
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-red-500 hover:bg-red-600"
-                  }`}
-              >
-                Cancel Order
-              </button>
-            </div>
-          </div>
-        )}
-      />
+              />
+            )}
+            muiTablePaperProps={{
+              elevation: 0,
+              sx: {
+                border: "none",
+                borderRadius: "8px",
+              },
+            }}
+            muiTableProps={{
+              sx: {
+                border: "none",
+              },
+            }}
+            muiTableHeadCellProps={{
+              sx: {
+                backgroundColor: "#f3f4f6",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#374151",
+                borderBottom: "1px solid #e5e7eb",
+              },
+            }}
+            muiTableBodyCellProps={{
+              sx: {
+                borderBottom: "1px solid #f3f4f6",
+                padding: "1rem",
+              },
+            }}
+            muiExpandButtonProps={{
+              sx: {
+                color: "#3b82f6",
+              },
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
