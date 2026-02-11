@@ -1,11 +1,19 @@
-import React, { useState , useId, useEffect} from "react";
+import React, { useState, useId, useEffect } from "react";
+import { Plus, Minus } from "lucide-react";
 
 interface CounterProps {
   initialCount: number;
   onCountChange: (newCount: number) => void;
+  minCount?: number;
+  maxCount?: number;
 }
 
-const Counter: React.FC<CounterProps> = ({ initialCount, onCountChange }) => {
+const Counter: React.FC<CounterProps> = ({ 
+  initialCount, 
+  onCountChange,
+  minCount = 1,
+  maxCount = 999
+}) => {
   const [count, setCount] = useState<number>(initialCount);
   const uniqueId = useId();
 
@@ -15,41 +23,84 @@ const Counter: React.FC<CounterProps> = ({ initialCount, onCountChange }) => {
   }, [initialCount]);
 
   const handleIncrement = () => {
-    setCount((prevCount) => prevCount + 1);
-    onCountChange(count + 1);
+    if (count < maxCount) {
+      const newCount = count + 1;
+      setCount(newCount);
+      onCountChange(newCount);
+    }
   };
 
   const handleDecrement = () => {
-    const newCount = Math.max(count - 1, 1); // Ensure count doesn't go below 1
-    setCount(newCount);
-    onCountChange(newCount);
+    if (count > minCount) {
+      const newCount = count - 1;
+      setCount(newCount);
+      onCountChange(newCount);
+    }
   };
 
+  const handleDirectInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = parseInt(e.target.value, 10);
+    
+    if (isNaN(value)) {
+      value = minCount;
+    }
+    
+    // Clamp value between min and max
+    value = Math.max(minCount, Math.min(value, maxCount));
+    
+    setCount(value);
+    onCountChange(value);
+  };
+
+  const isAtMin = count <= minCount;
+  const isAtMax = count >= maxCount;
+
   return (
-    <>
+    <div className="w-full justify-center flex items-center gap-1 bg-gray-100 rounded-lg p-1 ">
+      {/* Decrement Button */}
       <button
         type="button"
-        className="size-10 leading-10 text-gray-600 transition hover:opacity-75"
-        onClick={handleIncrement}
+        onClick={handleDecrement}
+        disabled={isAtMin}
+        className={`flex items-center justify-center size-9 rounded-md transition-all flex-1 ${
+          isAtMin
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-white text-gray-600 hover:bg-primary hover:text-white active:scale-95"
+        }`}
+        aria-label="Decrease quantity"
+        title={isAtMin ? `Minimum quantity is ${minCount}` : "Decrease quantity"}
       >
-        +
+        <Minus size={18} />
       </button>
+
+      {/* Input Field */}
       <input
         type="number"
-        id={`quantity-${uniqueId}`} 
+        id={`quantity-${uniqueId}`}
         value={count}
-        readOnly
-        className="text-black h-10 w-10 border-transparent text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+        onChange={handleDirectInput}
+        min={minCount}
+        max={maxCount}
+        className="h-9 w-14 text-center text-black font-semibold border-0 bg-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-primary [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+        aria-label="Quantity"
       />
 
+      {/* Increment Button */}
       <button
         type="button"
-        className="size-10 leading-10 text-gray-600 transition hover:opacity-75"
-        onClick={handleDecrement}
+        onClick={handleIncrement}
+        disabled={isAtMax}
+        className={`flex items-center justify-center size-9 rounded-md transition-all flex-1 ${
+          isAtMax
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-white text-gray-600 hover:bg-primary hover:text-white active:scale-95"
+        }`}
+        aria-label="Increase quantity"
+        title={isAtMax ? `Maximum quantity is ${maxCount}` : "Increase quantity"}
       >
-        &minus;
+        <Plus size={18} />
       </button>
-    </>
+    </div>
   );
 };
 

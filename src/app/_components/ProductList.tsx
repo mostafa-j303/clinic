@@ -1,16 +1,16 @@
-import React, { useContext, useState } from "react";
-import { Pencil, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Pencil, ShoppingCart, Trash2 } from "lucide-react";
 import Counter from "./counter";
 import { useCart } from "../_context/CartContext";
+import { useAdminAuth } from "../_context/AdminAuthContext";
+import Alert from "./Alert";
+import ConfirmationModal from "./ConfirmationModal";
 
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Grid } from "swiper/modules";
-import { useAdminAuth } from "../_context/AdminAuthContext";
-import Alert from "./Alert";
-import ConfirmationModal from "./ConfirmationModal";
 
 // Define the type for a product
 export interface Product {
@@ -50,23 +50,28 @@ interface ProductListProps {
   onEditProduct: (product: Product) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct, onEditProduct}) => {
-
+const ProductList: React.FC<ProductListProps> = ({
+  productList,
+  onDeleteProduct,
+  onEditProduct,
+}) => {
   const [productQuantities, setProductQuantities] = useState<{
     [key: number]: number;
   }>({});
   const { cart, setCart } = useCart();
-  const { isAdmin, login, logout } = useAdminAuth();
+  const { isAdmin } = useAdminAuth();
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);
     setShowConfirmation(true);
   };
+
   const confirmDelete = async () => {
     if (!productToDelete) return;
     try {
@@ -75,9 +80,8 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
       });
 
       if (res.ok) {
-        //the ondeleteproduct function from the prodcutsection cause the products are in the productsection file 
         onDeleteProduct(productToDelete.id);
-        setAlertMessage("Product is deleted");
+        setAlertMessage("Product deleted successfully");
         setShowAlert(true);
       } else {
         setAlertMessage("Failed to delete product");
@@ -85,6 +89,8 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
       }
     } catch (error) {
       console.error("Error deleting product:", error);
+      setAlertMessage("An error occurred while deleting the product");
+      setShowAlert(true);
     } finally {
       setShowConfirmation(false);
       setProductToDelete(null);
@@ -112,7 +118,6 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
         return [...prevCart, newClientProduct];
       }
     });
-    // ✅ Reset counter to 1 after adding to cart
     setProductQuantities((prev) => ({
       ...prev,
       [product.id]: 1,
@@ -124,20 +129,23 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
       {showAlert && (
         <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
       )}
-      {showConfirmation && (
+      {showConfirmation && productToDelete && (
         <ConfirmationModal
-          text={`Are you sure you want to delete "${productToDelete?.name}"?`}
+          text={`Are you sure you want to delete "${productToDelete.name}"? This action cannot be undone.`}
           onConfirm={confirmDelete}
-          onCancel={() => setShowConfirmation(false)}
+          onCancel={() => {
+            setShowConfirmation(false);
+            setProductToDelete(null);
+          }}
+          isDangerous={true}
         />
       )}
-      <div className="px-4">
+
       <Swiper
         modules={[Navigation, Pagination, Grid]}
-        spaceBetween={15}
+        spaceBetween={12}
         slidesPerView={2}
         slidesPerGroup={2}
-        slidesPerGroupSkip={0}
         grid={{
           rows: 2,
           fill: "row",
@@ -145,84 +153,93 @@ const ProductList: React.FC<ProductListProps> = ({ productList ,onDeleteProduct,
         navigation
         pagination={{ clickable: true }}
         breakpoints={{
-          768: { slidesPerView: 3, slidesPerGroup: 3 },
-          1024: { slidesPerView: 4, slidesPerGroup: 4 },
-          1280: { slidesPerView: 5, slidesPerGroup: 5 },
+          480: { slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 12 },
+          768: { slidesPerView: 3, slidesPerGroup: 3, spaceBetween: 16 },
+          1024: { slidesPerView: 4, slidesPerGroup: 4, spaceBetween: 20 },
+          1280: { slidesPerView: 4, slidesPerGroup: 4, spaceBetween: 20 },
         }}
-        className="w-full h-full"
+        className="w-full"
       >
         {productList.map((product) => (
-          <SwiperSlide key={product.id} className="h-full flex-wrap">
-            <div className="transition ease-out duration-200 hover:z-40 w-full bg-white rounded-lg shadow-hovprimary shadow-sm hover:shadow-2xl h-full grid ">
-              <img
-                alt=""
-                src={product.image}
-                className="w-full max-h-36 min-h-36 rounded-md rounded-b-none object-fill border-b-0 border-primary "
-              />
-              <div className="flex justify-between px-2 pb-3 pt-0 flex-col rounded-md rounded-t-none border-t-0 border-primary ">
-                <div className="flex justify-between ">
-                  <div className="flex flex-col mt-2 justify-between">
-                    <dl>
-                      <div className="text-sm items-end text-black">
-                        {product.price}
-                      </div>
-                      <div className="text-primary text-[12px] font-normal min-h-6 max-h-6 leading-3 mb-1 ">
-                        {product.name}
-                      </div>
-                      <p className="text-gray-400 text-[10px] line-clamp-3 min-h-9 max-h-9 overflow-hidden leading-3">
-                        {product.details}
-                      </p>
-                    </dl>
-                    <div>
+          <SwiperSlide key={product.id}>
+            <div className="w-full h-full">
+              {/* Product Card */}
+              <div className="w-full h-full min-h-96 bg-white rounded-lg border-2 border-gray-200 hover:border-primary overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
+                
+                {/* Image Container */}
+                <div className="relative w-full h-40 bg-gray-100 overflow-hidden group flex-shrink-0">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-fill group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {isAdmin && (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <button
-                        className="mt-1 group hover:rounded-xl rounded-lg duration-300 relative inline-block overflow-hidden border border-primary px-3 pt-1 py-1 focus:outline-none focus:ring"
-                        onClick={() =>
-                          addToCart(product, productQuantities[product.id] || 1)
-                        }
+                        onClick={() => onEditProduct(product)}
+                        className="flex items-center justify-center size-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        title="Edit product"
                       >
-                        <span className="absolute inset-y-0 left-0 w-[0px] bg-hovprimary transition-all duration-500 group-hover:w-full group-active:bg-primary"></span>
-                        <span className="flex relative text-sm font-medium text-primary transition-colors group-hover:text-white text-center items-center">
-                          Add
-                          <ShoppingCart className="pl-1 size-5" />
-                        </span>
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(product)}
+                        className="flex items-center justify-center size-10 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                        title="Delete product"
+                      >
+                        <Trash2 size={18} />
                       </button>
                     </div>
-                  </div>
-                  <div className="flex items-start mt-1 justify-between flex-nowrap">
-                    <div>
-                      <div className="flex flex-col items-center rounded border border-gray-200">
-                        <Counter
-                          initialCount={productQuantities[product.id] || 1}
-                          onCountChange={(newCount) =>
-                            handleCountChange(product.id, newCount)
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
-                {isAdmin && (
-                  <div className="flex gap-3 mt-2 flex-row-reverse">
-                    <button
-                      className="text-white rounded-lg bg-red-500 p-2"
-                      onClick={() => handleDeleteClick(product)}
-                    >
-                      <Trash2 />
-                    </button>
-                    <button className="text-white rounded-lg bg-blue-500 p-2"
-                    onClick={() => onEditProduct(product)}
-                    >
-                      {" "}
-                      <Pencil />
-                    </button>
+
+                {/* Content Area */}
+                <div className="flex flex-col flex-grow p-3 overflow-hidden">
+                  
+                  {/* Main Content - Price, Name, Description */}
+                  <div className="flex-grow overflow-hidden">
+                    {/* Price */}
+                    <div className="text-lg md:text-xl font-bold text-primary truncate mb-1">
+                      {product.price}
+                    </div>
+
+                    {/* Product Name */}
+                    <h3 className="text-xs md:text-sm font-bold text-gray-900 line-clamp-2 mb-1">
+                      {product.name}
+                    </h3>
+
+                    {/* Details */}
+                    <p className="text-[10px] md:text-xs text-gray-600 line-clamp-3">
+                      {product.details}
+                    </p>
                   </div>
-                )}
+
+                  {/* Counter - Right Side */}
+                  <div className=" flex justify-center">
+                    <Counter
+                      initialCount={productQuantities[product.id] || 1}
+                      onCountChange={(newCount) =>
+                        handleCountChange(product.id, newCount)
+                      }
+                    />
+                  </div>
+
+                  {/* Add Button - Full Width */}
+                  <button
+                    onClick={() =>
+                      addToCart(product, productQuantities[product.id] || 1)
+                    }
+                    className="w-full mt-2 flex items-center justify-center gap-1 bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg text-white font-semibold py-2 px-2 rounded-lg transition-all duration-300 active:scale-95 text-xs md:text-sm flex-shrink-0"
+                  >
+                    <ShoppingCart size={16} />
+                    <span className="hidden sm:inline">Add</span>
+                  </button>
+                </div>
               </div>
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
-      </div>
     </>
   );
 };

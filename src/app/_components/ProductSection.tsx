@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import ProductList from "./ProductList";
-import LocationLoader from "../_components/Apploading";
 import Separator from "./Sparator";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Filter, Search, X } from "lucide-react";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import AddProductModal from "./AddProductModal";
 import Alert from "./Alert";
@@ -20,6 +19,7 @@ interface Product {
   details: string;
   categories: string;
 }
+
 interface Category {
   id?: number;
   name: string;
@@ -31,6 +31,7 @@ const ProductSection: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [fetched, setFetched] = useState(false);
   const { isAdmin } = useAdminAuth();
@@ -44,9 +45,7 @@ const ProductSection: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
-  );
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   // ✅ Add/Edit Category
   const handleSaveCategory = async (category: Category) => {
@@ -81,6 +80,7 @@ const ProductSection: React.FC = () => {
     setAlertMessage(isEdit ? "Category updated" : "Category added");
     setShowAlert(true);
     setEditingCategory(null);
+    setShowCategoryModal(false);
   };
 
   const handleEditProduct = (product: Product) => {
@@ -116,7 +116,6 @@ const ProductSection: React.FC = () => {
       );
 
       const data = await res.json();
-
       const existingProduct = products.find((p) => p.id === product.id);
 
       const finalizeSave = (imageBase64: string) => {
@@ -201,7 +200,7 @@ const ProductSection: React.FC = () => {
         const data = await response.json();
 
         setProducts(data.products);
-        setCategories([{ id: -1, name: "All" }, ...data.categories]); // Add "All"
+        setCategories([{ id: -1, name: "All" }, ...data.categories]);
         setFetched(true);
       } catch (err: any) {
         setError(err.message || "Something went wrong");
@@ -215,68 +214,165 @@ const ProductSection: React.FC = () => {
 
   const filteredProducts =
     selectedCategory === "All"
-      ? products
+      ? products.filter((product) =>
+          product.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       : products.filter(
           (product) =>
             product.categories.trim().toLowerCase() ===
-            selectedCategory.trim().toLowerCase()
+              selectedCategory.trim().toLowerCase() &&
+            product.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
-  if (loading) return <Loading variant="grid" message="Loading products..."/>;
+  if (loading) return <Loading variant="grid" message="Loading products..." />;
 
   if (error) {
     return (
-      <div className="text-center py-10 bg-secondary text-red-500">
+      <div className="text-center py-10 text-red-500">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <div
-      className="bg-gradient-to-b from-white via-white to-hovprimary pb-12"
-      id="Products"
-    >
+    <section id="Products" className="w-full py-10 sm:py-10 lg:py-10 bg-gradient-to-b from-white via-white to-hovprimary">
       {showAlert && (
         <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
       )}
 
-      <div className="mb-2 pt-4 flex items-center text-center justify-center gap-2">
-        <label
-          htmlFor="category-select"
-          className="text-lg font-bold text-gray-700 mr-2 italic"
-        >
-          Filter by Category:
-        </label>
-        <select
-          id="category-select"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border border-gray-300 rounded px-2 py-2 text-sm shadow-sm sm:text-sm text-black"
-        >
-          {categories.map((cat, index) => (
-            <option key={index} value={cat.name}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Filter Section */}
+        <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <Filter className="w-5 h-5 text-primary" />
+            <label
+              htmlFor="category-select"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Category:
+            </label>
+            <select
+              id="category-select"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="flex-1 sm:flex-none px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black font-medium"
+            >
+              {categories.map((cat, index) => (
+                <option key={index} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {isAdmin && (
-          <button
-            className="text-white rounded-lg bg-green-500 p-2"
-            onClick={() => setShowModal(true)}
-          >
-            <Plus />
-          </button>
-        )}
+          {/* Search Bar */}
+          <div className="flex-1 sm:flex-none relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {isAdmin && (
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setShowModal(true);
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+            >
+              <Plus size={20} />
+              Add Product
+            </button>
+          )}
+        </div>
+
+        {/* Products List */}
+        <ProductList
+          productList={filteredProducts}
+          onDeleteProduct={handleDeleteProduct}
+          onEditProduct={handleEditProduct}
+        />
       </div>
 
-      <ProductList
-        productList={filteredProducts}
-        onDeleteProduct={handleDeleteProduct}
-        onEditProduct={handleEditProduct}
-      />
+      {/* Admin Categories Section */}
+      {isAdmin && (
+        <div className="mt-7 pt-7 border-none">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-white/60 py-8 rounded-lg shadow-2xl">
+            {/* Categories Header */}
+            <div className="flex items-center justify-between mb-8 bg-white p-4 rounded-lg shadow-md">
+              <h2 className="text-3xl font-bold text-gray-900">Manage Categories</h2>
+              <button
+                onClick={() => {
+                  setEditingCategory(null);
+                  setShowCategoryModal(true);
+                }}
+                className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-lg transition-all"
+              >
+                <Plus size={20} />
+                Add Category
+              </button>
+            </div>
 
+            {/* Categories Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories
+                .filter((cat) => cat.name !== "All")
+                .map((category, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg border-2 border-gray-200 hover:border-primary p-4 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-900 font-semibold capitalize text-lg">
+                        {category.name}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingCategory({
+                              id: category.id,
+                              name: category.name,
+                            });
+                            setShowCategoryModal(true);
+                          }}
+                          className="flex items-center justify-center size-9 bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-all"
+                          title="Edit category"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCategoryToDelete(category);
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="flex items-center justify-center size-9 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-lg transition-all"
+                          title="Delete category"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
       {showModal && (
         <AddProductModal
           onClose={() => {
@@ -284,66 +380,9 @@ const ProductSection: React.FC = () => {
             setEditingProduct(null);
           }}
           onSave={handleSaveProduct}
-          categories={categories.map((c) => c.name)}
+          categories={categories.map((c) => c.name).filter((n) => n !== "All")}
           initialProduct={editingProduct}
         />
-      )}
-
-      {isAdmin && (
-        <div className="px-4 py-4 bg-white">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-extrabold mb-4 text-gray-700 capitalize">
-              Categories:
-            </h2>
-            <button
-              className="text-white rounded-lg bg-green-500 p-2 mb-2"
-              onClick={() => {
-                setEditingCategory(null);
-                setShowCategoryModal(true);
-              }}
-            >
-              <Plus />
-            </button>
-          </div>
-
-          <ul className="space-y-2 mb-8">
-            {categories
-              .filter((cat) => cat.name !== "All")
-              .map((category, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between items-center bg-blue-50 p-3 rounded shadow-sm border border-gray-200"
-                >
-                  <span className="text-gray-800 font-medium capitalize">
-                    {category.name}
-                  </span>
-                  <div className="space-x-2 flex gap-1">
-                    <button
-                      className="text-white rounded-lg bg-blue-500 p-2"
-                      onClick={() => {
-                        setEditingCategory({
-                          id: category.id,
-                          name: category.name,
-                        });
-                        setShowCategoryModal(true);
-                      }}
-                    >
-                      <Pencil />
-                    </button>
-                    <button
-                      className="text-white rounded-lg bg-red-500 p-2"
-                      onClick={() => {
-                        setCategoryToDelete(category);
-                        setShowDeleteConfirm(true);
-                      }}
-                    >
-                      <Trash2 />
-                    </button>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </div>
       )}
 
       {showCategoryModal && (
@@ -353,6 +392,7 @@ const ProductSection: React.FC = () => {
           initialCategory={editingCategory ?? undefined}
         />
       )}
+
       {showDeleteConfirm && categoryToDelete && (
         <ConfirmationModal
           text={`Are you sure you want to delete the category "${categoryToDelete.name}"?`}
@@ -361,9 +401,10 @@ const ProductSection: React.FC = () => {
             setShowDeleteConfirm(false);
             setCategoryToDelete(null);
           }}
+          isDangerous={true}
         />
       )}
-    </div>
+    </section>
   );
 };
 

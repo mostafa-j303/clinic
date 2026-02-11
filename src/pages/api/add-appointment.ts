@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  const session = await requireAdmin(req, res);
   if (!session) return;
 
-  const { name, price, offerPrice, duration, details } = req.body;
+  const { name, price, offerprice, duration, details } = req.body;
 
   if (!name || !price ) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         VALUES ($1, $2, $3, $4)
         RETURNING id
       `,
-      [name, price, offerPrice, duration]
+      [name, price, offerprice, duration]
     );
 
     const appointmentId = insertAppointment.rows[0].id;

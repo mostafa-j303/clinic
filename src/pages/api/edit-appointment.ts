@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  const session = await requireAdmin(req, res);
   if (!session) return;
 
-  const { id, name, price, offerPrice, duration, details } = req.body;
+  const { id, name, price, offerprice, duration, details } = req.body;
 
   if (!id || !name || !price ) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         SET name = $1, price = $2, offer_price = $3, duration = $4
         WHERE id = $5
       `,
-      [name, price, offerPrice, duration, id]
+      [name, price, offerprice, duration, id]
     );
 
     // Clear existing details

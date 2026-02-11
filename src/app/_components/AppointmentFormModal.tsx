@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { X, Save } from "lucide-react";
 
 type AppointmentFormModalProps = {
   isOpen: boolean;
@@ -15,27 +16,26 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
 }) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [offerprice, setofferprice] = useState("");
+  const [offerprice, setOfferprice] = useState("");
   const [duration, setDuration] = useState("");
   const [details, setDetails] = useState("");
 
- useEffect(() => {
-  if (initialData) {
-    setName(initialData.name || "");
-    setPrice(initialData.price || "");
-    setofferprice(initialData.offerprice || "");
-    setDuration(initialData.duration || "");
-    setDetails(initialData.details?.join(";\n") || "");
-  } else {
-    // Clear fields when no initialData
-    setName("");
-    setPrice("");
-    setofferprice("");
-    setDuration("");
-    setDetails("");
-  }
-}, [initialData]);
-
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setName(initialData.name || "");
+      setPrice(initialData.price || "");
+      setOfferprice(initialData.offerprice || "");
+      setDuration(initialData.duration || "");
+      setDetails(initialData.details?.join(";\n") || "");
+    } else if (!initialData && isOpen) {
+      // Clear fields when no initialData and modal is open
+      setName("");
+      setPrice("");
+      setOfferprice("");
+      setDuration("");
+      setDetails("");
+    }
+  }, [initialData, isOpen]);
 
   const handleSubmit = () => {
     const formattedDetails = details
@@ -43,15 +43,23 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       .map((d) => d.trim())
       .filter((d) => d !== "");
 
+    // Format prices - add $ if not already present
+    const formatPrice = (priceStr: string) => {
+      if (!priceStr || !priceStr.trim()) return ""; // Return empty string if empty
+      const cleaned = priceStr.trim();
+      return cleaned.startsWith("$") ? cleaned : `${cleaned}`;
+    };
+
     const appointment = {
       id: initialData?.id,
       name,
-      price,
-      offerprice,
+      price: formatPrice(price),
+      offerprice: formatPrice(offerprice), // This will be "" if empty, or "$XX" if filled
       duration,
       details: formattedDetails,
     };
-
+    
+    console.log("Saving appointment:", appointment); // Debug log to see what's being sent
     onSave(appointment);
     onClose();
   };
@@ -59,66 +67,139 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-md shadow-md w-96">
-        <h2 className="text-xl font-bold mb-4 text-gray-700">
-          {initialData ? "Edit" : "Add"} Appointment
-        </h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">
+            {initialData ? "Edit" : "Add"} Appointment
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:bg-white/20 rounded-lg p-1 transition"
+            aria-label="Close modal"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
+        {/* Form */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-4"
+          className="p-6 space-y-4"
         >
-          <input
-            className="w-full p-2 border rounded text-gray-600"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            className="w-full p-2 border rounded text-gray-600"
-            placeholder="Price"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-          />
-          <input
-            className="w-full p-2 border rounded text-gray-600"
-            placeholder="Optional Offer Price"
-            value={offerprice}
-            onChange={(e) => setofferprice(e.target.value)}
-          />
-          <input
-            className="w-full p-2 border rounded text-gray-600"
-            placeholder="Duration (Optional)"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-          <textarea
-            className="w-full p-2 border rounded text-gray-600"
-            placeholder="Details (separate by ; or new line)"
-            rows={4}
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            required
-          />
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Service Name *
+            </label>
+            <input
+              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+              placeholder="e.g., Nutrition Consultation"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
 
-          <div className="flex justify-end gap-2 mt-4">
+          {/* Price Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Price */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Price *
+              </label>
+              <input
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                placeholder="e.g., 50 or $50"
+                value={price}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // Auto-format: if user types a number, add $ prefix
+                  if (val && !val.startsWith("$")) {
+                    // Only add $ if it's a number or number with decimal
+                    if (/^\d+\.?\d*$/.test(val)) {
+                      val = `$${val}`;
+                    }
+                  }
+                  setPrice(val);
+                }}
+                required
+              />
+            </div>
+
+            {/* Offer Price */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Offer Price
+              </label>
+              <input
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                placeholder="Optional"
+                value={offerprice}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // Auto-format: if user types a number, add $ prefix
+                  if (val && !val.startsWith("$")) {
+                    // Only add $ if it's a number or number with decimal
+                    if (/^\d+\.?\d*$/.test(val)) {
+                      val = `$${val}`;
+                    }
+                  }
+                  setOfferprice(val);
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Duration (Optional)
+            </label>
+            <input
+              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+              placeholder="e.g., 30 minutes, 1 hour"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            />
+          </div>
+
+          {/* Details */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Details *
+            </label>
+            <textarea
+              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black resize-none"
+              placeholder="Separate items with semicolon (;) or new line"
+              rows={4}
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Example: Diet plan; Recommendations; Follow-up
+            </p>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded"
+              className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition"
             >
               Cancel
             </button>
             <button
-              type="submit" // ✅ make it submit to trigger form validation
-              className="px-4 py-2 bg-primary text-white rounded"
+              type="submit"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-blue-600 text-white font-semibold rounded-lg hover:shadow-lg transition"
             >
+              <Save size={18} />
               {initialData ? "Update" : "Add"}
             </button>
           </div>
