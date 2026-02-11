@@ -21,6 +21,6 @@ export function openWhishApp(): void {
         "https://apps.apple.com/lb/app/whish-money/id1284243483";
     }, 2000);
   } else {
-    window.open("https://apps.whish.money", "_blank");
+    window.open("https://www.whish.money/whish-app", "_blank");
   }
 }

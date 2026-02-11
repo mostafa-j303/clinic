@@ -1,17 +1,248 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useCart } from "../_context/CartContext";
 import { openWhishApp } from "../utils/openWhishApp";
 import data from "../../../public/data.json";
 import Link from "next/link";
-import LocationLoader from "../_components/Apploading"; 
+import LocationLoader from "../_components/Apploading";
 import Image from "next/image";
 import Alert from "../_components/Alert";
 import { useSettings } from "../_context/SettingsContext";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import {
+  MapPin,
+  Trash2,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+  Phone as PhoneIcon,
+  User,
+  MapPinIcon,
+  DollarSign,
+} from "lucide-react";
 
-export default function CartPage(){
+// Memoized Cart Item Component
+const CartItemCard = React.memo(
+  ({
+    item,
+    index,
+    onRemove,
+  }: {
+    item: any;
+    index: number;
+    onRemove: (id: number) => void;
+  }) => (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+      <div className="flex gap-4">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-20 h-20 rounded-lg object-cover"
+        />
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+          <p className="text-sm text-gray-600 mt-1">{item.details}</p>
+          <div className="flex items-center justify-between mt-3">
+            <span className="text-lg font-bold text-blue-600">{item.price}</span>
+            <div className="flex items-center gap-2">
+              <div className="bg-gray-100 px-3 py-1 rounded text-sm font-semibold text-gray-700">
+                Qty: {item.quantity}
+              </div>
+              <button
+                onClick={() => onRemove(item.id)}
+                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                title="Remove item"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+);
+
+CartItemCard.displayName = "CartItemCard";
+
+// Memoized Price Summary Component
+const PriceSummary = React.memo(
+  ({
+    subtotal,
+    discount,
+    delivery,
+    total,
+    minOrder,
+    discountPercentage,
+  }: {
+    subtotal: number;
+    discount: number;
+    delivery: number;
+    total: number;
+    minOrder: number;
+    discountPercentage: number;
+  }) => {
+    const isBelowMinimum = total < minOrder;
+
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
+
+        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Subtotal</span>
+            <span className="font-semibold text-gray-900">
+              ${subtotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Discount ({discountPercentage}%)</span>
+            <span className="font-semibold text-red-600">
+              -${discount.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Delivery Charge</span>
+            <span className="font-semibold text-gray-900">
+              ${delivery.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mb-4">
+          <span className="font-bold text-gray-900">Total</span>
+          <span className="text-2xl font-bold text-blue-600">
+            ${total.toFixed(2)}
+          </span>
+        </div>
+
+        {isBelowMinimum && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex gap-2">
+            <AlertCircle size={18} className="text-yellow-700 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-yellow-700">
+              Minimum order is <span className="font-bold">${minOrder.toFixed(2)}</span>. 
+              Add <span className="font-bold">${(minOrder - total).toFixed(2)}</span> more to proceed.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+PriceSummary.displayName = "PriceSummary";
+
+// Memoized Location Section Component
+const LocationSection = React.memo(
+  ({
+    locationFetched,
+    locationLink,
+    isFetchingLocation,
+    onFetchLocation,
+    onClearLocation,
+  }: {
+    locationFetched: boolean;
+    locationLink: string | null;
+    isFetchingLocation: boolean;
+    onFetchLocation: () => void;
+    onClearLocation: () => void;
+  }) => (
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <MapPin size={20} className="text-blue-600" />
+        Delivery Location
+      </h3>
+
+      {locationFetched ? (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle2 size={20} className="text-green-600" />
+            <span className="font-semibold text-green-900">
+              Location Fetched Successfully
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Link
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-center transition-colors"
+              target="_blank"
+              href={locationLink || "#"}
+            >
+              View on Map
+            </Link>
+            <button
+              onClick={onClearLocation}
+              className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onFetchLocation}
+          disabled={isFetchingLocation}
+          className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
+            isFetchingLocation
+              ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          {isFetchingLocation ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Fetching Location...
+            </>
+          ) : (
+            <>
+              <MapPin size={20} />
+              Fetch My Location
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  )
+);
+
+LocationSection.displayName = "LocationSection";
+
+// Memoized Form Input Component
+const FormInput = React.memo(
+  ({
+    label,
+    icon: Icon,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+  }: {
+    label: string;
+    icon: any;
+    value: string;
+    onChange: (e: any) => void;
+    placeholder: string;
+    type?: string;
+  }) => (
+    <div>
+      <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+        <Icon size={18} className="text-blue-600" />
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all"
+      />
+    </div>
+  )
+);
+
+FormInput.displayName = "FormInput";
+
+export default function CartPage() {
   // ────── Hooks ──────
   const { cart, setCart } = useCart();
   const { settings, loading, error } = useSettings();
@@ -50,12 +281,12 @@ export default function CartPage(){
     }
   }, []);
 
-  // ────── Handlers ──────
-  const handleRemove = (productId: number) => {
+  // ────── Handlers (Memoized) ──────
+  const handleRemove = useCallback((productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
-  };
+  }, [setCart]);
 
-  const fetchLocation = () => {
+  const fetchLocation = useCallback(() => {
     if (navigator.geolocation) {
       setFetchingLocation(true);
       navigator.geolocation.getCurrentPosition(
@@ -69,98 +300,66 @@ export default function CartPage(){
         },
         (error) => {
           if (error.code === error.PERMISSION_DENIED) {
-            alert("Please allow location access to fetch your location.");
+            setAlertMessage("Please allow location access to fetch your location.");
+            setShowAlert(true);
           }
           setFetchingLocation(false);
         }
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      setAlertMessage("Geolocation is not supported by this browser.");
+      setShowAlert(true);
     }
-  };
+  }, []);
 
-  const clearLocation = () => {
+  const clearLocation = useCallback(() => {
     setLocationLink(null);
     setLocationFetched(false);
     localStorage.removeItem("locationLink");
-  };
+  }, []);
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setName(value);
-    localStorage.setItem("name", value);
-  };
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setName(value);
+      localStorage.setItem("name", value);
+    },
+    []
+  );
 
-  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLastName(value);
-    localStorage.setItem("lastName", value);
-  };
+  const handleLastNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setLastName(value);
+      localStorage.setItem("lastName", value);
+    },
+    []
+  );
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setAddress(value);
-    localStorage.setItem("address", value);
-  };
+  const handleAddressChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setAddress(value);
+      localStorage.setItem("address", value);
+    },
+    []
+  );
 
-  const handlePhoneChange = (value: string) => {
+  const handlePhoneChange = useCallback((value: string) => {
     setPhone(value);
     localStorage.setItem("phone", value);
-  };
+  }, []);
+
   const normalizePhone = (input: string): string | null => {
-    // Remove everything except digits and +
     let value = input.replace(/[^\d+]/g, "");
-    // Allow only one +
     if ((value.match(/\+/g) || []).length > 1) return null;
-    // + must be first character
     if (value.includes("+") && !value.startsWith("+")) return null;
-    // Remove +
     value = value.replace("+", "");
-    // Validate length (E.164 recommendation: 6–15 digits)
     if (value.length < 9 || value.length > 15) return null;
     return `+${value}`;
   };
 
-  // const prepareWhatsAppMessage = () => {
-  //   if (!settings) return "#";
-
-  //   const parsedData = {
-  //     discount: parseFloat(settings.discount.replace("$", "")),
-  //     delivery: parseFloat(settings.delivery.replace("$", "")),
-  //   };
-
-  //   const subtotal = cart.reduce(
-  //     (acc, item) =>
-  //       acc + parseFloat(item.price.replace("$", "")) * item.quantity,
-  //     0
-  //   );
-
-  //   const discountAmount = subtotal * (parsedData.discount / 100);
-  //   const total = subtotal - discountAmount + parsedData.delivery;
-
-  //   let message = `Order Details:\n\nName: ${name} ${lastName}\nAddress: ${address}\nPayment Method: ${paymentMethod}\nTotal: $${total.toFixed(
-  //     2
-  //   )}\n\nItems:\n`;
-
-  //   cart.forEach((item) => {
-  //     message += `${item.name} - ${item.quantity} x ${item.price}\n`;
-  //   });
-
-  //   message += `\nSubtotal: $${subtotal.toFixed(2)}`;
-  //   message += `\nDiscount: -$${discountAmount.toFixed(2)}`;
-  //   message += `\nDelivery Charge: $${parsedData.delivery.toFixed(2)}`;
-  //   message += `\nTotal: $${total.toFixed(2)}`;
-
-  //   if (locationFetched && locationLink) {
-  //     message += `\n\nLocation: ${locationLink}`;
-  //   }
-  //   console.log(cart);
-  //   return `https://wa.me/${settings.social.number}?text=${encodeURIComponent(
-  //     message
-  //   )}`;
-  // };
-
-  const sendOrderToDatabase = async () => {
+  const sendOrderToDatabase = useCallback(async () => {
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -182,9 +381,9 @@ export default function CartPage(){
       throw new Error(data.message || "Failed to send order");
     }
     return data;
-  };
+  }, [name, lastName, phone, paymentMethod, address, locationLink, cart]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = useCallback(async () => {
     if (isSubmitting) return;
     if (
       !name ||
@@ -239,9 +438,6 @@ export default function CartPage(){
       setAlertMessage("Order has been sent successfully.");
       setShowAlert(true);
 
-      // const whatsappLink = prepareWhatsAppMessage();
-      // window.open(whatsappLink, "_blank");
-
       setCart([]);
     } catch (error) {
       setAlertMessage("Failed to send order. Please try again.");
@@ -249,283 +445,255 @@ export default function CartPage(){
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, name, lastName, address, locationFetched, phone, cart, settings, sendOrderToDatabase, setCart]);
 
-  // ────── Conditional Rendering inside JSX ──────
+  // ────── Memoized Calculations ──────
+  const calculations = useMemo(() => {
+    if (!settings) return null;
+    const parsedData = {
+      discount: parseFloat(settings.discount.replace("$", "")),
+      delivery: parseFloat(settings.delivery.replace("$", "")),
+    };
+    const subtotal = cart.reduce(
+      (acc, item) =>
+        acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+      0
+    );
+    const discountAmount = subtotal * (parsedData.discount / 100);
+    const total = subtotal - discountAmount + parsedData.delivery;
+    const minOrder = parseFloat(settings.minOrder.replace("$", ""));
+
+    return {
+      subtotal,
+      discountAmount,
+      total,
+      minOrder,
+      discountPercentage: parsedData.discount,
+      delivery: parsedData.delivery,
+    };
+  }, [settings, cart]);
+
+  // ────── Conditional Rendering ──────
   if (loading) return <LocationLoader />;
   if (error) return <div>Error: {error}</div>;
   if (!settings) return <div>No settings found.</div>;
+  if (!calculations) return <div>Loading...</div>;
 
-  const parsedData = {
-    discount: parseFloat(settings.discount.replace("$", "")),
-    delivery: parseFloat(settings.delivery.replace("$", "")),
-  };
-  const subtotal = cart.reduce(
-    (acc, item) =>
-      acc + parseFloat(item.price.replace("$", "")) * item.quantity,
-    0
-  );
-  const discountAmount = subtotal * (parsedData.discount / 100);
-  const total = subtotal - discountAmount + parsedData.delivery;
-  const minOrder = parseFloat(settings.minOrder.replace("$", ""));
+  const isCheckoutDisabled =
+    !name ||
+    !lastName ||
+    !address ||
+    !locationFetched ||
+    !phone ||
+    cart.length < 1 ||
+    isSubmitting;
 
-  // ────── JSX ──────
   return (
-    <section className="bg-gradient-to-br from-hovsecondary via-white to-hovsecondary">
+    <div className="min-h-screen bg-gray-50">
       {showAlert && (
         <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
       )}
 
-      <Link
-        href={"/#home"}
-        className="text-white m-1 bg-primary p-4 rounded-b-2xl  md:hidden"
-      >
-        Return to Home
-      </Link>
-      {/** Conditional rendering of the loader */}
       {fetchingLocation && <LocationLoader />}
 
-      <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="bg-gray-50 rounded-2xl h-full mx-auto max-w-3xl">
-          <header className="text-center">
-            <h1 className="pt-5 text-xl font-bold text-gray-900 sm:text-3xl">
-              Your Cart:
-            </h1>
-            <hr />
-          </header>
-
-          <div className="mt-3">
-            {cart.length === 0 ? (
-              <p className="mt-4 m-4 bg-secondary text-primary pr-9 pl-9 pt-3 pb-3 rounded-xl animate-bounce">
-                No products added yet.
-              </p>
-            ) : (
-              <ul className="space-y-2 max-h-56 overflow-x-scroll mx-4">
-                {cart.map((item, index) => (
-                  <li
-                    key={index}
-                    className="p-3 m-1 rounded-md bg-hovprimary flex items-center gap-4"
-                  >
-                    <img
-                      src={item.image}
-                      alt=""
-                      className="w-16 h-16 rounded object-fill"
-                    />
-                    <div>
-                      <h1 className="text-sm text-gray-900">{item.name}</h1>
-                      <dl className="mt-0.5 space-y-px text-[10px] text-gray-600">
-                        <div>{item.details}</div>
-                      </dl>
-                      <h3 className="text-black">{item.price}</h3>
-                    </div>
-                    <div className="flex flex-1 items-center justify-end gap-2">
-                      <form>
-                        <label
-                          htmlFor={`Line${index + 1}Qty`}
-                          className="sr-only"
-                        >
-                          Quantity
-                        </label>
-                        <input
-                          readOnly
-                          disabled
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          id={`Line${index + 1}Qty`}
-                          className="h-8 w-12 rounded border-gray-200 bg-gray-50 p-0 text-center text-xs text-gray-600 [-moz-appearance:_textfield] focus:outline-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                        />
-                      </form>
-                      <button
-                        onClick={() => handleRemove(item.id)}
-                        className="bg-secondary p-2 rounded-xl text-gray-600 hover:text-red-600 transition duration-500"
-                      >
-                        <span className="sr-only">Remove item</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="h-4 w-4"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="bg-gray-200 rounded-b-2xl  flex justify-center text-center border-t border-gray-100 p-2 pt-8">
-              <div className="w-screen max-w-lg space-y-4">
-                <div>
-                  <dl className="space-y-0.5 text-sm text-gray-700">
-                    <div className="flex justify-between">
-                      <dt>Subtotal</dt>
-                      <dd>${subtotal.toFixed(2)}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt>Delivery Charge</dt>
-                      <dd>${parsedData.delivery.toFixed(2)}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt>Discount ({parsedData.discount}%)</dt>
-                      <dd>-${discountAmount.toFixed(2)}</dd>
-                    </div>
-                    <div className="flex justify-between !text-base font-medium">
-                      <dt>Total</dt>
-                      <dd>${total.toFixed(2)}</dd>
-                    </div>
-                    <div>
-                      <dt className="italic font-medium">
-                        {" "}
-                        ⚠️ Total must be at least ${minOrder.toFixed(2)} to
-                        proceed with checkout.
-                      </dt>
-                    </div>
-                  </dl>
-                </div>
-                <div className="flex flex-col">
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={handleNameChange}
-                    className="border text-black p-2 rounded-t outline-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Enter your last name"
-                    value={lastName}
-                    onChange={handleLastNameChange}
-                    className="border border-t-gray-400 p-2 text-black outline-none "
-                  />
-                  <PhoneInput
-                    country={"lb"}
-                    value={phone}
-                    onChange={handlePhoneChange}
-                    inputProps={{
-                      name: "phone",
-                      required: true,
-                    }}
-                    dropdownClass="custom-dropdown"
-                    enableSearch
-                    containerClass="w-full"
-                    inputClass="!w-full !py-2 !pl-12 !text-black !border !rounded"
-                  />
-
-                  <textarea
-                    placeholder="Enter your address detail"
-                    value={address}
-                    onChange={handleAddressChange}
-                    className=" p-2 text-black rounded-b border border-t-gray-400 outline-none"
-                  ></textarea>
-                  <div className="mt-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payment Method
-                    </label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="p-2 text-black border rounded w-full"
-                    >
-                      <option value="Cash">Cash</option>
-                      <option value="Wish Money">Wish Money</option>
-                    </select>
-                  </div>
-                  {paymentMethod === "Wish Money" && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-red-800 text-sm leading-4">
-                        {" "}
-                        Pay to wish Account:
-                        <span className="block md:inline">
-                          {settings.social.wishnb}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={openWhishApp}
-                        className="p-2 rounded transition hover:opacity-80"
-                      >
-                        <Image
-                          className="rounded-md w-auto h-auto"
-                          src={settings.images.whishlogo}
-                          alt="Open Whish"
-                          width={40}
-                          height={50}
-                        />
-                      </button>
-                    </div>
-                  )}
-                  <div className="mt-2 flex space-x-2">
-                    <button
-                      onClick={fetchLocation}
-                      className="bg-primary text-white text-xs p-2 rounded disabled:opacity-50"
-                      disabled={locationFetched}
-                    >
-                      {locationFetched ? "Location Fetched" : "Fetch Location"}
-                    </button>
-                    {locationFetched && (
-                      <button
-                        onClick={clearLocation}
-                        className="bg-red-500 text-white text-xs p-2 rounded"
-                      >
-                        Clear Location
-                      </button>
-                    )}
-                    {locationFetched && (
-                      <Link
-                        className="bg-primary text-white text-xs p-2 pt-3 pb-3 rounded ml-3"
-                        target="_blank"
-                        href={locationLink || "home"}
-                      >
-                        Check Location
-                      </Link>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col space-y-4">
-                  <button
-                    onClick={handleCheckout}
-                    className={`${
-                      !name ||
-                      !lastName ||
-                      !address ||
-                      !locationFetched ||
-                      !phone ||
-                      cart.length < 1 ||
-                      isSubmitting
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-primary hover:bg-hovprimary"
-                    } text-white px-4 py-2 rounded`}
-                    disabled={
-                      !name ||
-                      !lastName ||
-                      !address ||
-                      !locationFetched ||
-                      !phone ||
-                      cart.length < 1 ||
-                      isSubmitting
-                    }
-                  >
-                    {isSubmitting ? "Sending..." : "Send Order"}
-                  </button>
-                </div>
-
-                <h2 className="flex m-0 p-0 relative text-gray-400 text-[12px]">
-                  All Items will be sent via Whatsapp
-                </h2>
-              </div>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+          <p className="text-gray-600 mt-2">
+            {cart.length} {cart.length === 1 ? "item" : "items"} in your cart
+          </p>
         </div>
       </div>
-    </section>
-  );
-};
 
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {cart.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <div className="text-6xl mb-4">🛒</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Add some delicious items to get started!
+            </p>
+            <Link
+              href="/#home"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Continue Shopping
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-4 max-h-[550px] overflow-y-auto pr-2 ">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Order Items
+              </h2>
+              {cart.map((item, index) => (
+                <CartItemCard
+                  key={index}
+                  item={item}
+                  index={index}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Price Summary */}
+              <PriceSummary
+                subtotal={calculations.subtotal}
+                discount={calculations.discountAmount}
+                delivery={calculations.delivery}
+                total={calculations.total}
+                minOrder={calculations.minOrder}
+                discountPercentage={calculations.discountPercentage}
+              />
+
+              {/* Location */}
+              <LocationSection
+                locationFetched={locationFetched}
+                locationLink={locationLink}
+                isFetchingLocation={fetchingLocation}
+                onFetchLocation={fetchLocation}
+                onClearLocation={clearLocation}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Checkout Form */}
+        {cart.length > 0 && (
+          <div className="mt-8 bg-white rounded-lg border border-gray-200 p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Delivery Information
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <FormInput
+                label="First Name"
+                icon={User}
+                value={name}
+                onChange={handleNameChange}
+                placeholder="Enter your first name"
+              />
+              <FormInput
+                label="Last Name"
+                icon={User}
+                value={lastName}
+                onChange={handleLastNameChange}
+                placeholder="Enter your last name"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <PhoneIcon size={18} className="text-blue-600" />
+                Phone Number
+              </label>
+              <PhoneInput
+                country={"lb"}
+                value={phone}
+                onChange={handlePhoneChange}
+                inputProps={{
+                  name: "phone",
+                  required: true,
+                }}
+                dropdownClass="custom-dropdown"
+                enableSearch
+                containerClass="w-full"
+                inputClass="!w-full !py-2.5 !pl-12 !text-gray-900 !border !rounded-lg !focus:ring-2 !focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <MapPinIcon size={18} className="text-blue-600" />
+                Delivery Address
+              </label>
+              <textarea
+                placeholder="Enter your complete address with details"
+                value={address}
+                onChange={handleAddressChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 resize-none h-24 transition-all"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <DollarSign size={18} className="text-blue-600" />
+                Payment Method
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all"
+              >
+                <option value="Cash">Cash</option>
+                <option value="Wish Money">Wish Money</option>
+              </select>
+            </div>
+
+            {paymentMethod === "Wish Money" && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-4">
+                <Image
+                  className="rounded-lg flex-shrink-0"
+                  src={settings.images.whishlogo}
+                  alt="Wish Logo"
+                  width={50}
+                  height={50}
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Pay to Wish Account:
+                  </p>
+                  <p className="text-lg font-bold text-blue-600 mt-1">
+                    {settings.social.wishnb}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={openWhishApp}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0"
+                >
+                  Open App
+                </button>
+              </div>
+            )}
+
+            {/* Checkout Button */}
+            <button
+              onClick={handleCheckout}
+              disabled={isCheckoutDisabled}
+              className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 transition-all ${
+                isCheckoutDisabled
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Sending Order...
+                </>
+              ) : (
+                <>
+                  <Lock size={20} />
+                  Send Order via WhatsApp
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-sm text-gray-600 mt-4 flex items-center justify-center gap-2">
+              <CheckCircle2 size={16} className="text-green-600" />
+              All items will be confirmed via WhatsApp
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
