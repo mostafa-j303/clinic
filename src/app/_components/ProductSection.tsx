@@ -40,6 +40,12 @@ const ProductSection: React.FC = () => {
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+   const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -77,7 +83,7 @@ const ProductSection: React.FC = () => {
       }
     });
 
-    setAlertMessage(isEdit ? "Category updated" : "Category added");
+    showAlertMessage(isEdit ? "Category updated" : "Category added", "success");
     setShowAlert(true);
     setEditingCategory(null);
     setShowCategoryModal(false);
@@ -134,8 +140,9 @@ const ProductSection: React.FC = () => {
             : [...prev, updatedProduct]
         );
 
-        setAlertMessage(
-          isEdit ? "Product updated successfully" : "Product added successfully"
+        showAlertMessage(
+          isEdit ? "Product updated successfully" : "Product added successfully",
+          "success"
         );
         setShowAlert(true);
       };
@@ -176,15 +183,17 @@ const ProductSection: React.FC = () => {
       );
       const data = await res.json();
       if (!res.ok) {
-        alert(data.message || "Failed to delete category");
+        showAlertMessage(data.message || "Failed to delete category", "error");
+        setShowAlert(true);
         return;
       }
       setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
-      setAlertMessage("Category deleted successfully");
+      showAlertMessage("Category deleted successfully", "success");
       setShowAlert(true);
     } catch (error) {
       console.error("Failed to delete category:", error);
-      alert("An error occurred while deleting the category.");
+      showAlertMessage("An error occurred while deleting the category", "error");
+      setShowAlert(true);
     } finally {
       setShowDeleteConfirm(false);
       setCategoryToDelete(null);
@@ -237,7 +246,7 @@ const ProductSection: React.FC = () => {
   return (
     <section id="Products" className="w-full py-10 sm:py-10 lg:py-10 bg-gradient-to-b from-white via-white to-hovprimary">
       {showAlert && (
-        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

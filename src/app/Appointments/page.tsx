@@ -252,6 +252,12 @@ export default function AppointmentRequestsAdmin() {
 
   const [requests, setRequests] = useState<AppointmentRequest[]>([]);
   const [alert, setAlert] = useState<string | null>(null);
+   const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlert(message);
+    setAlertType(type);
+  };
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -271,7 +277,7 @@ export default function AppointmentRequestsAdmin() {
         if (!res.ok) throw new Error(data.message || "Failed to load requests");
         setRequests(data.requests);
       } catch (err: any) {
-        setAlert(err.message || "Failed to load appointment requests");
+        showAlertMessage(err.message || "Failed to load appointment requests", "error");
       } finally {
         setIsLoading(false);
       }
@@ -301,7 +307,7 @@ export default function AppointmentRequestsAdmin() {
         prev.map((r) => (r.id === id ? { ...r, status } : r))
       );
     } catch (err: any) {
-      setAlert(err.message);
+      showAlertMessage(err.message || "Failed to update status", "error");
     } finally {
       setUpdatingId(null);
     }
@@ -325,9 +331,9 @@ export default function AppointmentRequestsAdmin() {
       }
 
       setRequests((prev) => prev.filter((r) => r.id !== confirmId));
-      setAlert("Request deleted successfully");
+      showAlertMessage("Request deleted successfully", "success");
     } catch (err: any) {
-      setAlert(err.message);
+      showAlertMessage(err.message || "Failed to delete request", "error");
     } finally {
       setConfirmId(null);
     }
@@ -451,7 +457,7 @@ export default function AppointmentRequestsAdmin() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {alert && <Alert value={alert} onClose={() => setAlert(null)} />}
+      {alert && <Alert value={alert} type={alertType} onClose={() => setAlert(null)} />}
 
       {confirmId && (
         <ConfirmationModal

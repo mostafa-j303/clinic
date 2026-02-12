@@ -43,6 +43,12 @@ function Appointment() {
   const [appointmentToDelete, setAppointmentToDelete] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
 
   const openAddModal = () => {
     setEditData(null);
@@ -91,12 +97,13 @@ function Appointment() {
 
       setFormOpen(false);
       setEditData(null);
-      setAlertMessage(
-        `Appointment ${isEdit ? "updated" : "added"} successfully`
-      );
+      showAlertMessage(
+        `Appointment ${isEdit ? "updated" : "added"} successfully`,
+        "success"
+       );
     } catch (err) {
       console.error("Failed to save appointment", err);
-      setAlertMessage("An error occurred while saving the appointment.");
+      showAlertMessage("An error occurred while saving the appointment.", "error");
     }
   };
 
@@ -137,7 +144,7 @@ function Appointment() {
   const handleSubmit = async () => {
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
-      setAlertMessage("Invalid phone number. Please check the format.");
+      showAlertMessage("Invalid phone number. Please check the format.", "error");
       return;
     }
     localStorage.setItem("name", name);
@@ -168,11 +175,11 @@ function Appointment() {
         });
 
         if (!res.ok) throw new Error("Insert failed");
-        setAlertMessage("Appointment request sent successfully.");
+        showAlertMessage("Appointment request sent successfully.", "success");
         closeModal();
       } catch (err) {
         console.error(err);
-        setAlertMessage("Failed to submit appointment. Please try again.");
+        showAlertMessage("Failed to submit appointment. Please try again.", "error");
       } finally {
         setIsSubmitting(false);
       }
@@ -202,7 +209,7 @@ function Appointment() {
       );
     } catch (error) {
       console.error("Delete failed", error);
-      alert("Failed to delete appointment.");
+      showAlertMessage("Failed to delete appointment.", "error");
     } finally {
       setShowConfirmation(false);
       setAppointmentToDelete(null);
@@ -345,7 +352,7 @@ function Appointment() {
       )}
 
       {alertMessage && (
-        <Alert value={alertMessage} onClose={() => setAlertMessage(null)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setAlertMessage(null)} />
       )}
 
       {/* Booking Modal */}

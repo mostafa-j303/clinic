@@ -258,6 +258,12 @@ export default function CartPage() {
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+   const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -300,14 +306,14 @@ export default function CartPage() {
         },
         (error) => {
           if (error.code === error.PERMISSION_DENIED) {
-            setAlertMessage("Please allow location access to fetch your location.");
+            showAlertMessage("Please allow location access to fetch your location.", "error");
             setShowAlert(true);
           }
           setFetchingLocation(false);
         }
       );
     } else {
-      setAlertMessage("Geolocation is not supported by this browser.");
+      showAlertMessage("Geolocation is not supported by this browser.", "error");
       setShowAlert(true);
     }
   }, []);
@@ -393,8 +399,9 @@ export default function CartPage() {
       !phone ||
       cart.length < 1
     ) {
-      setAlertMessage(
-        "Please fill out all required fields and fetch your location."
+      showAlertMessage(
+        "Please fill out all required fields and fetch your location.",
+        "error"
       );
       setShowAlert(true);
       return;
@@ -415,10 +422,11 @@ export default function CartPage() {
     const total = subtotal - discountAmount + parsedData.delivery;
 
     if (total < minOrder) {
-      setAlertMessage(
+      showAlertMessage(
         `Minimum order is $${minOrder.toFixed(
           2
-        )}. Your total is $${total.toFixed(2)}.`
+        )}. Your total is $${total.toFixed(2)}.`,
+        "error"
       );
       setShowAlert(true);
       return;
@@ -426,7 +434,7 @@ export default function CartPage() {
 
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
-      setAlertMessage("Please enter a valid phone number.");
+      showAlertMessage("Please enter a valid phone number.", "error");
       setShowAlert(true);
       return;
     }
@@ -435,12 +443,12 @@ export default function CartPage() {
       setIsSubmitting(true);
       await sendOrderToDatabase();
 
-      setAlertMessage("Order has been sent successfully.");
+      showAlertMessage("Order has been sent successfully.", "success");
       setShowAlert(true);
 
       setCart([]);
     } catch (error) {
-      setAlertMessage("Failed to send order. Please try again.");
+      showAlertMessage("Failed to send order. Please try again.", "error");
       setShowAlert(true);
     } finally {
       setIsSubmitting(false);
@@ -491,7 +499,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
-        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
 
       {fetchingLocation && <LocationLoader />}

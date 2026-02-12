@@ -303,6 +303,12 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+   const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
 
@@ -320,7 +326,7 @@ export default function OrdersPage() {
         if (!res.ok) throw new Error(data.message || "Failed to fetch orders");
         setOrders(data.orders);
       } catch (err: any) {
-        setAlertMessage(err.message);
+        showAlertMessage(err.message || "Failed to fetch orders", "error");
         setShowAlert(true);
       }
     };
@@ -395,10 +401,10 @@ export default function OrdersPage() {
         throw new Error(data.message || "Failed to delete order");
       }
       setOrders((prev) => prev.filter((order) => order.id !== orderToDelete));
-      setAlertMessage("Order deleted successfully");
+      showAlertMessage("Order deleted successfully", "success");
       setShowAlert(true);
     } catch (err: any) {
-      setAlertMessage(err.message);
+      showAlertMessage(err.message || "Failed to delete order", "error");
       setShowAlert(true);
     } finally {
       setShowConfirmModal(false);
@@ -503,7 +509,7 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
-        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
       {showConfirmModal && (
         <ConfirmationModal

@@ -96,6 +96,13 @@ export default function SettingsPage() {
 
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+ const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
+
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -136,10 +143,10 @@ export default function SettingsPage() {
 
     setIsSaving(false);
     if (!res.ok) {
-      setAlertMessage("Failed to update settings");
+      showAlertMessage("Failed to update settings", "error");
       setShowAlert(true);
     } else {
-      setAlertMessage("Settings updated successfully!");
+      showAlertMessage("Settings updated successfully!", "success");
       setShowAlert(true);
       setSettings?.({
         ...settings,
@@ -174,7 +181,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
-        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
 
       {/* Header */}

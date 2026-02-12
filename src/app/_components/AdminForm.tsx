@@ -60,6 +60,7 @@ const AdminForm = ({ onClose }: { onClose: () => void }) => {
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       {showAlert && (
         <Alert 
+          type={alertType}
           value={alertMessage} 
           onClose={() => setShowAlert(false)}
         />

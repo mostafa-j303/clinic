@@ -92,7 +92,7 @@ const Alert: React.FC<AlertProps> = ({
       {/* Alert Container */}
       <div
         role="alert"
-        className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${
+        className={`fixed top-4 right-4 z-[51] transform transition-all duration-300 ${
           isClosing ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
         }`}
       >

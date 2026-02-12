@@ -63,6 +63,12 @@ const ProductList: React.FC<ProductListProps> = ({
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+   const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+  const showAlertMessage = (message: string, type: "success" | "error" = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+  };
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -81,15 +87,15 @@ const ProductList: React.FC<ProductListProps> = ({
 
       if (res.ok) {
         onDeleteProduct(productToDelete.id);
-        setAlertMessage("Product deleted successfully");
+        showAlertMessage("Product deleted successfully", "success");
         setShowAlert(true);
       } else {
-        setAlertMessage("Failed to delete product");
+        showAlertMessage("Failed to delete product", "error");
         setShowAlert(true);
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      setAlertMessage("An error occurred while deleting the product");
+      showAlertMessage("An error occurred while deleting the product", "error");
       setShowAlert(true);
     } finally {
       setShowConfirmation(false);
@@ -127,7 +133,7 @@ const ProductList: React.FC<ProductListProps> = ({
   return (
     <>
       {showAlert && (
-        <Alert value={alertMessage} onClose={() => setShowAlert(false)} />
+        <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
       {showConfirmation && productToDelete && (
         <ConfirmationModal
