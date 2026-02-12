@@ -68,25 +68,18 @@ const ProductSection: React.FC = () => {
 
     if (!res.ok) {
       console.error("Failed to save category");
+      showAlertMessage("Failed to save category", "error");
+      setShowAlert(true);
       return;
     }
-
-    const data = await res.json();
-
-    setCategories((prev) => {
-      if (isEdit) {
-        return prev.map((cat) =>
-          cat.id === category.id ? { ...cat, name: category.name } : cat
-        );
-      } else {
-        return [...prev, { id: data.id, name: category.name }];
-      }
-    });
 
     showAlertMessage(isEdit ? "Category updated" : "Category added", "success");
     setShowAlert(true);
     setEditingCategory(null);
     setShowCategoryModal(false);
+    
+    // Refetch categories from backend to keep state in sync with server
+    setFetched(false);
   };
 
   const handleEditProduct = (product: Product) => {
@@ -187,9 +180,11 @@ const ProductSection: React.FC = () => {
         setShowAlert(true);
         return;
       }
-      setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
       showAlertMessage("Category deleted successfully", "success");
       setShowAlert(true);
+      
+      // Refetch categories from backend to keep state in sync with server
+      setFetched(false);
     } catch (error) {
       console.error("Failed to delete category:", error);
       showAlertMessage("An error occurred while deleting the category", "error");
