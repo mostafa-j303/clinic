@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       delivery,
     } = req.body;
 
+    
     const pool = await poolPromise;
 
     await pool.query(
