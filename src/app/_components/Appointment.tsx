@@ -12,6 +12,7 @@ import Alert from "./Alert";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Loading from "./Loding";
+import { generateAppointmentEmailHTML } from "../utils/emailTemplates";
 
 type AppointmentType = {
   id: number;
@@ -175,6 +176,40 @@ function Appointment() {
         });
 
         if (!res.ok) throw new Error("Insert failed");
+
+        //Mail sending logic starts here
+        // Send confirmation email to admin
+        if (settings && settings.social.mail) {
+          try {
+            const emailResponse = await fetch("/api/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                to: settings.social.mail,
+                subject: `New Appointment Booking from ${name} ${lastName}`,
+                htmlContent: generateAppointmentEmailHTML({
+                  customerName: `${name} ${lastName}`,
+                  customerPhone: normalizedPhone,
+                  appointmentName: selectedAppointment.name,
+                  appointmentDate: date,
+                  price: priceUsed,
+                  paymentMethod,
+                }),
+                type: 'appointment',
+                recipientName: 'Admin',
+              }),
+            });
+
+            if (!emailResponse.ok) {
+              console.error('Failed to send appointment confirmation email');
+            }
+          } catch (emailError) {
+            console.error('Error sending appointment email:', emailError);
+            // Don't fail the booking if email fails
+          }
+        }
+        //mail sending logic ends here
+
         showAlertMessage("Appointment request sent successfully.", "success");
         closeModal();
       } catch (err) {

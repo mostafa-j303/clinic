@@ -21,6 +21,7 @@ import {
   MapPinIcon,
   DollarSign,
 } from "lucide-react";
+import { generateOrderEmailHTML } from "../utils/emailTemplates";
 
 // Memoized Cart Item Component
 const CartItemCard = React.memo(
@@ -443,10 +444,64 @@ export default function CartPage() {
       setIsSubmitting(true);
       await sendOrderToDatabase();
 
+
+      // Calculate order details for email
+      const parsedData = {
+        discount: parseFloat(settings.discount.replace("$", "")),
+        delivery: parseFloat(settings.delivery.replace("$", "")),
+      };
+      const subtotal = cart.reduce(
+        (acc, item) =>
+          acc + parseFloat(item.price.replace("$", "")) * item.quantity,
+        0
+      );
+      const discountAmount = subtotal * (parsedData.discount / 100);
+      const total = subtotal - discountAmount + parsedData.delivery;
+      
+      //Mail sending logic starts here
+      // Send confirmation email to admin
+      if (settings.social.mail) {
+        try {
+          const emailResponse = await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: settings.social.mail,
+              subject: `New Order from ${name} ${lastName}`,
+              htmlContent: generateOrderEmailHTML({
+                customerName: `${name} ${lastName}`,
+                customerPhone: phone,
+                address,
+                items: cart.map(item => ({
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                })),
+                subtotal,
+                discount: discountAmount,
+                delivery: parsedData.delivery,
+                total,
+                paymentMethod,
+              }),
+              type: 'order',
+              recipientName: 'Admin',
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            console.error('Failed to send order confirmation email');
+          }
+        } catch (emailError) {
+          console.error('Error sending order email:', emailError);
+          // Don't fail the order if email fails
+        }
+      }
+      //mail sending logic ends here
+
       showAlertMessage("Order has been sent successfully.", "success");
       setShowAlert(true);
 
-      setCart([]);
+     setCart([]);
     } catch (error) {
       showAlertMessage("Failed to send order. Please try again.", "error");
       setShowAlert(true);
