@@ -638,7 +638,7 @@ export default function CartPage() {
             </div>
 
             {paymentMethod === "Wish Money" && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-4">
+              <div className="flex-col lg:flex-row md:flex-row bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-4">
                 <Image
                   className="rounded-lg flex-shrink-0"
                   src={settings.images.whishlogo}
