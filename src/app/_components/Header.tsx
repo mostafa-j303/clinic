@@ -1,7 +1,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { ShoppingCart, Menu, X, LogOut, Settings, ClipboardList } from "lucide-react";
+import {
+  ShoppingCart,
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  ClipboardList,
+  User,
+} from "lucide-react";
 import { useCart } from "../_context/CartContext";
 import Cart from "../_components/Cart";
 import Link from "next/link";
@@ -9,6 +17,7 @@ import { useSettings } from "../_context/SettingsContext";
 import LocationLoader from "./Apploading";
 import AdminForm from "./AdminForm";
 import { useAdminAuth } from "../_context/AdminAuthContext";
+import { useSession, signOut } from "next-auth/react";
 
 const Header: React.FC = () => {
   const { cart } = useCart();
@@ -19,6 +28,8 @@ const Header: React.FC = () => {
 
   const { isAdmin, logout } = useAdminAuth();
   const { settings, loading, error } = useSettings();
+
+  const { data: clientSession } = useSession();
 
   const toggleCart = () => setIsCartOpen((prev) => !prev);
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
@@ -53,11 +64,18 @@ const Header: React.FC = () => {
   const adminLinks = [
     { href: "/Setting", label: "Setting", icon: Settings },
     { href: "/Orders", label: "Orders", icon: ShoppingCart },
-    { href: "/Appointments", label: "Appointment Requests", icon: ClipboardList },
+    {
+      href: "/Appointments",
+      label: "Appointment Requests",
+      icon: ClipboardList,
+    },
   ];
 
   return (
-    <header id="home" className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
+    <header
+      id="home"
+      className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md"
+    >
       <div className="flex h-[70px] items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Hamburger Menu Button */}
         <button
@@ -108,6 +126,40 @@ const Header: React.FC = () => {
             <ShoppingCart size={18} />
             <span className="hidden sm:inline">({cart?.length || 0})</span>
           </button>
+
+          {/* Client Auth */}
+          {clientSession ? (
+            <div className="relative group">
+              <button className="text-gray-500 hover:text-gray-700 flex items-center gap-1 px-3 py-2 text-sm">
+                {clientSession.user?.name?.split(" ")[0]}
+              </button>
+              <ul className="absolute right-0 mt-0 w-40 bg-white shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <li>
+                  <Link
+                    href="/client-dashboard"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    My Profile
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Sign Out
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <Link
+              href="/client-portal"
+              className="text-sm text-gray-500 hover:text-gray-700 px-3 py-2"
+            >
+              Client Login
+            </Link>
+          )}
 
           {/* Desktop Admin Section */}
           <div className="hidden md:flex items-center gap-2">

@@ -11,6 +11,7 @@ import { AdminAuthProvider } from "./_context/AdminAuthContext";
 import { Suspense, useEffect } from "react";
 import AppLoading from "./_components/Apploading";
 import { useSettings } from "./_context/SettingsContext";
+import { SessionProvider } from "next-auth/react";
 
 const inter = Roboto({ subsets: ["latin"], weight: "700" });
 
@@ -20,18 +21,21 @@ function AppContent({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {settings, loading } = useSettings();
+  const { settings, loading } = useSettings();
 
   useEffect(() => {
-  if (!settings?.colors) return;
+    if (!settings?.colors) return;
 
-  const root = document.documentElement;
+    const root = document.documentElement;
 
-  root.style.setProperty("--color-primary", settings.colors.primary);
-  root.style.setProperty("--color-hovprimary", settings.colors.hovprimary);
-  root.style.setProperty("--color-secondary", settings.colors.secondary);
-  root.style.setProperty("--color-hovsecondary", settings.colors.hovsecondary);
-}, [settings]);
+    root.style.setProperty("--color-primary", settings.colors.primary);
+    root.style.setProperty("--color-hovprimary", settings.colors.hovprimary);
+    root.style.setProperty("--color-secondary", settings.colors.secondary);
+    root.style.setProperty(
+      "--color-hovsecondary",
+      settings.colors.hovsecondary
+    );
+  }, [settings]);
 
   // Show loading screen while settings are being fetched
   if (loading) {
@@ -41,9 +45,7 @@ function AppContent({
   return (
     <>
       <Header />
-      <main className="pt-[70px]">
-        {children}
-      </main>
+      <main className="pt-[70px]">{children}</main>
       <ScrollToTop />
       <Footer />
     </>
@@ -59,15 +61,17 @@ function RootLayoutContent({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CartContextProvider>
-          <SettingsProvider>
-            <AdminAuthProvider>
-              <Suspense fallback={<AppLoading />}>
-                <AppContent>{children}</AppContent>
-              </Suspense>
-            </AdminAuthProvider>
-          </SettingsProvider>
-        </CartContextProvider>
+        <SessionProvider>
+          <CartContextProvider>
+            <SettingsProvider>
+              <AdminAuthProvider>
+                <Suspense fallback={<AppLoading />}>
+                  <AppContent>{children}</AppContent>
+                </Suspense>
+              </AdminAuthProvider>
+            </SettingsProvider>
+          </CartContextProvider>
+        </SessionProvider>
       </body>
     </html>
   );

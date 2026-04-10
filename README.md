@@ -45,3 +45,5 @@ the back up files are in the misso-clinic folder .
 
 to change vercel branch : go to vercel project --> setting --> Environments --> change branch name and readeploye 
 to change dbatabe info in the vercel : go to vercel project --> setting --> Environments varialbe --> edit the DATABASE_URL to the new external url value you take it from render .
+
+for google login : https://console.cloud.google.com/apis/credentials?project=valiant-monitor-462917-k9
