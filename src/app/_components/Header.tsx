@@ -9,6 +9,7 @@ import {
   Settings,
   ClipboardList,
   User,
+  FileText,
 } from "lucide-react";
 import { useCart } from "../_context/CartContext";
 import Cart from "../_components/Cart";
@@ -64,6 +65,7 @@ const Header: React.FC = () => {
   const adminLinks = [
     { href: "/Setting", label: "Setting", icon: Settings },
     { href: "/Orders", label: "Orders", icon: ShoppingCart },
+    { href: "/IntakeForms", label: "Intake Forms", icon: FileText },
     {
       href: "/Appointments",
       label: "Appointment Requests",

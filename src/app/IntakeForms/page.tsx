@@ -1,0 +1,666 @@
+"use client";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
+import { Calendar, FileText, Mail, Phone, Trash2, User } from "lucide-react";
+import { useAdminAuth } from "../_context/AdminAuthContext";
+import Alert from "../_components/Alert";
+import ConfirmationModal from "../_components/ConfirmationModal";
+
+type IntakeFormRecord = {
+  id: number;
+  client_id: number;
+  email: string;
+  account_full_name: string | null;
+  profile_completed: boolean;
+  client_created_at: string;
+  full_name: string;
+  age: string | number | null;
+  phone_number: string | null;
+  gender: string | null;
+  occupation: string | null;
+  reason: string | null;
+  goals: string[] | string | null;
+  specific_goal: string | null;
+  medical_conditions: string[] | string | null;
+  past_surgeries: string | null;
+  food_allergies: string | null;
+  medications: string | null;
+  current_weight: string | number | null;
+  height_cm: string | number | null;
+  usual_weight: string | number | null;
+  typical_day_eating: string | null;
+  meals_per_day: string | null;
+  water_intake: string | null;
+  eat_out_frequency: string | null;
+  eating_behaviors: string[] | string | null;
+  eating_challenges: string | null;
+  exercises: string | null;
+  exercise_details: string | null;
+  sleep_hours: string | null;
+  stress_level: string | null;
+  menstrual_regular: boolean | null;
+  women_conditions: string[] | string | null;
+  has_lab_tests: boolean | null;
+  lab_results: string | null;
+  readiness_scale: string | number | null;
+  expected_challenges: string | null;
+  expectations: string | null;
+  additional_info: string | null;
+};
+
+function formatValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.length ? value.join(", ") : "-";
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  return String(value);
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+const ProfileBadge = React.memo(({ completed }: { completed: boolean }) => (
+  <span
+    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border inline-flex items-center gap-1.5 ${
+      completed
+        ? "bg-green-50 border-green-200 text-green-700"
+        : "bg-yellow-50 border-yellow-200 text-yellow-700"
+    }`}
+  >
+    {completed ? "Completed" : "Incomplete"}
+  </span>
+));
+
+ProfileBadge.displayName = "ProfileBadge";
+
+const IntakeDetailPanel = React.memo(
+  ({
+    record,
+    onDelete,
+    onDownloadPdf,
+  }: {
+    record: IntakeFormRecord;
+    onDelete: (id: number) => void;
+    onDownloadPdf: (record: IntakeFormRecord) => void;
+  }) => {
+    const sections = [
+      {
+        title: "Account",
+        icon: <Mail size={18} />,
+        fields: [
+          ["Client ID", record.client_id],
+          ["Full Name", record.full_name],
+          ["Email", record.email],
+          ["Phone", record.phone_number],
+          ["Gender", record.gender],
+          ["Age", record.age],
+          ["Occupation", record.occupation],
+          [
+            "Registered At",
+            new Date(record.client_created_at).toLocaleString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          ],
+        ],
+      },
+      {
+        title: "Goals",
+        icon: <User size={18} />,
+        fields: [
+          ["Main Reason", record.reason],
+          ["Goals", record.goals],
+          ["Specific Goal", record.specific_goal],
+          ["Readiness Scale", record.readiness_scale],
+          ["Expected Challenges", record.expected_challenges],
+          ["Expectations", record.expectations],
+        ],
+      },
+      {
+        title: "Medical",
+        icon: <Phone size={18} />,
+        fields: [
+          ["Medical Conditions", record.medical_conditions],
+          ["Past Surgeries", record.past_surgeries],
+          ["Food Allergies", record.food_allergies],
+          ["Medications", record.medications],
+          ["Has Lab Tests", record.has_lab_tests],
+          ["Lab Results", record.lab_results],
+        ],
+      },
+      {
+        title: "Body And Diet",
+        icon: <Calendar size={18} />,
+        fields: [
+          ["Current Weight", record.current_weight],
+          ["Height (cm)", record.height_cm],
+          ["Usual Weight", record.usual_weight],
+          ["Typical Day Eating", record.typical_day_eating],
+          ["Meals Per Day", record.meals_per_day],
+          ["Water Intake", record.water_intake],
+          ["Eat Out Frequency", record.eat_out_frequency],
+          ["Eating Behaviors", record.eating_behaviors],
+          ["Eating Challenges", record.eating_challenges],
+        ],
+      },
+      {
+        title: "Lifestyle",
+        icon: <Calendar size={18} />,
+        fields: [
+          ["Exercises", record.exercises],
+          ["Exercise Details", record.exercise_details],
+          ["Sleep Hours", record.sleep_hours],
+          ["Stress Level", record.stress_level],
+          ["Menstrual Regular", record.menstrual_regular],
+          ["Women Conditions", record.women_conditions],
+          ["Additional Info", record.additional_info],
+        ],
+      },
+    ];
+
+    return (
+      <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {sections.map((section) => (
+            <div
+              key={section.title}
+              className="bg-white border border-gray-200 rounded-lg p-5"
+            >
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                {section.icon}
+                {section.title}
+              </h3>
+              <div className="space-y-3">
+                {section.fields.map(([label, value]) => (
+                  <div
+                    key={String(label)}
+                    className="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      {label}
+                    </p>
+                    <p className="text-sm font-medium text-gray-800 mt-1 whitespace-pre-wrap break-words">
+                      {formatValue(value)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+            <button
+              onClick={() => onDownloadPdf(record)}
+              className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md hover:shadow-lg"
+            >
+              <FileText size={18} />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+
+            <button
+              onClick={() => onDelete(record.id)}
+              className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center bg-red-600 hover:bg-red-700 text-white transition-all shadow-md hover:shadow-lg"
+            >
+              <Trash2 size={18} />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+IntakeDetailPanel.displayName = "IntakeDetailPanel";
+
+export default function IntakeFormsPage() {
+  const { isAdmin, isChecking } = useAdminAuth();
+  const router = useRouter();
+
+  const [records, setRecords] = useState<IntakeFormRecord[]>([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
+
+  const showAlertMessage = useCallback(
+    (message: string, type: "success" | "error" = "success") => {
+      setAlertMessage(message);
+      setAlertType(type);
+      setShowAlert(true);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!isChecking && !isAdmin) {
+      router.push("/");
+    }
+  }, [isChecking, isAdmin, router]);
+
+  useEffect(() => {
+    const fetchIntakeForms = async () => {
+      try {
+        const res = await fetch("/api/admin/get-intake-forms");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch intake forms");
+        }
+
+        setRecords(data.intakeForms);
+      } catch (err: any) {
+        showAlertMessage(
+          err.message || "Failed to fetch intake forms",
+          "error"
+        );
+      }
+    };
+
+    fetchIntakeForms();
+  }, [showAlertMessage]);
+
+  const handleDownloadPdf = useCallback((record: IntakeFormRecord) => {
+    const sections = [
+      {
+        title: "Account Information",
+        fields: [
+          ["Client ID", record.client_id],
+          ["Full Name", record.full_name],
+          ["Email", record.email],
+          ["Phone", record.phone_number],
+          ["Age", record.age],
+          ["Gender", record.gender],
+          ["Occupation", record.occupation],
+          ["Profile Completed", record.profile_completed],
+          [
+            "Registered At",
+            new Date(record.client_created_at).toLocaleString(),
+          ],
+        ],
+      },
+      {
+        title: "Goals And Reason",
+        fields: [
+          ["Main Reason", record.reason],
+          ["Goals", record.goals],
+          ["Specific Goal", record.specific_goal],
+          ["Readiness Scale", record.readiness_scale],
+          ["Expected Challenges", record.expected_challenges],
+          ["Expectations", record.expectations],
+        ],
+      },
+      {
+        title: "Medical History",
+        fields: [
+          ["Medical Conditions", record.medical_conditions],
+          ["Past Surgeries", record.past_surgeries],
+          ["Food Allergies", record.food_allergies],
+          ["Medications", record.medications],
+          ["Has Lab Tests", record.has_lab_tests],
+          ["Lab Results", record.lab_results],
+        ],
+      },
+      {
+        title: "Body And Nutrition",
+        fields: [
+          ["Current Weight", record.current_weight],
+          ["Height (cm)", record.height_cm],
+          ["Usual Weight", record.usual_weight],
+          ["Typical Day Eating", record.typical_day_eating],
+          ["Meals Per Day", record.meals_per_day],
+          ["Water Intake", record.water_intake],
+          ["Eat Out Frequency", record.eat_out_frequency],
+          ["Eating Behaviors", record.eating_behaviors],
+          ["Eating Challenges", record.eating_challenges],
+        ],
+      },
+      {
+        title: "Lifestyle And Extra Details",
+        fields: [
+          ["Exercises", record.exercises],
+          ["Exercise Details", record.exercise_details],
+          ["Sleep Hours", record.sleep_hours],
+          ["Stress Level", record.stress_level],
+          ["Menstrual Regular", record.menstrual_regular],
+          ["Women Conditions", record.women_conditions],
+          ["Additional Info", record.additional_info],
+        ],
+      },
+    ];
+
+    const sectionsHtml = sections
+      .map(
+        (section) => `
+          <section class="section">
+            <h2>${escapeHtml(section.title)}</h2>
+            <table>
+              ${section.fields
+                .map(
+                  ([label, value]) => `
+                    <tr>
+                      <th>${escapeHtml(String(label))}</th>
+                      <td>${escapeHtml(formatValue(value))}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </table>
+          </section>
+        `
+      )
+      .join("");
+
+    const popup = window.open("", "_blank", "width=900,height=1000");
+
+    if (!popup) {
+      showAlertMessage("Please allow popups to generate the PDF", "error");
+      return;
+    }
+
+    popup.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Intake Form - ${escapeHtml(record.full_name)}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              color: #1f2937;
+              margin: 32px;
+              line-height: 1.5;
+            }
+            h1 {
+              margin: 0 0 8px;
+              color: #111827;
+            }
+            .subtitle {
+              margin-bottom: 24px;
+              color: #4b5563;
+            }
+            .section {
+              margin-bottom: 24px;
+              page-break-inside: avoid;
+            }
+            .section h2 {
+              margin: 0 0 10px;
+              font-size: 18px;
+              color: #2563eb;
+              border-bottom: 2px solid #dbeafe;
+              padding-bottom: 6px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              text-align: left;
+              vertical-align: top;
+              padding: 10px 12px;
+              border-bottom: 1px solid #e5e7eb;
+              font-size: 14px;
+            }
+            th {
+              width: 32%;
+              background: #f9fafb;
+              color: #374151;
+            }
+            td {
+              white-space: pre-wrap;
+              word-break: break-word;
+            }
+            @media print {
+              body {
+                margin: 20px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Client Intake Form</h1>
+          <div class="subtitle">Prepared for ${escapeHtml(
+            record.full_name
+          )} (${escapeHtml(record.email)})</div>
+          ${sectionsHtml}
+          <script>
+            window.onload = function () {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    popup.document.close();
+  }, [showAlertMessage]);
+
+  const confirmDeleteRecord = useCallback(async () => {
+    if (!recordToDelete) return;
+
+    try {
+      const res = await fetch("/api/admin/delete-intake-form", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ intakeFormId: recordToDelete }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to delete intake form");
+      }
+
+      setRecords((prev) => prev.filter((record) => record.id !== recordToDelete));
+      showAlertMessage("Intake form deleted successfully", "success");
+    } catch (err: any) {
+      showAlertMessage(
+        err.message || "Failed to delete intake form",
+        "error"
+      );
+    } finally {
+      setShowConfirmModal(false);
+      setRecordToDelete(null);
+    }
+  }, [recordToDelete, showAlertMessage]);
+
+  const columns = useMemo<MRT_ColumnDef<IntakeFormRecord>[]>(
+    () => [
+      {
+        header: "ID",
+        accessorKey: "id",
+        size: 60,
+        Cell: ({ cell }) => (
+          <span className="font-mono font-bold text-gray-900">
+            #{cell.getValue<number>()}
+          </span>
+        ),
+      },
+      {
+        header: "Client",
+        accessorKey: "full_name",
+        Cell: ({ row }) => (
+          <div>
+            <div className="font-medium text-gray-900">{row.original.full_name}</div>
+            <div className="text-xs text-gray-500">{row.original.email}</div>
+          </div>
+        ),
+      },
+      {
+        header: "Phone",
+        accessorKey: "phone_number",
+        Cell: ({ cell }) => {
+          const phone = cell.getValue<string | null>();
+
+          if (!phone) return <span className="text-gray-400">-</span>;
+
+          return (
+            <a
+              href={`tel:${phone}`}
+              className="text-blue-600 hover:underline text-sm font-medium"
+            >
+              {phone}
+            </a>
+          );
+        },
+      },
+      {
+        header: "Reason",
+        accessorKey: "reason",
+        Cell: ({ cell }) => (
+          <span className="text-sm text-gray-700">{formatValue(cell.getValue())}</span>
+        ),
+      },
+      {
+        header: "Exercises",
+        accessorKey: "exercises",
+        Cell: ({ cell }) => (
+          <span className="text-sm text-gray-700">
+            {formatValue(cell.getValue())}
+          </span>
+        ),
+      },
+      {
+        header: "Status",
+        accessorKey: "profile_completed",
+        Cell: ({ cell }) => <ProfileBadge completed={cell.getValue<boolean>()} />,
+      },
+      {
+        header: "Created",
+        accessorKey: "client_created_at",
+        Cell: ({ cell }) => (
+          <span className="text-sm text-gray-600">
+            {new Date(cell.getValue<string>()).toLocaleString(undefined, {
+              month: "short",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {showAlert && (
+        <Alert
+          value={alertMessage}
+          type={alertType}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmationModal
+          text="Are you sure you want to delete this intake form? The client will need to fill it again."
+          onCancel={() => {
+            setShowConfirmModal(false);
+            setRecordToDelete(null);
+          }}
+          onConfirm={confirmDeleteRecord}
+        />
+      )}
+
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <h1 className="text-3xl font-bold text-gray-900">Intake Forms</h1>
+          <p className="text-gray-600 mt-2">
+            Review full client intake submissions, export them to PDF, or delete them.
+          </p>
+          <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+              {records.length} forms
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <MaterialReactTable
+            columns={columns}
+            data={records}
+            renderDetailPanel={({ row }) => (
+              <IntakeDetailPanel
+                record={row.original}
+                onDelete={(id) => {
+                  setRecordToDelete(id);
+                  setShowConfirmModal(true);
+                }}
+                onDownloadPdf={handleDownloadPdf}
+              />
+            )}
+            muiTablePaperProps={{
+              elevation: 0,
+              sx: {
+                border: "none",
+                borderRadius: "8px",
+              },
+            }}
+            muiTableProps={{
+              sx: {
+                border: "none",
+              },
+            }}
+            muiTableHeadCellProps={{
+              sx: {
+                backgroundColor: "#f3f4f6",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "#374151",
+                borderBottom: "1px solid #e5e7eb",
+              },
+            }}
+            muiTableBodyCellProps={{
+              sx: {
+                borderBottom: "1px solid #f3f4f6",
+                padding: "1rem",
+              },
+            }}
+            muiExpandButtonProps={{
+              sx: {
+                color: "#3b82f6",
+              },
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
