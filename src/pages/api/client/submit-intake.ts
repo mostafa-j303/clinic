@@ -2,6 +2,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { connectToDatabase } from "../../../../lib/db";
+import { generateIntakeEmailHTML } from "../../../app/utils/emailTemplates";
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
+const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME || "Your Business";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,6 +26,12 @@ export default async function handler(
 
 
   try {
+    const clientResult = await pool.query(
+      "SELECT email, full_name FROM clients WHERE id = $1",
+      [session.clientId]
+    );
+
+    const client = clientResult.rows[0];
     const existing = await pool.query(
       "SELECT id FROM client_intake_forms WHERE client_id = $1",
       [session.clientId]
@@ -82,6 +93,54 @@ export default async function handler(
       "UPDATE clients SET profile_completed = true WHERE id = $1",
       [session.clientId]
     );
+
+    try {
+      const settingsResult = await pool.query(
+        "SELECT mail FROM settings LIMIT 1"
+      );
+      const adminEmail = settingsResult.rows[0]?.mail;
+
+      if (adminEmail && BREVO_API_KEY) {
+        await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            "api-key": BREVO_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: {
+              name: BREVO_SENDER_NAME,
+              email: BREVO_SENDER_EMAIL,
+            },
+            to: [
+              {
+                email: adminEmail,
+                name: "Admin",
+              },
+            ],
+            subject: `New Intake Form Submission from ${f.fullName}`,
+            htmlContent: generateIntakeEmailHTML({
+              fullName: f.fullName,
+              email: client?.email || session.user?.email || "-",
+              phoneNumber: f.phoneNumber,
+              age: String(f.age),
+              gender: f.gender,
+              occupation: f.occupation,
+              reason: f.reason,
+              currentWeight: String(f.currentWeight),
+              heightCm: String(f.heightCm),
+              usualWeight: String(f.usualWeight),
+              exercises: f.exercises === "Yes" && f.exerciseDetails
+                ? `Yes - ${f.exerciseDetails}`
+                : f.exercises,
+            }),
+          }),
+        });
+      }
+    } catch (emailError) {
+      console.error("Error sending intake form email:", emailError);
+    }
 
     return res.status(200).json({ message: "Form submitted successfully" });
   } catch (err) {

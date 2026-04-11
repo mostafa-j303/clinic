@@ -30,6 +30,21 @@ export interface AppointmentEmailData {
   bookingDate?: string;
 }
 
+export interface IntakeEmailData {
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  age: string;
+  gender: string;
+  occupation?: string;
+  reason: string;
+  currentWeight: string;
+  heightCm: string;
+  usualWeight: string;
+  exercises: string;
+  submittedAt?: string;
+}
+
 /**
  * Generate order confirmation email HTML
  */
@@ -456,6 +471,204 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
         <div class="footer">
           <p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
           <p style="margin: 8px 0 0 0;">For support, contact us via WhatsApp or phone.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Generate intake form notification email HTML
+ */
+export function generateIntakeEmailHTML(data: IntakeEmailData): string {
+  const submittedAt = data.submittedAt || new Date().toLocaleDateString();
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Intake Form Submission</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          background-color: #f5f5f5;
+          padding: 20px;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+          background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+          color: white;
+          padding: 30px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 28px;
+        }
+        .content {
+          padding: 30px;
+        }
+        .section {
+          margin-bottom: 25px;
+        }
+        .section-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #0f766e;
+          margin-bottom: 12px;
+          border-bottom: 2px solid #0f766e;
+          padding-bottom: 8px;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 10px 0;
+          border-bottom: 1px solid #eee;
+        }
+        .info-label {
+          font-weight: 600;
+          color: #555;
+          flex-shrink: 0;
+        }
+        .info-value {
+          color: #333;
+          text-align: right;
+          font-weight: 500;
+        }
+        .highlight-card {
+          background: linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 100%);
+          border-left: 4px solid #0f766e;
+          padding: 16px;
+          border-radius: 6px;
+          margin: 16px 0;
+        }
+        .highlight-card .label {
+          font-size: 12px;
+          color: #666;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .highlight-card .value {
+          font-size: 20px;
+          font-weight: bold;
+          color: #0f766e;
+          margin-top: 4px;
+        }
+        .footer {
+          background-color: #f9fafb;
+          padding: 20px 30px;
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+          border-top: 1px solid #eee;
+        }
+        .status-badge {
+          display: inline-block;
+          background-color: #0f766e;
+          color: white;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          margin-top: 15px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New Intake Form Submitted</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">A new client completed the consultation intake form</p>
+        </div>
+
+        <div class="content">
+          <div class="section">
+            <div class="section-title">Quick Summary</div>
+            <div class="highlight-card">
+              <div class="label">Client Name</div>
+              <div class="value">${data.fullName}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Client Information</div>
+            <div class="info-row">
+              <span class="info-label">Full Name:</span>
+              <span class="info-value">${data.fullName}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value">${data.email}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Phone:</span>
+              <span class="info-value">${data.phoneNumber || "-"}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Age:</span>
+              <span class="info-value">${data.age}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Gender:</span>
+              <span class="info-value">${data.gender}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Occupation:</span>
+              <span class="info-value">${data.occupation || "-"}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Submitted On:</span>
+              <span class="info-value">${submittedAt}</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Health Snapshot</div>
+            <div class="info-row">
+              <span class="info-label">Main Reason:</span>
+              <span class="info-value">${data.reason}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Current Weight:</span>
+              <span class="info-value">${data.currentWeight}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Height:</span>
+              <span class="info-value">${data.heightCm} cm</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Usual Weight:</span>
+              <span class="info-value">${data.usualWeight}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Exercises:</span>
+              <span class="info-value">${data.exercises}</span>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #666; font-size: 14px;">
+              Review the dashboard for the full intake details.
+            </p>
+            <div class="status-badge">Status: New Intake Submission</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 8px 0 0 0;">A client profile has just been completed.</p>
         </div>
       </div>
     </body>
