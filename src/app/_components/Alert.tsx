@@ -31,42 +31,47 @@ const Alert: React.FC<AlertProps> = ({
     return () => clearTimeout(timer);
   }, [onClose, autoCloseDuration]);
 
-  // Color configurations based on type
+  // Color configurations based on type. These stay semantic (not brand-tied) on
+  // purpose: a success toast shouldn't shift color just because the brand does.
   const alertConfig = {
     success: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
       icon: Check,
-      iconColor: 'text-green-600',
-      textColor: 'text-green-800',
-      progressBg: 'bg-green-500',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      textColor: 'text-emerald-900',
+      progressBg: 'bg-emerald-500',
       title: 'Success',
     },
     error: {
-      bg: 'bg-red-50',
-      border: 'border-red-200',
+      bg: 'bg-rose-50',
+      border: 'border-rose-200',
       icon: X,
-      iconColor: 'text-red-600',
-      textColor: 'text-red-800',
-      progressBg: 'bg-red-500',
+      iconBg: 'bg-rose-100',
+      iconColor: 'text-rose-600',
+      textColor: 'text-rose-900',
+      progressBg: 'bg-rose-500',
       title: 'Error',
     },
     info: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
+      bg: 'bg-sky-50',
+      border: 'border-sky-200',
       icon: Info,
-      iconColor: 'text-blue-600',
-      textColor: 'text-blue-800',
-      progressBg: 'bg-blue-500',
+      iconBg: 'bg-sky-100',
+      iconColor: 'text-sky-600',
+      textColor: 'text-sky-900',
+      progressBg: 'bg-sky-500',
       title: 'Info',
     },
     warning: {
-      bg: 'bg-yellow-50',
-      border: 'border-yellow-200',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
       icon: AlertCircle,
-      iconColor: 'text-yellow-600',
-      textColor: 'text-yellow-800',
-      progressBg: 'bg-yellow-500',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+      textColor: 'text-amber-900',
+      progressBg: 'bg-amber-500',
       title: 'Warning',
     },
   };
@@ -97,19 +102,19 @@ const Alert: React.FC<AlertProps> = ({
         }`}
       >
         {/* Alert Card */}
-        <div className={`${config.bg} ${config.border} border-l-4 rounded-lg shadow-lg p-4 max-w-md w-full md:w-96`}>
+        <div className={`${config.bg} ${config.border} border rounded-2xl shadow-lg shadow-black/5 p-4 max-w-md w-full md:w-96`}>
           <div className="flex items-start gap-3">
             {/* Icon */}
-            <div className={`flex-shrink-0 mt-0.5 ${config.iconColor}`}>
-              <IconComponent size={20} className="stroke-[2.5]" />
+            <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${config.iconBg} ${config.iconColor}`}>
+              <IconComponent size={18} className="stroke-[2.5]" />
             </div>
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold text-sm ${config.textColor}`}>
+            <div className="flex-1 min-w-0 pt-1">
+              <h3 className={`font-heading font-bold text-sm ${config.textColor}`}>
                 {config.title}
               </h3>
-              <p className={`mt-1 text-sm ${config.textColor} opacity-90 break-words`}>
+              <p className={`mt-1 text-sm ${config.textColor} opacity-80 break-words leading-relaxed`}>
                 {value}
               </p>
             </div>
@@ -120,17 +125,17 @@ const Alert: React.FC<AlertProps> = ({
                 setIsClosing(true);
                 setTimeout(onClose, 300);
               }}
-              className={`flex-shrink-0 inline-flex p-1 rounded-md ${config.iconColor} hover:opacity-70 transition-opacity`}
+              className={`flex-shrink-0 inline-flex p-1.5 rounded-full cursor-pointer ${config.iconColor} hover:bg-black/5 transition-colors`}
               aria-label="Close alert"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
           {/* Progress Bar */}
-          <div className={`mt-3 h-1 w-full bg-gray-200 rounded-full overflow-hidden`}>
+          <div className={`mt-3 h-1 w-full bg-black/10 rounded-full overflow-hidden`}>
             <div
-              className={`h-full ${config.progressBg} rounded-full animate-pulse`}
+              className={`h-full ${config.progressBg} rounded-full`}
               style={{
                 animation: `shrink ${autoCloseDuration}ms linear forwards`,
               }}

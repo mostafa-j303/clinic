@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getPool } from "../../../lib/db";
+import { sendWhatsAppMessage } from "../../lib/whatsapp";
+import { orderWhatsAppParams } from "../../app/utils/whatsappTemplates";
 
 export default async function handler(
   req: NextApiRequest,
@@ -54,6 +56,12 @@ if (!phoneRegex.test(phone)) {
     }
 
     await client.query("COMMIT");
+
+    try {
+      await sendWhatsAppMessage(orderWhatsAppParams(name, lastName, orderId, cart.length));
+    } catch (whatsappError) {
+      console.error("Error sending order WhatsApp notification:", whatsappError);
+    }
 
     return res.status(200).json({
       message: "Order created successfully",

@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getPool } from "../../../lib/db";
+import { sendWhatsAppMessage } from "../../lib/whatsapp";
+import { appointmentWhatsAppParams } from "../../app/utils/whatsappTemplates";
 
 export default async function handler(
   req: NextApiRequest,
@@ -77,6 +79,14 @@ export default async function handler(
     );
 
     await client.query("COMMIT");
+
+    try {
+      await sendWhatsAppMessage(
+        appointmentWhatsAppParams(firstName, lastName, appointmentName, selectedDate)
+      );
+    } catch (whatsappError) {
+      console.error("Error sending appointment WhatsApp notification:", whatsappError);
+    }
 
     return res.status(200).json({
       message: "Appointment request created successfully",

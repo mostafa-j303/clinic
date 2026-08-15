@@ -10,6 +10,7 @@ interface Settings {
     hovprimary: string;
     secondary: string;
     hovsecondary: string;
+    accent: string;
   };
   addressdetail: {
     address: string;

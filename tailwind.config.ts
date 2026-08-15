@@ -1,9 +1,8 @@
-import { useSettings } from "@/app/_context/SettingsContext";
-import data from "./public/data.json"
 import type { Config } from "tailwindcss";
 
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,6 +10,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ["var(--font-heading)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
@@ -21,6 +24,7 @@ const config: Config = {
         hovprimary: "var(--color-hovprimary)",
         secondary: "var(--color-secondary)",
         hovsecondary: "var(--color-hovsecondary)",
+        accent: "var(--color-accent)",
       }
     },
   },

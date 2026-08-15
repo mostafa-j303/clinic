@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import ConfirmationModal from "../_components/ConfirmationModal";
+import AdminShell from "../_components/AdminShell";
 
 type OrderItem = {
   productId: number;
@@ -145,7 +146,7 @@ const OrderDetailPanel = React.memo(
                   {order.items.map((item) => (
                     <tr
                       key={item.productId}
-                      className="border-b border-gray-100 hover:bg-blue-50 transition-colors"
+                      className="border-b border-gray-100 hover:bg-primary/5 transition-colors"
                     >
                       <td className="px-4 py-3 text-sm text-gray-800 font-medium">
                         {item.name}
@@ -184,7 +185,7 @@ const OrderDetailPanel = React.memo(
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between">
                 <span className="font-bold text-gray-900">Total:</span>
-                <span className="font-bold text-lg text-blue-600">
+                <span className="font-bold text-lg text-primary">
                   ${order.total.toFixed(2)}
                 </span>
               </div>
@@ -203,7 +204,7 @@ const OrderDetailPanel = React.memo(
             />
             <button
               onClick={() => onCheckLocation(order.locationLink)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg flex gap-2 justify-center items-center transition-colors mb-4"
+              className="w-full bg-primary hover:bg-hovprimary text-white font-semibold py-2.5 rounded-lg flex gap-2 justify-center items-center transition-colors mb-4"
             >
               <MapPin size={18} />
               View on Map
@@ -440,7 +441,7 @@ export default function OrdersPage() {
         Cell: ({ cell }) => (
           <a
             href={`tel:${cell.getValue<string>()}`}
-            className="text-blue-600 hover:underline text-sm font-medium"
+            className="text-primary hover:underline text-sm font-medium"
           >
             {cell.getValue<string>()}
           </a>
@@ -492,21 +493,26 @@ export default function OrdersPage() {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <AdminShell>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminShell>
     );
 
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 max-w-md">
-          {error}
+      <AdminShell>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 max-w-md">
+            {error}
+          </div>
         </div>
-      </div>
+      </AdminShell>
     );
 
   return (
+    <AdminShell>
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
         <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
@@ -519,6 +525,7 @@ export default function OrdersPage() {
             setOrderToDelete(null);
           }}
           onConfirm={confirmDeleteOrder}
+          isDangerous={true}
         />
       )}
 
@@ -530,7 +537,7 @@ export default function OrdersPage() {
             Manage and track customer orders
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-semibold">
               {orders.length} orders
             </span>
           </div>
@@ -594,5 +601,6 @@ export default function OrdersPage() {
         </div>
       </div>
     </div>
+    </AdminShell>
   );
 }

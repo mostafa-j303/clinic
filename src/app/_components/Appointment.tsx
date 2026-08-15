@@ -1,17 +1,19 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import data from "../../../public/data.json";
+import { motion } from "framer-motion";
 import { openWhishApp } from "../utils/openWhishApp";
 import Image from "next/image";
 import { useSettings } from "../_context/SettingsContext";
 import { useAdminAuth } from "../_context/AdminAuthContext";
-import { Pencil, Plus, Trash2, X, Check } from "lucide-react";
+import { Pencil, Plus, Trash2, X, Check, Star } from "lucide-react";
 import AppointmentFormModal from "./AppointmentFormModal";
 import ConfirmationModal from "./ConfirmationModal";
 import Alert from "./Alert";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Loading from "./Loding";
+import SectionHeading from "./SectionHeading";
+import ParticleBackdrop, { hexToRgba } from "./ParticleBackdrop";
 import { generateAppointmentEmailHTML } from "../utils/emailTemplates";
 
 type AppointmentType = {
@@ -21,6 +23,7 @@ type AppointmentType = {
   name: string;
   duration?: string;
   details: string[];
+  is_featured?: boolean;
 };
 
 function Appointment() {
@@ -59,6 +62,29 @@ function Appointment() {
   const openEditModal = (appointment: AppointmentType) => {
     setEditData(appointment);
     setFormOpen(true);
+  };
+
+  const handleToggleFeatured = async (id: number) => {
+    try {
+      const res = await fetch("/api/toggle-appointment-featured", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle featured");
+      const { isFeatured } = await res.json();
+
+      setAppointments((prev) => {
+        const updated = prev.map((a) => ({
+          ...a,
+          is_featured: a.id === id ? isFeatured : false,
+        }));
+        return [...updated].sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
+      });
+    } catch (err) {
+      console.error("Failed to toggle featured appointment", err);
+      showAlertMessage("Failed to update featured package.", "error");
+    }
   };
 
   const handleSaveAppointment = async (appointmentData: AppointmentType) => {
@@ -194,6 +220,8 @@ function Appointment() {
                   appointmentDate: date,
                   price: priceUsed,
                   paymentMethod,
+                  brandPrimary: settings.colors?.primary,
+                  brandAccent: settings.colors?.accent,
                 }),
                 type: 'appointment',
                 recipientName: 'Admin',
@@ -262,25 +290,77 @@ function Appointment() {
   return (
     <section
       id="appointment"
-      className="w-full py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-hovsecondary via-white to-hovprimary"
+      className="relative w-full py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-hovsecondary via-white to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ParticleBackdrop
+        colors={[
+          hexToRgba(settings.colors.primary, 0.55),
+          hexToRgba(settings.colors.accent, 0.5),
+          hexToRgba(settings.colors.secondary, 0.45),
+        ]}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Appointments"
+          title="Choose Your Package"
+          subtitle="Personalized nutrition packages designed around your goals, from a single consultation to a full year of ongoing support."
+        />
         {/* Grid of Appointment Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {appointments.map((appointment: AppointmentType) => (
             <div
               key={appointment.id}
-              className="group bg-white rounded-xl border-2 border-gray-200 hover:border-primary shadow-sm hover:shadow-lg transition-all duration-300 p-6 flex flex-col"
+              className={`group relative bg-white dark:bg-gray-800 rounded-xl border-2 shadow-sm hover:shadow-lg transition-all duration-300 p-6 flex flex-col ${
+                appointment.is_featured
+                  ? "border-amber-400 shadow-amber-200/50"
+                  : "border-gray-200 dark:border-gray-700 hover:border-primary"
+              }`}
             >
+              {appointment.is_featured && (
+                // Small dedicated corner wrapper owns the clipping, sized just for the
+                // ribbon — keeps it independent of the card's own overflow behavior.
+                <div className="absolute top-0 right-0 w-28 h-28 overflow-hidden rounded-tr-xl pointer-events-none">
+                  <motion.div
+                    className="absolute top-[22px] right-[-40px] w-[150px] py-1 text-center text-[11px] font-bold uppercase tracking-wide text-white shadow-md rotate-45"
+                    style={{
+                      backgroundSize: "200% 100%",
+                      backgroundImage:
+                        "linear-gradient(90deg, #b45309, #fbbf24, #b45309)",
+                    }}
+                    animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                  >
+                    Most Popular
+                  </motion.div>
+                </div>
+              )}
+
               {/* Header */}
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
+              <div className="mb-4 flex items-start justify-between gap-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   {appointment.name}
                 </h3>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleToggleFeatured(appointment.id)}
+                    className="flex-shrink-0 cursor-pointer"
+                    title={appointment.is_featured ? "Unmark as featured" : "Mark as featured (shows first)"}
+                  >
+                    <Star
+                      size={20}
+                      className={
+                        appointment.is_featured
+                          ? "fill-amber-400 text-amber-500"
+                          : "text-gray-300 hover:text-amber-400"
+                      }
+                    />
+                  </button>
+                )}
               </div>
 
               {/* Price Section */}
-              <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <p className="flex items-baseline gap-2">
                   {appointment.offerprice ? (
                     <>
@@ -304,16 +384,16 @@ function Appointment() {
                 {appointment.details.map((detail, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <Check size={16} className="text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-600">{detail}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{detail}</span>
                   </li>
                 ))}
               </ul>
 
               {/* Duration */}
               {appointment.duration && (
-                <div className="mb-4 pb-4 border-t border-gray-200 pt-4">
-                  <p className="text-xs text-gray-500">Duration</p>
-                  <p className="text-sm font-semibold text-gray-700">
+                <div className="mb-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                     {appointment.duration}
                   </p>
                 </div>
@@ -322,17 +402,17 @@ function Appointment() {
               {/* Book Button */}
               <button
                 onClick={() => setSelectedAppointment(appointment)}
-                className="w-full py-3 bg-gradient-to-r from-primary to-blue-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-3"
+                className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-3"
               >
                 Book Now
               </button>
 
               {/* Admin Controls */}
               {isAdmin && (
-                <div className="flex gap-2 pt-3 border-t border-gray-200">
+                <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => openEditModal(appointment)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-100 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg py-2 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg py-2 transition-colors"
                   >
                     <Pencil size={16} />
                     <span className="text-xs font-semibold">Edit</span>
@@ -383,6 +463,7 @@ function Appointment() {
             setShowConfirmation(false);
             setAppointmentToDelete(null);
           }}
+          isDangerous={true}
         />
       )}
 
@@ -393,9 +474,9 @@ function Appointment() {
       {/* Booking Modal */}
       {selectedAppointment && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-gradient-to-r from-primary to-accent px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">
                 Book: {selectedAppointment.name}
               </h2>
@@ -411,14 +492,14 @@ function Appointment() {
             <form className="p-6 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   First Name *
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
                   placeholder="Enter your first name"
                   required
                 />
@@ -426,14 +507,14 @@ function Appointment() {
 
               {/* Last Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Last Name *
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
                   placeholder="Enter your last name"
                   required
                 />
@@ -441,7 +522,7 @@ function Appointment() {
 
               {/* Phone */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Phone Number *
                 </label>
                 <PhoneInput
@@ -461,27 +542,27 @@ function Appointment() {
 
               {/* Date */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Preferred Date *
                 </label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
                   required
                 />
               </div>
 
               {/* Payment Method */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Payment Method
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
                 >
                   <option value="Cash">Cash</option>
                   <option value="Wish Money">Wish Money</option>
@@ -490,8 +571,8 @@ function Appointment() {
 
               {/* Wish Money Info */}
               {paymentMethod === "Wish Money" && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Pay to Wish Account:
                   </p>
                   <div className="flex items-center justify-between gap-2">
@@ -516,11 +597,11 @@ function Appointment() {
               )}
 
               {/* Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition"
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                 >
                   Cancel
                 </button>
@@ -531,7 +612,7 @@ function Appointment() {
                   className={`flex-1 px-4 py-2 font-semibold rounded-lg transition flex items-center justify-center gap-2 ${
                     !name || !lastName || !date || !phone || isSubmitting
                       ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-gradient-to-r from-primary to-blue-600 text-white hover:shadow-lg"
+                      : "bg-gradient-to-r from-primary to-accent text-white hover:shadow-lg"
                   }`}
                 >
                   {isSubmitting ? (

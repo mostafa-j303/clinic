@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
 import { Calendar, FileText, Mail, Phone, Trash2, User } from "lucide-react";
 import { useAdminAuth } from "../_context/AdminAuthContext";
+import { useSettings } from "../_context/SettingsContext";
 import Alert from "../_components/Alert";
 import ConfirmationModal from "../_components/ConfirmationModal";
+import AdminShell from "../_components/AdminShell";
 
 type IntakeFormRecord = {
   id: number;
@@ -34,14 +36,19 @@ type IntakeFormRecord = {
   meals_per_day: string | null;
   water_intake: string | null;
   eat_out_frequency: string | null;
+  food_dislikes: string | null;
+  budget_constraints: string | null;
   eating_behaviors: string[] | string | null;
   eating_challenges: string | null;
   exercises: string | null;
   exercise_details: string | null;
   sleep_hours: string | null;
   stress_level: string | null;
+  smokes: boolean | null;
+  drinks_alcohol: boolean | null;
   menstrual_regular: boolean | null;
   women_conditions: string[] | string | null;
+  pregnant_breastfeeding: boolean | null;
   has_lab_tests: boolean | null;
   lab_results: string | null;
   readiness_scale: string | number | null;
@@ -50,13 +57,35 @@ type IntakeFormRecord = {
   additional_info: string | null;
 };
 
+function isEmptyValue(value: unknown): boolean {
+  if (value === null || value === undefined || value === "") return true;
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+
+const WOMEN_ONLY_LABELS = new Set([
+  "Menstrual Regular",
+  "Women Conditions",
+  "Pregnant Or Breastfeeding",
+]);
+
+function filterApplicableFields(
+  fields: [string, unknown][],
+  record: { gender: string | null }
+): [string, unknown][] {
+  return fields.filter(([label, value]) => {
+    if (WOMEN_ONLY_LABELS.has(label) && record.gender !== "Female") return false;
+    return !isEmptyValue(value);
+  });
+}
+
 function formatValue(value: unknown): string {
   if (Array.isArray(value)) {
     return value.length ? value.join(", ") : "-";
   }
 
-  if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
+  if (typeof value === "boolean" || value === "true" || value === "false") {
+    return value === true || value === "true" ? "Yes" : "No";
   }
 
   if (value === null || value === undefined || value === "") {
@@ -158,6 +187,8 @@ const IntakeDetailPanel = React.memo(
           ["Meals Per Day", record.meals_per_day],
           ["Water Intake", record.water_intake],
           ["Eat Out Frequency", record.eat_out_frequency],
+          ["Food Dislikes", record.food_dislikes],
+          ["Budget Constraints", record.budget_constraints],
           ["Eating Behaviors", record.eating_behaviors],
           ["Eating Challenges", record.eating_challenges],
         ],
@@ -170,6 +201,9 @@ const IntakeDetailPanel = React.memo(
           ["Exercise Details", record.exercise_details],
           ["Sleep Hours", record.sleep_hours],
           ["Stress Level", record.stress_level],
+          ["Smokes", record.smokes],
+          ["Drinks Alcohol", record.drinks_alcohol],
+          ["Pregnant Or Breastfeeding", record.pregnant_breastfeeding],
           ["Menstrual Regular", record.menstrual_regular],
           ["Women Conditions", record.women_conditions],
           ["Additional Info", record.additional_info],
@@ -180,7 +214,13 @@ const IntakeDetailPanel = React.memo(
     return (
       <div className="p-6 bg-gradient-to-br from-gray-50 to-white">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {sections.map((section) => (
+          {sections
+            .map((section) => ({
+              ...section,
+              fields: filterApplicableFields(section.fields as [string, unknown][], record),
+            }))
+            .filter((section) => section.fields.length > 0)
+            .map((section) => (
             <div
               key={section.title}
               className="bg-white border border-gray-200 rounded-lg p-5"
@@ -212,7 +252,7 @@ const IntakeDetailPanel = React.memo(
           <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
             <button
               onClick={() => onDownloadPdf(record)}
-              className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md hover:shadow-lg"
+              className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center bg-primary hover:bg-hovprimary text-white transition-all shadow-md hover:shadow-lg"
             >
               <FileText size={18} />
               <span className="hidden sm:inline">PDF</span>
@@ -236,6 +276,7 @@ IntakeDetailPanel.displayName = "IntakeDetailPanel";
 
 export default function IntakeFormsPage() {
   const { isAdmin, isChecking } = useAdminAuth();
+  const { settings } = useSettings();
   const router = useRouter();
 
   const [records, setRecords] = useState<IntakeFormRecord[]>([]);
@@ -283,6 +324,8 @@ export default function IntakeFormsPage() {
   }, [showAlertMessage]);
 
   const handleDownloadPdf = useCallback((record: IntakeFormRecord) => {
+    const brandPrimary = settings?.colors?.primary || "#0891B2";
+    const brandPrimarySoft = `${brandPrimary}22`;
     const sections = [
       {
         title: "Account Information",
@@ -333,6 +376,8 @@ export default function IntakeFormsPage() {
           ["Meals Per Day", record.meals_per_day],
           ["Water Intake", record.water_intake],
           ["Eat Out Frequency", record.eat_out_frequency],
+          ["Food Dislikes", record.food_dislikes],
+          ["Budget Constraints", record.budget_constraints],
           ["Eating Behaviors", record.eating_behaviors],
           ["Eating Challenges", record.eating_challenges],
         ],
@@ -344,6 +389,9 @@ export default function IntakeFormsPage() {
           ["Exercise Details", record.exercise_details],
           ["Sleep Hours", record.sleep_hours],
           ["Stress Level", record.stress_level],
+          ["Smokes", record.smokes],
+          ["Drinks Alcohol", record.drinks_alcohol],
+          ["Pregnant Or Breastfeeding", record.pregnant_breastfeeding],
           ["Menstrual Regular", record.menstrual_regular],
           ["Women Conditions", record.women_conditions],
           ["Additional Info", record.additional_info],
@@ -352,6 +400,11 @@ export default function IntakeFormsPage() {
     ];
 
     const sectionsHtml = sections
+      .map((section) => ({
+        ...section,
+        fields: filterApplicableFields(section.fields as [string, unknown][], record),
+      }))
+      .filter((section) => section.fields.length > 0)
       .map(
         (section) => `
           <section class="section">
@@ -409,8 +462,8 @@ export default function IntakeFormsPage() {
             .section h2 {
               margin: 0 0 10px;
               font-size: 18px;
-              color: #2563eb;
-              border-bottom: 2px solid #dbeafe;
+              color: ${brandPrimary};
+              border-bottom: 2px solid ${brandPrimarySoft};
               padding-bottom: 6px;
             }
             table {
@@ -455,7 +508,7 @@ export default function IntakeFormsPage() {
       </html>
     `);
     popup.document.close();
-  }, [showAlertMessage]);
+  }, [showAlertMessage, settings]);
 
   const confirmDeleteRecord = useCallback(async () => {
     if (!recordToDelete) return;
@@ -520,7 +573,7 @@ export default function IntakeFormsPage() {
           return (
             <a
               href={`tel:${phone}`}
-              className="text-blue-600 hover:underline text-sm font-medium"
+              className="text-primary hover:underline text-sm font-medium"
             >
               {phone}
             </a>
@@ -568,13 +621,16 @@ export default function IntakeFormsPage() {
 
   if (isChecking) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <AdminShell>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminShell>
     );
   }
 
   return (
+    <AdminShell>
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
         <Alert
@@ -592,6 +648,7 @@ export default function IntakeFormsPage() {
             setRecordToDelete(null);
           }}
           onConfirm={confirmDeleteRecord}
+          isDangerous={true}
         />
       )}
 
@@ -602,7 +659,7 @@ export default function IntakeFormsPage() {
             Review full client intake submissions, export them to PDF, or delete them.
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-semibold">
               {records.length} forms
             </span>
           </div>
@@ -662,5 +719,6 @@ export default function IntakeFormsPage() {
         </div>
       </div>
     </div>
+    </AdminShell>
   );
 }

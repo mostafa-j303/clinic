@@ -40,9 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       price: row.price,
       details: row.details,
       categories: row.category,
-      image: row.image_base64
-        ? `data:${row.mimetype};base64,${row.image_base64}`
-        : null,
+      image: row.image_url || null,
       filename: row.filename || null
     }));
 

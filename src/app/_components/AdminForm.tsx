@@ -79,7 +79,7 @@ const AdminForm = ({ onClose }: { onClose: () => void }) => {
         {/* Modal Card */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-primary to-blue-600 px-6 py-8 text-center">
+          <div className="bg-gradient-to-r from-primary to-accent px-6 py-8 text-center">
             <div className="flex justify-center mb-3">
               <div className="bg-white/20 p-3 rounded-full backdrop-blur">
                 <Lock className="w-8 h-8 text-white" />
@@ -131,7 +131,7 @@ const AdminForm = ({ onClose }: { onClose: () => void }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-blue-600 text-white font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-accent text-white font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>

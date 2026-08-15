@@ -1,6 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { connectToDatabase } from "../../../../lib/db";
 import bcrypt from "bcrypt";
+import { sendWhatsAppMessage } from "../../../lib/whatsapp";
+import { registrationWhatsAppParams } from "../../../app/utils/whatsappTemplates";
+import { generateRegistrationEmailHTML } from "../../../app/utils/emailTemplates";
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
+const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME || "Your Business";
 
 export default async function handler(
   req: NextApiRequest,
@@ -34,6 +41,43 @@ export default async function handler(
      VALUES ($1, $2, $3, false)`,
     [email, hash, fullName]
   );
+
+  try {
+    await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email));
+  } catch (whatsappError) {
+    console.error("Error sending registration WhatsApp notification:", whatsappError);
+  }
+
+  try {
+    const settingsResult = await pool.query(
+      "SELECT mail, primary_color, accent_color FROM settings LIMIT 1"
+    );
+    const adminEmail = settingsResult.rows[0]?.mail;
+    const brandPrimary = settingsResult.rows[0]?.primary_color;
+    const brandAccent = settingsResult.rows[0]?.accent_color;
+
+    if (adminEmail && BREVO_API_KEY) {
+      await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "api-key": BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: {
+            name: BREVO_SENDER_NAME,
+            email: BREVO_SENDER_EMAIL,
+          },
+          to: [{ email: adminEmail, name: "Admin" }],
+          subject: `New Client Registration: ${fullName}`,
+          htmlContent: generateRegistrationEmailHTML({ fullName, email, brandPrimary, brandAccent }),
+        }),
+      });
+    }
+  } catch (emailError) {
+    console.error("Error sending registration email:", emailError);
+  }
 
   return res.status(201).json({ message: "Account created. Please sign in." });
 }

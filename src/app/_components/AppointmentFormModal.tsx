@@ -70,7 +70,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-gradient-to-r from-primary to-accent px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">
             {initialData ? "Edit" : "Add"} Appointment
           </h2>
@@ -197,7 +197,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-blue-600 text-white font-semibold rounded-lg hover:shadow-lg transition"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition"
             >
               <Save size={18} />
               {initialData ? "Update" : "Add"}

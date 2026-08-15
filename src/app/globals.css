@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #be75ff;
-  --color-hovprimary: #D09CFA;
-  --color-secondary: #ffffff;
-  --color-hovsecondary: #ffffff;
+  --color-primary: #0891B2;
+  --color-hovprimary: #15A3C6;
+  --color-secondary: #20D3EE;
+  --color-hovsecondary: #4BD2E7;
+  --color-accent: #059669;
 }
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -14,13 +15,6 @@
   --color-secondary: theme('colors.secondary');
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
 .custom-dropdown {
   text-align: start;
   color: rgb(53, 53, 53);
@@ -32,9 +26,18 @@ html {
   scroll-behavior: smooth;
 }
 body {
-
   color: rgb(var(--foreground-rgb));
   background-color: white;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.dark body {
+  --foreground-rgb: 245, 245, 245;
+  background-color: #0f172a;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), sans-serif;
 }
 
 @layer utilities {

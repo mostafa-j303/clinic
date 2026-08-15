@@ -14,7 +14,13 @@ export default function ClientDashboard() {
     if (status === "authenticated" && !session.profileCompleted) router.push("/intake-form");
   }, [status, session, router]);
 
-  if (status === "loading") return null;
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -29,7 +35,7 @@ export default function ClientDashboard() {
           <div className="grid grid-cols-1 gap-4 mt-8">
             <Link
               href="/#appointment"
-              className="flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-blue-600 text-white font-semibold py-4 rounded-xl hover:shadow-lg transition"
+              className="flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-accent text-white font-semibold py-4 rounded-xl hover:shadow-lg transition"
             >
               <CalendarCheck size={20} />
               Book an Appointment

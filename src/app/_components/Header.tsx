@@ -10,6 +10,8 @@ import {
   ClipboardList,
   User,
   FileText,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useCart } from "../_context/CartContext";
 import Cart from "../_components/Cart";
@@ -18,6 +20,7 @@ import { useSettings } from "../_context/SettingsContext";
 import LocationLoader from "./Apploading";
 import AdminForm from "./AdminForm";
 import { useAdminAuth } from "../_context/AdminAuthContext";
+import { useTheme } from "../_context/ThemeContext";
 import { useSession, signOut } from "next-auth/react";
 
 const Header: React.FC = () => {
@@ -29,6 +32,7 @@ const Header: React.FC = () => {
 
   const { isAdmin, logout } = useAdminAuth();
   const { settings, loading, error } = useSettings();
+  const { isDark, toggleTheme } = useTheme();
 
   const { data: clientSession } = useSession();
 
@@ -76,7 +80,7 @@ const Header: React.FC = () => {
   return (
     <header
       id="home"
-      className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md"
+      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md transition-colors"
     >
       <div className="flex h-[70px] items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Hamburger Menu Button */}
@@ -89,8 +93,17 @@ const Header: React.FC = () => {
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        {/* Logo */}
-        <Link href="/#home" className="flex-shrink-0">
+        {/* Logo — double-click opens the admin login (intentionally not a visible link) */}
+        <Link
+          href="/#home"
+          className="flex-shrink-0"
+          onDoubleClick={(e) => {
+            if (!isAdmin) {
+              e.preventDefault();
+              handleLoginClick();
+            }
+          }}
+        >
           <Image
             className="w-auto rounded-2xl max-h-14"
             src={settings.images.logo}
@@ -107,7 +120,7 @@ const Header: React.FC = () => {
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
-                  className="text-gray-500 transition hover:text-gray-700"
+                  className="text-gray-500 dark:text-gray-300 transition hover:text-gray-700 dark:hover:text-white"
                   href={link.href}
                 >
                   {link.label}
@@ -119,6 +132,15 @@ const Header: React.FC = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-4 ml-auto">
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-9 h-9 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-800 transition-colors cursor-pointer"
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {/* Cart Button */}
           <button
             onClick={toggleCart}
@@ -135,11 +157,11 @@ const Header: React.FC = () => {
               <button className="text-gray-500 hover:text-gray-700 flex items-center gap-1 px-3 py-2 text-sm">
                 {clientSession.user?.name?.split(" ")[0]}
               </button>
-              <ul className="absolute right-0 mt-0 w-40 bg-white shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <ul className="absolute right-0 mt-0 w-40 bg-white dark:bg-gray-800 shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                 <li>
                   <Link
                     href="/client-dashboard"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     My Profile
                   </Link>
@@ -147,7 +169,7 @@ const Header: React.FC = () => {
                 <li>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Sign Out
                   </button>
@@ -168,7 +190,7 @@ const Header: React.FC = () => {
             {isAdmin ? (
               <div className="relative group">
                 <button
-                  className="text-gray-500 transition hover:text-gray-700 flex items-center gap-1 px-3 py-2"
+                  className="text-gray-500 dark:text-gray-300 transition hover:text-gray-700 dark:hover:text-white flex items-center gap-1 px-3 py-2"
                   aria-label="Admin menu"
                 >
                   Admin
@@ -187,7 +209,7 @@ const Header: React.FC = () => {
                   </svg>
                 </button>
                 {/* Dropdown Menu */}
-                <ul className="absolute right-0 mt-0 w-48 bg-white shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <ul className="absolute right-0 mt-0 w-48 bg-white dark:bg-gray-800 shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                   {adminLinks.map((link) => {
                     const Icon = link.icon;
                     return (
@@ -206,27 +228,23 @@ const Header: React.FC = () => {
               </div>
             ) : null}
 
-            {/* Auth Button */}
-            <button
-              onClick={isAdmin ? handleLogout : handleLoginClick}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-gray-700 bg-hovprimary hover:bg-gray-200 transition"
-            >
-              {isAdmin ? (
-                <>
-                  <LogOut size={16} />
-                  Logout
-                </>
-              ) : (
-                "Login"
-              )}
-            </button>
+            {/* Logout — the login entry point itself is hidden (double-click the logo) */}
+            {isAdmin && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-gray-700 bg-hovprimary hover:bg-gray-200 transition"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile Navigation Menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-secondary max-h-[calc(100vh-70px)] overflow-y-auto">
+        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-secondary dark:bg-gray-900 max-h-[calc(100vh-70px)] overflow-y-auto">
           <div className="px-4 py-5">
             <ul className="space-y-1">
               {navLinks.map((link) => (
@@ -251,6 +269,19 @@ const Header: React.FC = () => {
                 </Link>
               </li>
 
+              <li>
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                    closeMenus();
+                  }}
+                  className="w-full flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition text-left cursor-pointer"
+                >
+                  {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                  {isDark ? "Light Mode" : "Dark Mode"}
+                </button>
+              </li>
+
               {/* Mobile Admin Links */}
               {isAdmin && (
                 <>
@@ -273,22 +304,18 @@ const Header: React.FC = () => {
                 </>
               )}
 
-              {/* Mobile Auth Button */}
-              <li className="border-t border-gray-200 pt-2 mt-2">
-                <button
-                  onClick={isAdmin ? handleLogout : handleLoginClick}
-                  className="w-full rounded-lg px-4 py-2 text-sm bg-hovprimary text-gray-700 hover:bg-gray-200 transition text-left flex items-center gap-2"
-                >
-                  {isAdmin ? (
-                    <>
-                      <LogOut size={16} />
-                      Logout
-                    </>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-              </li>
+              {/* Mobile Logout — login entry point is hidden (double-click the logo) */}
+              {isAdmin && (
+                <li className="border-t border-gray-200 pt-2 mt-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full rounded-lg px-4 py-2 text-sm bg-hovprimary text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition text-left flex items-center gap-2"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </div>

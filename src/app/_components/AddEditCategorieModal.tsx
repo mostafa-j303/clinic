@@ -51,9 +51,9 @@ const AddEditCategoryModal: React.FC<AddEditCategoryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex items-center justify-between rounded-t-lg">
+        <div className="bg-gradient-to-r from-primary to-accent px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-xl font-bold text-white">
             {isEdit ? "Edit Category" : "Add New Category"}
           </h2>
@@ -118,7 +118,7 @@ const AddEditCategoryModal: React.FC<AddEditCategoryModalProps> = ({
               className={`flex-1 px-4 py-2 font-semibold rounded-lg text-white transition flex items-center justify-center gap-2 ${
                 isSubmitting || !name.trim()
                   ? "bg-gray-400 cursor-not-allowed opacity-50"
-                  : "bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg"
+                  : "bg-gradient-to-r from-primary to-accent hover:shadow-lg"
               }`}
             >
               {isSubmitting ? (

@@ -40,13 +40,18 @@ const initialForm = {
   mealsPerDay: "",
   waterIntake: "",
   eatOutFrequency: "",
+  foodDislikes: "",
+  budgetConstraints: "",
   eatingBehaviors: [] as string[],
   eatingChallenges: "",
   exercises: "",
   exerciseDetails: "",
   sleepHours: "",
   stressLevel: "",
+  smokes: "",
+  drinksAlcohol: "",
   menstrualRegular: "",
+  pregnantBreastfeeding: "",
   womenConditions: [] as string[],
   hasLabTests: "",
   labResults: "",
@@ -270,10 +275,32 @@ export default function IntakeFormPage() {
     setSubmitting(false);
   };
 
-  if (status === "loading") return null;
+  const isStepApplicable = (s: number) => !(s === 9 && form.gender !== "Female");
 
-  const totalSteps = 13;
-  const progress = ((step + 1) / totalSteps) * 100;
+  const goToStep = (direction: 1 | -1) => {
+    setStep((s) => {
+      let next = s + direction;
+      while (next >= 0 && next <= 12 && !isStepApplicable(next)) {
+        next += direction;
+      }
+      return Math.min(12, Math.max(0, next));
+    });
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center">
+        <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const applicableSteps = Array.from({ length: 13 }, (_, i) => i).filter(
+    isStepApplicable
+  );
+  const totalSteps = applicableSteps.length;
+  const progress =
+    ((applicableSteps.indexOf(step) + 1) / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -304,13 +331,13 @@ export default function IntakeFormPage() {
         <div className="mb-6">
           <div className="flex justify-between text-sm text-gray-500 mb-2">
             <span>
-              Section {step + 1} of {totalSteps}
+              Section {applicableSteps.indexOf(step) + 1} of {totalSteps}
             </span>
             <span>{SECTIONS[step]}</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -584,6 +611,24 @@ export default function IntakeFormPage() {
                 ))}
               </div>
             </Field>
+            <Field label="Any foods you dislike or won't eat?">
+              <textarea
+                className={textareaCls}
+                rows={3}
+                value={form.foodDislikes}
+                onChange={(e) => set("foodDislikes", e.target.value)}
+                placeholder="e.g. mushrooms, seafood, spicy food…"
+              />
+            </Field>
+            <Field label="Any budget constraints for groceries or meal plans?">
+              <textarea
+                className={textareaCls}
+                rows={3}
+                value={form.budgetConstraints}
+                onChange={(e) => set("budgetConstraints", e.target.value)}
+                placeholder="Let us know if cost is a factor to plan around…"
+              />
+            </Field>
           </SectionCard>
         )}
 
@@ -687,6 +732,30 @@ export default function IntakeFormPage() {
                 ))}
               </div>
             </Field>
+            <Field label="Do you smoke?">
+              <div className="space-y-2">
+                {["Yes", "No"].map((o) => (
+                  <Radio
+                    key={o}
+                    label={o}
+                    checked={form.smokes === o}
+                    onChange={() => set("smokes", o)}
+                  />
+                ))}
+              </div>
+            </Field>
+            <Field label="Do you drink alcohol?">
+              <div className="space-y-2">
+                {["Yes", "No"].map((o) => (
+                  <Radio
+                    key={o}
+                    label={o}
+                    checked={form.drinksAlcohol === o}
+                    onChange={() => set("drinksAlcohol", o)}
+                  />
+                ))}
+              </div>
+            </Field>
           </SectionCard>
         )}
 
@@ -696,6 +765,18 @@ export default function IntakeFormPage() {
             <p className="text-sm text-gray-500 -mt-2 mb-4">
               Skip this section if it doesn't apply to you.
             </p>
+            <Field label="Are you currently pregnant or breastfeeding?">
+              <div className="space-y-2">
+                {["Yes", "No"].map((o) => (
+                  <Radio
+                    key={o}
+                    label={o}
+                    checked={form.pregnantBreastfeeding === o}
+                    onChange={() => set("pregnantBreastfeeding", o)}
+                  />
+                ))}
+              </div>
+            </Field>
             <Field label="Is your menstrual cycle regular?">
               <div className="space-y-2">
                 {["Yes", "No"].map((o) => (
@@ -710,7 +791,7 @@ export default function IntakeFormPage() {
             </Field>
             <Field label="Check all that apply:">
               <div className="space-y-2">
-                {["Pregnant", "Breastfeeding", "PCOS", "None"].map((c) => (
+                {["PCOS", "Other", "None"].map((c) => (
                   <Checkbox
                     key={c}
                     label={c}
@@ -822,7 +903,7 @@ export default function IntakeFormPage() {
         <div className="flex gap-3 mt-4">
           {step > 0 && (
             <button
-              onClick={() => setStep((s) => s - 1)}
+              onClick={() => goToStep(-1)}
               className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition"
             >
               ← Back
@@ -842,9 +923,9 @@ export default function IntakeFormPage() {
                   return;
                 }
                 setErrors({});
-                setStep((s) => s + 1);
+                goToStep(1);
               }}
-              className="flex-1 py-3 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl hover:shadow-lg transition"
+              className="flex-1 py-3 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl hover:shadow-lg transition"
             >
               Next →
             </button>

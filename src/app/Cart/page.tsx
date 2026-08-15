@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useCart } from "../_context/CartContext";
 import { openWhishApp } from "../utils/openWhishApp";
-import data from "../../../public/data.json";
 import Link from "next/link";
 import LocationLoader from "../_components/Apploading";
 import Image from "next/image";
@@ -45,7 +44,7 @@ const CartItemCard = React.memo(
           <h3 className="font-semibold text-gray-900">{item.name}</h3>
           <p className="text-sm text-gray-600 mt-1">{item.details}</p>
           <div className="flex items-center justify-between mt-3">
-            <span className="text-lg font-bold text-blue-600">{item.price}</span>
+            <span className="text-lg font-bold text-primary">{item.price}</span>
             <div className="flex items-center gap-2">
               <div className="bg-gray-100 px-3 py-1 rounded text-sm font-semibold text-gray-700">
                 Qty: {item.quantity}
@@ -113,7 +112,7 @@ const PriceSummary = React.memo(
 
         <div className="flex justify-between items-center mb-4">
           <span className="font-bold text-gray-900">Total</span>
-          <span className="text-2xl font-bold text-blue-600">
+          <span className="text-2xl font-bold text-primary">
             ${total.toFixed(2)}
           </span>
         </div>
@@ -151,7 +150,7 @@ const LocationSection = React.memo(
   }) => (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <MapPin size={20} className="text-blue-600" />
+        <MapPin size={20} className="text-primary" />
         Delivery Location
       </h3>
 
@@ -165,7 +164,7 @@ const LocationSection = React.memo(
           </div>
           <div className="flex gap-2">
             <Link
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-center transition-colors"
+              className="flex-1 bg-primary hover:bg-hovprimary text-white font-semibold py-2 rounded-lg text-center transition-colors"
               target="_blank"
               href={locationLink || "#"}
             >
@@ -186,7 +185,7 @@ const LocationSection = React.memo(
           className={`w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
             isFetchingLocation
               ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-primary hover:bg-hovprimary text-white"
           }`}
         >
           {isFetchingLocation ? (
@@ -227,7 +226,7 @@ const FormInput = React.memo(
   }) => (
     <div>
       <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-        <Icon size={18} className="text-blue-600" />
+        <Icon size={18} className="text-primary" />
         {label}
       </label>
       <input
@@ -235,7 +234,7 @@ const FormInput = React.memo(
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all"
+        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500 transition-all"
       />
     </div>
   )
@@ -482,6 +481,8 @@ export default function CartPage() {
                 delivery: parsedData.delivery,
                 total,
                 paymentMethod,
+                brandPrimary: settings.colors?.primary,
+                brandAccent: settings.colors?.accent,
               }),
               type: 'order',
               recipientName: 'Admin',
@@ -582,7 +583,7 @@ export default function CartPage() {
             </p>
             <Link
               href="/#home"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="inline-block bg-primary hover:bg-hovprimary text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
               Continue Shopping
             </Link>
@@ -654,7 +655,7 @@ export default function CartPage() {
 
             <div className="mb-6">
               <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <PhoneIcon size={18} className="text-blue-600" />
+                <PhoneIcon size={18} className="text-primary" />
                 Phone Number
               </label>
               <PhoneInput
@@ -668,32 +669,32 @@ export default function CartPage() {
                 dropdownClass="custom-dropdown"
                 enableSearch
                 containerClass="w-full"
-                inputClass="!w-full !py-2.5 !pl-12 !text-gray-900 !border !rounded-lg !focus:ring-2 !focus:ring-blue-500"
+                inputClass="!w-full !py-2.5 !pl-12 !text-gray-900 !border !rounded-lg !focus:ring-2 !focus:ring-primary"
               />
             </div>
 
             <div className="mb-6">
               <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <MapPinIcon size={18} className="text-blue-600" />
+                <MapPinIcon size={18} className="text-primary" />
                 Delivery Address
               </label>
               <textarea
                 placeholder="Enter your complete address with details"
                 value={address}
                 onChange={handleAddressChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 resize-none h-24 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500 resize-none h-24 transition-all"
               />
             </div>
 
             <div className="mb-6">
               <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                <DollarSign size={18} className="text-blue-600" />
+                <DollarSign size={18} className="text-primary" />
                 Payment Method
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 transition-all"
               >
                 <option value="Cash">Cash</option>
                 <option value="Wish Money">Wish Money</option>
@@ -701,7 +702,7 @@ export default function CartPage() {
             </div>
 
             {paymentMethod === "Wish Money" && (
-              <div className="flex-col lg:flex-row md:flex-row bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-4">
+              <div className="flex-col lg:flex-row md:flex-row bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6 flex items-center gap-4">
                 <Image
                   className="rounded-lg flex-shrink-0"
                   src={settings.images.whishlogo}
@@ -713,14 +714,14 @@ export default function CartPage() {
                   <p className="text-sm font-semibold text-gray-900">
                     Pay to Wish Account:
                   </p>
-                  <p className="text-lg font-bold text-blue-600 mt-1">
+                  <p className="text-lg font-bold text-primary mt-1">
                     {settings.social.wishnb}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={openWhishApp}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0"
+                  className="bg-primary hover:bg-hovprimary text-white font-semibold py-2 px-4 rounded-lg transition-colors flex-shrink-0"
                 >
                   Open App
                 </button>
@@ -734,7 +735,7 @@ export default function CartPage() {
               className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 transition-all ${
                 isCheckoutDisabled
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
+                  : "bg-primary hover:bg-hovprimary text-white shadow-lg hover:shadow-xl"
               }`}
             >
               {isSubmitting ? (

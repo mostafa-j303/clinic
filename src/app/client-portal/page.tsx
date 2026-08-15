@@ -66,7 +66,13 @@ export default function ClientPortal() {
     setLoading(false);
   };
 
-  if (status === "loading") return null;
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -76,7 +82,7 @@ export default function ClientPortal() {
 
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-blue-600 px-8 py-10 text-center">
+        <div className="bg-gradient-to-r from-primary to-accent px-8 py-10 text-center">
           <h1 className="text-2xl font-bold text-white">Client Portal</h1>
           <p className="text-white/80 mt-2 text-sm">
             {mode === "login" ? "Welcome back!" : "Create your account"}
@@ -141,7 +147,7 @@ export default function ClientPortal() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

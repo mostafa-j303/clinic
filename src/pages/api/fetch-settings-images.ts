@@ -17,14 +17,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const settings = settingsResult.rows[0];
     const imageMap: { [key: string]: string } = {};
 
-    // Convert bytea to base64 and map to known image names
-    const expectedKeys = ['background', 'background2', 'logo', 'missoPic', 'whishlogo'];
-
-   imagesResult.rows.forEach((img, index) => {
-  if (index < expectedKeys.length) {
-    imageMap[expectedKeys[index]] = `data:${img.mimetype};base64,${img.image.toString('base64')}`;
-  }
-});
+    imagesResult.rows.forEach((img) => {
+      if (img.image_key) {
+        imageMap[img.image_key] = img.image_url;
+      }
+    });
 
     const response = {
       images: imageMap,
@@ -35,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         hovprimary: settings.hover_primary,
         secondary: settings.secondary_color,
         hovsecondary: settings.hover_secondary,
+        accent: settings.accent_color,
       },
       addressdetail: {
         address: settings.address,

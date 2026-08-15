@@ -38,7 +38,19 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 library :
 npm install swiper
 
-Restore databse :
+When the Render database expires and you need a new one :
+1. Before it expires, run `npm run db:backup` to get a fresh backup file (skip if you already have a recent one).
+2. Create the new database on Render.
+3. Run `npm run db:restore -- backups/<your-backup-file>.backup <new-render-db-url>` to restore everything (tables, data, images URLs) into the new database.
+4. Update `DATABASE_URL` in two places: locally in `.env`, and on Vercel (project → Settings → Environment Variables → `DATABASE_URL`) → then redeploy.
+Note: images themselves are stored in Vercel Blob, not in the database, so they keep working automatically once the database is restored — no separate image recovery needed.
+
+Backup / restore database (recommended way) :
+- Backup: `npm run db:backup` — dumps the current DATABASE_URL (from .env) into a timestamped .backup file under `backups/` (gitignored).
+- Restore: `npm run db:restore -- <backup-file> [target-database-url]` — restores a .backup file into DATABASE_URL (or a different target URL if given as a second argument). Asks for confirmation before running since it overwrites existing objects.
+Example: `npm run db:restore -- backups/misso-clinic_2026-08-15_21-23-28.backup`
+
+Restore database (manual / pgAdmin fallback) :
 go to pgadmin 4 --> Open pgAdmin 4 and connect to your server --> In the Object Explorere (left sidebar) --> Expand your server --> Render DB --> Databases --> Right-click on the database jarjourdb or the db we have create on render etc.. or create db and right click on it --> Choose Restore --> choose the back up file , format custom .backup or plain .sql .
 the back up files are in the misso-clinic folder .
 
@@ -47,3 +59,18 @@ to change vercel branch : go to vercel project --> setting --> Environments --> 
 to change dbatabe info in the vercel : go to vercel project --> setting --> Environments varialbe --> edit the DATABASE_URL to the new external url value you take it from render .
 
 for google login : https://console.cloud.google.com/apis/credentials?project=valiant-monitor-462917-k9
+
+Direct intake form link for customers :
+Send a customer this URL: https://<your-domain>/intake-form
+- If they're not logged in, it sends them to login/register first, then automatically brings them straight back to the intake form afterward.
+- If they're already logged in but haven't filled it yet, it opens the form directly.
+- If they already completed it, it sends them to their dashboard instead (so they're not asked to redo it).
+No extra setup needed — this already works as-is.
+
+
+To recreate the database structure (all tables, relations, functions) from scratch, use sql_tables.sql :
+1. Create a new empty database (in pgAdmin or Render).
+2. Run this command in the terminal, replacing <new_db_url> with your new database connection string :
+   psql <new_db_url> -f sql_tables.sql
+   or open sql_tables.sql, copy all of it, and paste/run it in pgAdmin's Query Tool on the new database.
+This only creates the empty structure, no data/rows.

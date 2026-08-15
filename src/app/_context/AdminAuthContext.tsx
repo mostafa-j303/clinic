@@ -21,7 +21,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const checkAdmin = async () => {
     setIsChecking(true);
     try {
-      const res = await fetch('/api/check-admin');
+      const res = await fetch('/api/admin/check-admin');
       const data = await res.json();
       setIsAdmin(data.isAdmin);
     } catch {

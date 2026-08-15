@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { connectToDatabase } from "../../../../lib/db";
 import { generateIntakeEmailHTML } from "../../../app/utils/emailTemplates";
+import { sendWhatsAppMessage } from "../../../lib/whatsapp";
+import { intakeFormWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -58,17 +60,18 @@ export default async function handler(
         medications,
         current_weight, height_cm, usual_weight,
         typical_day_eating, meals_per_day, water_intake, eat_out_frequency,
+        food_dislikes, budget_constraints,
         eating_behaviors, eating_challenges,
         exercises, exercise_details,
-        sleep_hours, stress_level,
-        menstrual_regular, women_conditions,
+        sleep_hours, stress_level, smokes, drinks_alcohol,
+        menstrual_regular, women_conditions, pregnant_breastfeeding,
         has_lab_tests, lab_results,
         readiness_scale, expected_challenges, expectations,
         additional_info
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,
         $17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,
-        $31,$32,$33,$34
+        $31,$32,$33,$34,$35,$36,$37,$38,$39
       )
      `,
       [
@@ -79,10 +82,11 @@ export default async function handler(
         f.medications,
         f.currentWeight, f.heightCm, f.usualWeight,
         f.typicalDayEating, f.mealsPerDay, f.waterIntake, f.eatOutFrequency,
+        f.foodDislikes, f.budgetConstraints,
         f.eatingBehaviors, f.eatingChallenges,
         f.exercises, f.exerciseDetails,
-        f.sleepHours, f.stressLevel,
-        toBool(f.menstrualRegular), f.womenConditions,
+        f.sleepHours, f.stressLevel, toBool(f.smokes), toBool(f.drinksAlcohol),
+        toBool(f.menstrualRegular), f.womenConditions, toBool(f.pregnantBreastfeeding),
         toBool(f.hasLabTests), f.labResults,
         f.readinessScale, f.expectedChallenges, f.expectations,
         f.additionalInfo,
@@ -96,9 +100,11 @@ export default async function handler(
 
     try {
       const settingsResult = await pool.query(
-        "SELECT mail FROM settings LIMIT 1"
+        "SELECT mail, primary_color, accent_color FROM settings LIMIT 1"
       );
       const adminEmail = settingsResult.rows[0]?.mail;
+      const brandPrimary = settingsResult.rows[0]?.primary_color;
+      const brandAccent = settingsResult.rows[0]?.accent_color;
 
       if (adminEmail && BREVO_API_KEY) {
         await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -134,12 +140,20 @@ export default async function handler(
               exercises: f.exercises === "Yes" && f.exerciseDetails
                 ? `Yes - ${f.exerciseDetails}`
                 : f.exercises,
+              brandPrimary,
+              brandAccent,
             }),
           }),
         });
       }
     } catch (emailError) {
       console.error("Error sending intake form email:", emailError);
+    }
+
+    try {
+      await sendWhatsAppMessage(intakeFormWhatsAppParams(f.fullName, f.reason));
+    } catch (whatsappError) {
+      console.error("Error sending intake form WhatsApp notification:", whatsappError);
     }
 
     return res.status(200).json({ message: "Form submitted successfully" });

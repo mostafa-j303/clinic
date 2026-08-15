@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import Alert from "../_components/Alert";
 import ConfirmationModal from "../_components/ConfirmationModal";
+import AdminShell from "../_components/AdminShell";
 import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
 import {
   Trash2,
@@ -146,7 +147,7 @@ const AppointmentDetailPanel = React.memo(
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Price
                 </p>
-                <p className="text-lg font-bold text-blue-600 mt-1">
+                <p className="text-lg font-bold text-primary mt-1">
                   {appointment.price_used}
                 </p>
               </div>
@@ -175,7 +176,7 @@ const AppointmentDetailPanel = React.memo(
                 </p>
                 <a
                   href={`tel:${appointment.phone_number}`}
-                  className="text-sm font-semibold text-blue-600 hover:underline mt-1 inline-block"
+                  className="text-sm font-semibold text-primary hover:underline mt-1 inline-block"
                 >
                   {appointment.phone_number}
                 </a>
@@ -379,7 +380,7 @@ export default function AppointmentRequestsAdmin() {
         Cell: ({ cell }) => (
           <a
             href={`tel:${cell.getValue<string>()}`}
-            className="text-blue-600 hover:underline text-sm font-medium"
+            className="text-primary hover:underline text-sm font-medium"
           >
             {cell.getValue<string>()}
           </a>
@@ -450,12 +451,15 @@ export default function AppointmentRequestsAdmin() {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <AdminShell>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminShell>
     );
 
   return (
+    <AdminShell>
     <div className="min-h-screen bg-gray-50">
       {alert && <Alert value={alert} type={alertType} onClose={() => setAlert(null)} />}
 
@@ -464,6 +468,7 @@ export default function AppointmentRequestsAdmin() {
           text="Are you sure you want to delete this appointment request?"
           onCancel={() => setConfirmId(null)}
           onConfirm={deleteRequest}
+          isDangerous={true}
         />
       )}
 
@@ -477,7 +482,7 @@ export default function AppointmentRequestsAdmin() {
             Manage and respond to client appointment requests
           </p>
           <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-semibold">
               {requests.length} requests
             </span>
           </div>
@@ -537,5 +542,6 @@ export default function AppointmentRequestsAdmin() {
         </div>
       </div>
     </div>
+    </AdminShell>
   );
 }

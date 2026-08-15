@@ -3,6 +3,22 @@
  * Generates formatted HTML email content for orders and appointments
  */
 
+import { hexToHsl, hslToHex } from "./colorHarmony";
+
+// Falls back to the "Clinical Trust" brand colors when the caller doesn't have
+// the live settings on hand — pass brandPrimary/brandAccent from settings.colors
+// wherever available so emails stay in sync with the site's actual theme.
+const DEFAULT_BRAND_PRIMARY = "#0891B2";
+const DEFAULT_BRAND_ACCENT = "#059669";
+
+// A very light tint of the brand color for "highlight card" backgrounds —
+// email clients can't use CSS custom properties/color-mix, so this is computed
+// once here instead, reusing the same HSL math as the Settings color-suggestion tool.
+function brandTint(hex: string, lightness: number): string {
+  const { h, s } = hexToHsl(hex);
+  return hslToHex({ h, s: Math.max(15, Math.min(s, 45)), l: lightness });
+}
+
 export interface OrderEmailData {
   customerName: string;
   customerPhone: string;
@@ -18,6 +34,8 @@ export interface OrderEmailData {
   total: number;
   paymentMethod: string;
   orderDate?: string;
+  brandPrimary?: string;
+  brandAccent?: string;
 }
 
 export interface AppointmentEmailData {
@@ -28,6 +46,16 @@ export interface AppointmentEmailData {
   price: string;
   paymentMethod: string;
   bookingDate?: string;
+  brandPrimary?: string;
+  brandAccent?: string;
+}
+
+export interface RegistrationEmailData {
+  fullName: string;
+  email: string;
+  registeredAt?: string;
+  brandPrimary?: string;
+  brandAccent?: string;
 }
 
 export interface IntakeEmailData {
@@ -43,6 +71,8 @@ export interface IntakeEmailData {
   usualWeight: string;
   exercises: string;
   submittedAt?: string;
+  brandPrimary?: string;
+  brandAccent?: string;
 }
 
 /**
@@ -50,6 +80,8 @@ export interface IntakeEmailData {
  */
 export function generateOrderEmailHTML(data: OrderEmailData): string {
   const orderDate = data.orderDate || new Date().toLocaleDateString();
+  const brandPrimary = data.brandPrimary || DEFAULT_BRAND_PRIMARY;
+  const brandAccent = data.brandAccent || DEFAULT_BRAND_ACCENT;
   
   const itemsHTML = data.items
     .map(
@@ -93,7 +125,7 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .header {
-          background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+          background: linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%);
           color: white;
           padding: 30px;
           text-align: center;
@@ -111,9 +143,9 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
         .section-title {
           font-size: 16px;
           font-weight: bold;
-          color: #2563eb;
+          color: ${brandPrimary};
           margin-bottom: 12px;
-          border-bottom: 2px solid #2563eb;
+          border-bottom: 2px solid ${brandPrimary};
           padding-bottom: 8px;
         }
         .info-row {
@@ -141,7 +173,7 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
           text-align: left;
           font-weight: 600;
           color: #333;
-          border-bottom: 2px solid #2563eb;
+          border-bottom: 2px solid ${brandPrimary};
         }
         td {
           padding: 12px;
@@ -162,8 +194,8 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
         .summary-row.total {
           font-size: 18px;
           font-weight: bold;
-          color: #2563eb;
-          border-top: 2px solid #2563eb;
+          color: ${brandPrimary};
+          border-top: 2px solid ${brandPrimary};
           padding-top: 12px;
           margin-top: 12px;
         }
@@ -250,7 +282,7 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
               </div>
               <div class="summary-row total">
                 <span>Total:</span>
-                <strong style="color: #2563eb;">$${data.total.toFixed(2)}</strong>
+                <strong style="color: ${brandPrimary};">$${data.total.toFixed(2)}</strong>
               </div>
             </div>
           </div>
@@ -287,6 +319,10 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
  */
 export function generateAppointmentEmailHTML(data: AppointmentEmailData): string {
   const bookingDate = data.bookingDate || new Date().toLocaleDateString();
+  const brandPrimary = data.brandPrimary || DEFAULT_BRAND_PRIMARY;
+  const brandAccent = data.brandAccent || DEFAULT_BRAND_ACCENT;
+  const brandTintLight = brandTint(brandPrimary, 95);
+  const brandTintLighter = brandTint(brandPrimary, 98);
 
   return `
     <!DOCTYPE html>
@@ -312,7 +348,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .header {
-          background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+          background: linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%);
           color: white;
           padding: 30px;
           text-align: center;
@@ -330,9 +366,9 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
         .section-title {
           font-size: 16px;
           font-weight: bold;
-          color: #8b5cf6;
+          color: ${brandPrimary};
           margin-bottom: 12px;
-          border-bottom: 2px solid #8b5cf6;
+          border-bottom: 2px solid ${brandPrimary};
           padding-bottom: 8px;
         }
         .info-row {
@@ -351,8 +387,8 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
           font-weight: 500;
         }
         .appointment-card {
-          background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
-          border-left: 4px solid #8b5cf6;
+          background: linear-gradient(135deg, ${brandTintLight} 0%, ${brandTintLighter} 100%);
+          border-left: 4px solid ${brandPrimary};
           padding: 15px;
           border-radius: 5px;
           margin: 15px 0;
@@ -366,7 +402,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
         .appointment-card .value {
           font-size: 18px;
           font-weight: bold;
-          color: #8b5cf6;
+          color: ${brandPrimary};
           margin-top: 4px;
         }
         .price-section {
@@ -383,7 +419,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
         .price-value {
           font-size: 28px;
           font-weight: bold;
-          color: #8b5cf6;
+          color: ${brandPrimary};
           margin-top: 5px;
         }
         .footer {
@@ -396,7 +432,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
         }
         .status-badge {
           display: inline-block;
-          background-color: #8b5cf6;
+          background-color: ${brandPrimary};
           color: white;
           padding: 6px 16px;
           border-radius: 20px;
@@ -479,10 +515,130 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
 }
 
 /**
+ * Generate new client registration notification email HTML
+ */
+export function generateRegistrationEmailHTML(data: RegistrationEmailData): string {
+  const registeredAt = data.registeredAt || new Date().toLocaleDateString();
+  const brandPrimary = data.brandPrimary || DEFAULT_BRAND_PRIMARY;
+  const brandAccent = data.brandAccent || DEFAULT_BRAND_ACCENT;
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Client Registration</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          background-color: #f5f5f5;
+          padding: 20px;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+          background: linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%);
+          color: white;
+          padding: 30px;
+          text-align: center;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 28px;
+        }
+        .content {
+          padding: 30px;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 10px 0;
+          border-bottom: 1px solid #eee;
+        }
+        .info-label {
+          font-weight: 600;
+          color: #555;
+          flex-shrink: 0;
+        }
+        .info-value {
+          color: #333;
+          text-align: right;
+          font-weight: 500;
+        }
+        .footer {
+          background-color: #f9fafb;
+          padding: 20px 30px;
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+          border-top: 1px solid #eee;
+        }
+        .status-badge {
+          display: inline-block;
+          background-color: ${brandPrimary};
+          color: white;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 12px;
+          margin-top: 15px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New Client Registration</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">A new client just created an account</p>
+        </div>
+
+        <div class="content">
+          <div class="info-row">
+            <span class="info-label">Full Name:</span>
+            <span class="info-value">${data.fullName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">${data.email}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Registered On:</span>
+            <span class="info-value">${registeredAt}</span>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <div class="status-badge">Status: New Registration</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p style="margin: 0;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 8px 0 0 0;">A new client account has just been created.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/**
  * Generate intake form notification email HTML
  */
 export function generateIntakeEmailHTML(data: IntakeEmailData): string {
   const submittedAt = data.submittedAt || new Date().toLocaleDateString();
+  const brandPrimary = data.brandPrimary || DEFAULT_BRAND_PRIMARY;
+  const brandAccent = data.brandAccent || DEFAULT_BRAND_ACCENT;
+  const brandTintLight = brandTint(brandPrimary, 92);
+  const brandTintLighter = brandTint(brandPrimary, 97);
 
   return `
     <!DOCTYPE html>
@@ -508,7 +664,7 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .header {
-          background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+          background: linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%);
           color: white;
           padding: 30px;
           text-align: center;
@@ -526,9 +682,9 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
         .section-title {
           font-size: 16px;
           font-weight: bold;
-          color: #0f766e;
+          color: ${brandPrimary};
           margin-bottom: 12px;
-          border-bottom: 2px solid #0f766e;
+          border-bottom: 2px solid ${brandPrimary};
           padding-bottom: 8px;
         }
         .info-row {
@@ -549,8 +705,8 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
           font-weight: 500;
         }
         .highlight-card {
-          background: linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 100%);
-          border-left: 4px solid #0f766e;
+          background: linear-gradient(135deg, ${brandTintLight} 0%, ${brandTintLighter} 100%);
+          border-left: 4px solid ${brandPrimary};
           padding: 16px;
           border-radius: 6px;
           margin: 16px 0;
@@ -564,7 +720,7 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
         .highlight-card .value {
           font-size: 20px;
           font-weight: bold;
-          color: #0f766e;
+          color: ${brandPrimary};
           margin-top: 4px;
         }
         .footer {
@@ -577,7 +733,7 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
         }
         .status-badge {
           display: inline-block;
-          background-color: #0f766e;
+          background-color: ${brandPrimary};
           color: white;
           padding: 6px 16px;
           border-radius: 20px;

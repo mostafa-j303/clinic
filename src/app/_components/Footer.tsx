@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { FaTiktok, FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
 import { IoMail } from "react-icons/io5";
 import { MapPin, Clock, Phone } from "lucide-react";
-import data from "../../../public/data.json";
 import { useSettings } from "../_context/SettingsContext";
 import Loading from "./Loding";
 
@@ -25,7 +24,7 @@ function Footer() {
       name: "Facebook",
       href: settings.social.facebook,
       icon: FaFacebook,
-      color: "hover:text-blue-600",
+      color: "hover:text-primary",
     },
     {
       name: "Instagram",
@@ -41,7 +40,7 @@ function Footer() {
     },
     {
       name: "TikTok",
-      href: "https://www.tiktok.com/@dietitianmaysa",
+      href: settings.social.tiktok,
       icon: FaTiktok,
       color: "hover:text-black",
     },
@@ -60,7 +59,7 @@ function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
           {/* Map Section */}
           <div className="lg:col-span-1">
-            <div className="relative h-64 rounded-lg overflow-hidden shadow-lg border border-gray-700">
+            <div className="relative h-64 rounded-2xl overflow-hidden shadow-lg border border-gray-700">
               {!mapError ? (
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d26584.637704388914!2d35.4780439983918!3d33.888345720788744!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f170f813de44b%3A0xb6a9f74e09fd1e5f!2sKoraytem%2C%20Beirut%2C%20Lebanon!5e0!3m2!1sen!2s!4v1620731361740!5m2!1sen!2s"
@@ -93,9 +92,9 @@ function Footer() {
               </div>
               <Link
                 href={`tel:+${settings.social.number}`}
-                className="text-2xl font-bold text-primary hover:text-blue-400 transition"
+                className="text-2xl font-bold text-primary hover:text-hovprimary transition"
               >
-                (+961) 71 310 901
+                +{settings.social.number}
               </Link>
             </div>
 
@@ -121,7 +120,7 @@ function Footer() {
           {/* Address Section */}
           <div className="lg:col-span-1">
             <h3 className="text-xl font-bold text-white mb-6">Our Location</h3>
-            <div className="bg-gradient-to-br from-primary/20 to-blue-600/20 border border-primary/40 rounded-lg p-5 space-y-4">
+            <div className="bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/40 rounded-2xl p-5 space-y-4">
               <div className="flex gap-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>

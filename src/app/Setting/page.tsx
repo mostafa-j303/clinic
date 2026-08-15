@@ -4,7 +4,10 @@ import { useSettings } from "../_context/SettingsContext";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import Alert from "../_components/Alert";
-import { MapPin, Link2, Tag, Truck, ShoppingCart, Globe, Palette, Building2 } from "lucide-react";
+import AdminShell from "../_components/AdminShell";
+import SettingsImageUploader from "../_components/SettingsImageUploader";
+import { MapPin, Link2, Tag, Truck, ShoppingCart, Globe, Palette, Building2, Wand2, Image as ImageIcon } from "lucide-react";
+import { suggestPalette } from "../utils/colorHarmony";
 
 // Memoized FormSection Component
 const FormSection = React.memo(
@@ -19,7 +22,7 @@ const FormSection = React.memo(
   }) => (
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center gap-3 mb-5">
-        <Icon className="w-5 h-5 text-blue-600" />
+        <Icon className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
       </div>
       <div className="space-y-4">{children}</div>
@@ -50,7 +53,7 @@ const FormInput = React.memo(
         type={type}
         value={value}
         onChange={onChange}
-        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 transition-all"
+        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 transition-all"
       />
     </div>
   )
@@ -132,6 +135,57 @@ export default function SettingsPage() {
     });
   }, []);
 
+  const handleImageUploaded = useCallback(
+    (imageKey: string, newUrl: string) => {
+      setSettings?.((prev: any) => ({
+        ...prev,
+        images: { ...(prev?.images || {}), [imageKey]: newUrl },
+      }));
+      showAlertMessage(`Image updated successfully!`, "success");
+      setShowAlert(true);
+    },
+    [setSettings]
+  );
+
+  const handleImageUploadError = useCallback((message: string) => {
+    showAlertMessage(message, "error");
+    setShowAlert(true);
+  }, []);
+
+  const handleSuggestPalette = useCallback(() => {
+    setFormData((prev: any) => {
+      const suggested = suggestPalette(prev.colors.primary);
+      return {
+        ...prev,
+        colors: {
+          ...prev.colors,
+          secondary: suggested.secondary,
+          hovprimary: suggested.hoverPrimary,
+          hovsecondary: suggested.hoverSecondary,
+          accent: suggested.accent,
+        },
+      };
+    });
+  }, []);
+
+  // Live suggestion: as soon as the Primary Color changes, the rest of the
+  // palette updates immediately to match. Still editable by hand afterward.
+  const handlePrimaryColorChange = useCallback((newPrimary: string) => {
+    setFormData((prev: any) => {
+      const suggested = suggestPalette(newPrimary);
+      return {
+        ...prev,
+        colors: {
+          primary: newPrimary,
+          secondary: suggested.secondary,
+          hovprimary: suggested.hoverPrimary,
+          hovsecondary: suggested.hoverSecondary,
+          accent: suggested.accent,
+        },
+      };
+    });
+  }, []);
+
   // Memoized handleSubmit
   const handleSubmit = useCallback(async () => {
     setIsSaving(true);
@@ -164,21 +218,26 @@ export default function SettingsPage() {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
+      <AdminShell>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AdminShell>
     );
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
+      <AdminShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+            {error}
+          </div>
         </div>
-      </div>
+      </AdminShell>
     );
   if (!formData) return null;
 
   return (
+    <AdminShell>
     <div className="min-h-screen bg-gray-50">
       {showAlert && (
         <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
@@ -210,14 +269,69 @@ export default function SettingsPage() {
           />
         </FormSection>
 
+        {/* Website Images */}
+        <FormSection title="Website Images" icon={ImageIcon}>
+          <p className="text-xs text-gray-500 -mt-2 mb-2">
+            Choose a new image, review the preview, then click Apply to publish it. Each image
+            updates on its own — no need to click "Save Settings" below.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SettingsImageUploader
+              label="Logo"
+              imageKey="logo"
+              currentUrl={settings?.images?.logo}
+              onUploaded={handleImageUploaded}
+              onError={handleImageUploadError}
+            />
+            <SettingsImageUploader
+              label="Hero Background"
+              imageKey="background"
+              currentUrl={settings?.images?.background}
+              onUploaded={handleImageUploaded}
+              onError={handleImageUploadError}
+            />
+            <SettingsImageUploader
+              label="About Us Background"
+              imageKey="background2"
+              currentUrl={settings?.images?.background2}
+              onUploaded={handleImageUploaded}
+              onError={handleImageUploadError}
+            />
+            <SettingsImageUploader
+              label="Hero Photo (Dietitian)"
+              imageKey="missoPic"
+              currentUrl={settings?.images?.missoPic}
+              onUploaded={handleImageUploaded}
+              onError={handleImageUploadError}
+            />
+            <SettingsImageUploader
+              label="Whish Payment Logo"
+              imageKey="whishlogo"
+              currentUrl={settings?.images?.whishlogo}
+              onUploaded={handleImageUploaded}
+              onError={handleImageUploadError}
+            />
+          </div>
+        </FormSection>
+
         {/* Color Theme */}
         <FormSection title="Color Theme" icon={Palette}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ColorInput
               label="Primary Color"
               value={formData.colors.primary}
-              onChange={(e) => handleChange("colors.primary", e.target.value)}
+              onChange={(e) => handlePrimaryColorChange(e.target.value)}
             />
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleSuggestPalette}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/30 text-primary font-medium text-sm hover:bg-primary/10 transition-colors cursor-pointer"
+              >
+                <Wand2 className="w-4 h-4" />
+                Re-suggest matching colors
+              </button>
+            </div>
             <ColorInput
               label="Primary Hover Color"
               value={formData.colors.hovprimary}
@@ -235,7 +349,16 @@ export default function SettingsPage() {
                 handleChange("colors.hovsecondary", e.target.value)
               }
             />
+            <ColorInput
+              label="Accent Color"
+              value={formData.colors.accent}
+              onChange={(e) => handleChange("colors.accent", e.target.value)}
+            />
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Changing the Primary Color instantly updates the rest of the palette to match.
+            Use "Re-suggest matching colors" to reset them after fine-tuning by hand, or edit any field directly.
+          </p>
         </FormSection>
 
         {/* Location & Address */}
@@ -299,7 +422,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSubmit}
             disabled={isSaving}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            className="flex-1 bg-primary hover:bg-hovprimary disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
             {isSaving ? (
               <>
@@ -322,5 +445,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+    </AdminShell>
   );
 }

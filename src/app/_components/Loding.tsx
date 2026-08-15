@@ -11,7 +11,7 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
     return (
       <div className="flex items-center justify-center py-4">
         <div className="relative w-8 h-8">
-          <div className="absolute inset-0 rounded-full border-2 border-blue-100 border-t-blue-600 animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
         </div>
       </div>
     );
@@ -33,7 +33,7 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
               <div className="p-4 space-y-3">
                 <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded w-3/4" />
                 <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded w-1/2" />
-                <div className="h-8 bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 rounded mt-4" />
+                <div className="h-8 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded mt-4" />
               </div>
             </div>
           ))}
@@ -42,9 +42,9 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
         {/* Centered Loading Indicator */}
         <div className="flex flex-col items-center justify-center pt-8">
           <div className="relative w-16 h-16 mb-4">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 border-r-blue-500 animate-spin" />
-            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <LoaderPinwheel className="w-8 h-8 text-blue-600 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary border-r-accent animate-spin" />
+            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+              <LoaderPinwheel className="w-8 h-8 text-primary animate-spin" />
             </div>
           </div>
           <p className="text-gray-600 text-sm font-medium">{message}</p>
@@ -73,9 +73,9 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
         {/* Centered Loading Indicator */}
         <div className="flex flex-col items-center justify-center pt-6">
           <div className="relative w-16 h-16 mb-3">
-            <div className="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 border-r-blue-500 animate-spin" />
-            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-              <LoaderPinwheel className="w-8 h-8 text-blue-600 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary border-r-accent animate-spin" />
+            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+              <LoaderPinwheel className="w-8 h-8 text-primary animate-spin" />
             </div>
           </div>
           <p className="text-gray-600 text-sm font-medium">{message}</p>
@@ -88,9 +88,9 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
   return (
     <div className="w-full flex flex-col items-center justify-center py-12 bg-white ">
       <div className="relative w-20 h-20 mb-4">
-        <div className="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 border-r-blue-500 animate-spin" />
-        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-          <LoaderPinwheel className="w-10 h-10 text-blue-600 animate-spin" />
+        <div className="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary border-r-accent animate-spin" />
+        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <LoaderPinwheel className="w-10 h-10 text-primary animate-spin" />
         </div>
       </div>
       
@@ -98,9 +98,9 @@ function Loading({ variant = 'grid', message = 'Loading products...' }: LoadingP
       
       {/* Animated Dots */}
       <div className="flex justify-center gap-1.5 mt-4">
-        <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-        <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+        <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+        <span className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+        <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
       </div>
     </div>
   );

@@ -183,7 +183,7 @@ const ProductList: React.FC<ProductListProps> = ({
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <button
                         onClick={() => onEditProduct(product)}
-                        className="flex items-center justify-center size-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        className="flex items-center justify-center size-10 bg-primary hover:bg-hovprimary text-white rounded-lg transition-colors"
                         title="Edit product"
                       >
                         <Pencil size={18} />
@@ -235,7 +235,7 @@ const ProductList: React.FC<ProductListProps> = ({
                     onClick={() =>
                       addToCart(product, productQuantities[product.id] || 1)
                     }
-                    className="w-full mt-2 flex items-center justify-center gap-1 bg-gradient-to-r from-primary to-blue-600 hover:shadow-lg text-white font-semibold py-2 px-2 rounded-lg transition-all duration-300 active:scale-95 text-xs md:text-sm flex-shrink-0"
+                    className="w-full mt-2 flex items-center justify-center gap-1 bg-gradient-to-r from-primary to-accent hover:shadow-lg text-white font-semibold py-2 px-2 rounded-lg transition-all duration-300 active:scale-95 text-xs md:text-sm flex-shrink-0"
                   >
                     <ShoppingCart size={16} />
                     <span className="hidden sm:inline">Add</span>

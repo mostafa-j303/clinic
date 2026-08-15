@@ -3,6 +3,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm } from "formidable";
 import fs from "fs";
+import { put } from "@vercel/blob";
 import { getPool } from "../../../lib/db";
 import { requireAdmin } from '../../../lib/session';
 
@@ -69,10 +70,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const mimetype = file.mimetype || "image/jpeg";
       const filename = file.originalFilename || "image.jpg";
 
+      const blob = await put(`product-images/${id}-${filename}`, imageBuffer, {
+        access: "public",
+        contentType: mimetype,
+        addRandomSuffix: true,
+      });
+
       await pool.query(
-        `INSERT INTO product_images (product_id, image, mimetype, filename)
+        `INSERT INTO product_images (product_id, image_url, mimetype, filename)
          VALUES ($1, $2, $3, $4)`,
-        [id, imageBuffer, mimetype, filename]
+        [id, blob.url, mimetype, filename]
       );
     }
 
