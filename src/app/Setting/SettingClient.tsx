@@ -6,7 +6,9 @@ import { useAdminAuth } from "../_context/AdminAuthContext";
 import Alert from "../_components/Alert";
 import AdminShell from "../_components/AdminShell";
 import SettingsImageUploader from "../_components/SettingsImageUploader";
-import { MapPin, Link2, Tag, Truck, ShoppingCart, Globe, Palette, Building2, Wand2, Image as ImageIcon } from "lucide-react";
+import OpeningHoursEditor from "../_components/OpeningHoursEditor";
+import PhoneField from "../_components/PhoneField";
+import { MapPin, Link2, Tag, Truck, ShoppingCart, Globe, Palette, Building2, Wand2, Image as ImageIcon, Clock, Gift } from "lucide-react";
 import { suggestPalette } from "../utils/colorHarmony";
 
 // Memoized FormSection Component
@@ -39,11 +41,13 @@ const FormInput = React.memo(
     value,
     onChange,
     type = "text",
+    placeholder,
   }: {
     label: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     type?: string;
+    placeholder?: string;
   }) => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -53,6 +57,7 @@ const FormInput = React.memo(
         type={type}
         value={value}
         onChange={onChange}
+        placeholder={placeholder}
         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-700 transition-all"
       />
     </div>
@@ -60,6 +65,18 @@ const FormInput = React.memo(
 );
 
 FormInput.displayName = "FormInput";
+
+// "social" keys that are actually phone numbers (not just social links) —
+// these get the country-code PhoneField instead of a plain text input.
+const SOCIAL_PHONE_KEYS = new Set(["number", "wishnb"]);
+const SOCIAL_LABELS: Record<string, string> = {
+  facebook: "Facebook",
+  tiktok: "Tiktok",
+  insta: "Instagram",
+  mail: "Mail",
+  number: "Contact Phone Number",
+  wishnb: "WhatsApp Number",
+};
 
 // Memoized ColorInput Component
 const ColorInput = React.memo(
@@ -267,6 +284,16 @@ export default function SettingsPage() {
             value={formData.myLocation}
             onChange={(e) => handleChange("myLocation", e.target.value)}
           />
+          <FormInput
+            label="Site URL"
+            value={formData.siteUrl || ""}
+            onChange={(e) => handleChange("siteUrl", e.target.value)}
+            placeholder="https://stay-well-clinic.vercel.app"
+          />
+          <p className="text-xs text-gray-500 -mt-2">
+            Your live production domain — used to build the WhatsApp/admin-panel links in
+            notification emails. Update this whenever your domain changes.
+          </p>
         </FormSection>
 
         {/* Website Images */}
@@ -403,17 +430,67 @@ export default function SettingsPage() {
           </div>
         </FormSection>
 
+        {/* Opening Hours */}
+        <FormSection title="Appointment Opening Hours" icon={Clock}>
+          <p className="text-xs text-gray-500 -mt-2 mb-2">
+            Clients can only book a 30-minute appointment slot inside these hours. Unchecked days are treated as closed.
+          </p>
+          <OpeningHoursEditor
+            onSaved={() => {
+              showAlertMessage("Opening hours saved", "success");
+              setShowAlert(true);
+            }}
+            onError={(msg) => {
+              showAlertMessage(msg, "error");
+              setShowAlert(true);
+            }}
+          />
+        </FormSection>
+
+        {/* Reward Program */}
+        <FormSection title="Visit Reward Program" icon={Gift}>
+          <p className="text-xs text-gray-500 -mt-2 mb-2">
+            Automatically grants bonus visits once a client completes a set number of visits on a multi-visit package. Leave blank to disable.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              label="Every X completed visits..."
+              value={String(formData.rewardThreshold ?? "")}
+              onChange={(e) => handleChange("rewardThreshold", e.target.value)}
+              type="number"
+            />
+            <FormInput
+              label="...grant Y free bonus visits"
+              value={String(formData.rewardBonus ?? "")}
+              onChange={(e) => handleChange("rewardBonus", e.target.value)}
+              type="number"
+            />
+          </div>
+        </FormSection>
+
         {/* Social Links */}
         <FormSection title="Social Links" icon={Link2}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {socialEntries.map(([key, value]) => (
-              <FormInput
-                key={key}
-                label={key.charAt(0).toUpperCase() + key.slice(1)}
-                value={String(value)}
-                onChange={(e) => handleChange(`social.${key}`, e.target.value)}
-              />
-            ))}
+            {socialEntries.map(([key, value]) =>
+              SOCIAL_PHONE_KEYS.has(key) ? (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {SOCIAL_LABELS[key] || key}
+                  </label>
+                  <PhoneField
+                    value={String(value || "").replace(/\D/g, "")}
+                    onChange={(v) => handleChange(`social.${key}`, v)}
+                  />
+                </div>
+              ) : (
+                <FormInput
+                  key={key}
+                  label={SOCIAL_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1)}
+                  value={String(value)}
+                  onChange={(e) => handleChange(`social.${key}`, e.target.value)}
+                />
+              )
+            )}
           </div>
         </FormSection>
 

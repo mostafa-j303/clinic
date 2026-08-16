@@ -4,6 +4,7 @@ import { sendWhatsAppMessage } from "../../../lib/whatsapp";
 import { registrationWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 import { generateRegistrationEmailHTML } from "../../../app/utils/emailTemplates";
 import { findClientByEmail, createClient, getAdminNotificationSettings } from "../../../lib/repositories/clients";
+import { getSiteUrl } from "../../../lib/siteUrl";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -31,7 +32,7 @@ export default async function handler(
   }
 
   const hash = await bcrypt.hash(password, 12);
-  await createClient({ email, passwordHash: hash, fullName });
+  const clientId = await createClient({ email, passwordHash: hash, fullName });
 
   try {
     await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email));
@@ -40,7 +41,7 @@ export default async function handler(
   }
 
   try {
-    const { adminEmail, brandPrimary, brandAccent } = await getAdminNotificationSettings();
+    const { adminEmail, brandPrimary, brandAccent, siteUrl } = await getAdminNotificationSettings();
 
     if (adminEmail && BREVO_API_KEY) {
       await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -57,7 +58,13 @@ export default async function handler(
           },
           to: [{ email: adminEmail, name: "Admin" }],
           subject: `New Client Registration: ${fullName}`,
-          htmlContent: generateRegistrationEmailHTML({ fullName, email, brandPrimary, brandAccent }),
+          htmlContent: generateRegistrationEmailHTML({
+            fullName,
+            email,
+            brandPrimary,
+            brandAccent,
+            viewUrl: `${getSiteUrl(siteUrl)}/Users?id=${clientId}`,
+          }),
         }),
       });
     }

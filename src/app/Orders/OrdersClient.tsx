@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSettings } from "../_context/SettingsContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAdminAuth } from "../_context/AdminAuthContext";
 import Alert from "../_components/Alert";
 import AdminTable, { AdminTableColumn } from "../_components/AdminTable";
@@ -299,6 +299,8 @@ export default function OrdersPage() {
   const { settings, loading, error } = useSettings();
   const { isAdmin, isChecking } = useAdminAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const deepLinkId = searchParams?.get("id");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [showAlert, setShowAlert] = useState(false);
@@ -556,6 +558,7 @@ export default function OrdersPage() {
             getRowId={(row) => row.id}
             emptyMessage="No orders yet."
             mobileColumns={["id", "customer", "status"]}
+            initialExpandedId={deepLinkId ? Number(deepLinkId) : null}
             renderDetailPanel={(row) => (
               <OrderDetailPanel
                 order={row}

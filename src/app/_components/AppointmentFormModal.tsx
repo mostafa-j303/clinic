@@ -19,6 +19,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   const [offerprice, setOfferprice] = useState("");
   const [duration, setDuration] = useState("");
   const [details, setDetails] = useState("");
+  const [visitCount, setVisitCount] = useState("");
+  const [validityDays, setValidityDays] = useState("");
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -27,6 +29,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       setOfferprice(initialData.offerprice || "");
       setDuration(initialData.duration || "");
       setDetails(initialData.details?.join(";\n") || "");
+      setVisitCount(initialData.visit_count != null ? String(initialData.visit_count) : "");
+      setValidityDays(initialData.validity_days != null ? String(initialData.validity_days) : "");
     } else if (!initialData && isOpen) {
       // Clear fields when no initialData and modal is open
       setName("");
@@ -34,6 +38,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       setOfferprice("");
       setDuration("");
       setDetails("");
+      setVisitCount("");
+      setValidityDays("");
     }
   }, [initialData, isOpen]);
 
@@ -57,6 +63,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       offerprice: formatPrice(offerprice), // This will be "" if empty, or "$XX" if filled
       duration,
       details: formattedDetails,
+      visitCount: visitCount.trim() ? Number(visitCount) : null,
+      validityDays: validityDays.trim() ? Number(validityDays) : null,
     };
     
     console.log("Saving appointment:", appointment); // Debug log to see what's being sent
@@ -167,6 +175,40 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               onChange={(e) => setDuration(e.target.value)}
             />
           </div>
+
+          {/* Visit credits */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Number of Visits
+              </label>
+              <input
+                type="number"
+                min={1}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                placeholder="e.g., 16"
+                value={visitCount}
+                onChange={(e) => setVisitCount(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Valid For (days)
+              </label>
+              <input
+                type="number"
+                min={1}
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                placeholder="e.g., 365"
+                value={validityDays}
+                onChange={(e) => setValidityDays(e.target.value)}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 -mt-2">
+            Leave both blank for a single-visit package (the default). Set both to track a
+            client's remaining visits — e.g. 16 visits, valid for 365 days.
+          </p>
 
           {/* Details */}
           <div>

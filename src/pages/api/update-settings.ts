@@ -21,9 +21,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       discount,
       minOrder,
       delivery,
+      rewardThreshold,
+      rewardBonus,
+      siteUrl,
     } = req.body;
 
-    
+    // Normalize: trim, strip a trailing slash, add https:// if the admin left the protocol off.
+    let normalizedSiteUrl: string | null = siteUrl ? String(siteUrl).trim() : null;
+    if (normalizedSiteUrl) {
+      normalizedSiteUrl = normalizedSiteUrl.replace(/\/+$/, "");
+      if (!/^https?:\/\//i.test(normalizedSiteUrl)) {
+        normalizedSiteUrl = `https://${normalizedSiteUrl}`;
+      }
+    }
+
     const pool = await poolPromise;
 
     await pool.query(
@@ -48,7 +59,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         whatsapp_number = $16,
         discount = $17,
         min_order = $18,
-        delivery = $19
+        delivery = $19,
+        reward_threshold = $20,
+        reward_bonus = $21,
+        site_url = $22
       `,
       [
         myLocation,
@@ -70,6 +84,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         discount,
         minOrder,
         delivery,
+        rewardThreshold || null,
+        rewardBonus || null,
+        normalizedSiteUrl,
       ]
     );
 

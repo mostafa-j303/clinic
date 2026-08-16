@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AdminTable, { AdminTableColumn } from "../_components/AdminTable";
 import { Calendar, FileText, Mail, Phone, Trash2, User } from "lucide-react";
 import { useAdminAuth } from "../_context/AdminAuthContext";
@@ -278,6 +278,8 @@ export default function IntakeFormsPage() {
   const { isAdmin, isChecking } = useAdminAuth();
   const { settings } = useSettings();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const deepLinkId = searchParams?.get("id");
 
   const [records, setRecords] = useState<IntakeFormRecord[]>([]);
   const [showAlert, setShowAlert] = useState(false);
@@ -676,6 +678,7 @@ export default function IntakeFormsPage() {
             getRowId={(row) => row.id}
             emptyMessage="No intake forms submitted yet."
             mobileColumns={["id", "client", "status"]}
+            initialExpandedId={deepLinkId ? Number(deepLinkId) : null}
             renderDetailPanel={(row) => (
               <IntakeDetailPanel
                 record={row}

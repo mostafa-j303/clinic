@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
-import { generateIntakeEmailHTML } from "../../../app/utils/emailTemplates";
+import { generateIntakeEmailHTML, toWhatsAppLink } from "../../../app/utils/emailTemplates";
 import { sendWhatsAppMessage } from "../../../lib/whatsapp";
 import { intakeFormWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 import {
@@ -11,6 +11,7 @@ import {
   insertIntakeForm,
   markProfileCompleted,
 } from "../../../lib/repositories/clients";
+import { getSiteUrl } from "../../../lib/siteUrl";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -44,11 +45,11 @@ export default async function handler(
       });
     }
 
-    await insertIntakeForm(session.clientId, f);
+    const intakeFormId = await insertIntakeForm(session.clientId, f);
     await markProfileCompleted(session.clientId, true);
 
     try {
-      const { adminEmail, brandPrimary, brandAccent } = await getAdminNotificationSettings();
+      const { adminEmail, brandPrimary, brandAccent, siteUrl } = await getAdminNotificationSettings();
 
       if (adminEmail && BREVO_API_KEY) {
         await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -86,6 +87,8 @@ export default async function handler(
                 : f.exercises,
               brandPrimary,
               brandAccent,
+              viewUrl: `${getSiteUrl(siteUrl)}/IntakeForms?id=${intakeFormId}`,
+              whatsappUrl: toWhatsAppLink(f.phoneNumber),
             }),
           }),
         });

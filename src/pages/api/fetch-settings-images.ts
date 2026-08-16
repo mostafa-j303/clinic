@@ -50,6 +50,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       discount: settings.discount,
       minOrder: settings.min_order,
       delivery: settings.delivery,
+      rewardThreshold: settings.reward_threshold,
+      rewardBonus: settings.reward_bonus,
+      siteUrl: settings.site_url,
     };
 
     res.status(200).json(response);

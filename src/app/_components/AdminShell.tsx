@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   FileText,
   ClipboardList,
+  Users,
   LogOut,
   ExternalLink,
   Menu,
@@ -21,6 +22,7 @@ const ADMIN_LINKS = [
   { href: "/Orders", label: "Orders", icon: ShoppingCart },
   { href: "/IntakeForms", label: "Intake Forms", icon: FileText },
   { href: "/Appointments", label: "Appointments", icon: ClipboardList },
+  { href: "/Users", label: "Users", icon: Users },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {

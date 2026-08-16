@@ -1,14 +1,18 @@
 "use client";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
 import Alert from "../_components/Alert";
 
+const SUSPENDED_MESSAGE =
+  "Your account has been suspended. Please contact us if you think this is a mistake.";
+
 export default function ClientPortal() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -19,8 +23,21 @@ export default function ClientPortal() {
   const [alert, setAlert] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
+    if (searchParams?.get("error") === "SUSPENDED") {
+      setAlert({ msg: SUSPENDED_MESSAGE, type: "error" });
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (status === "authenticated" && session.isSuspended) {
+      signOut({ redirect: false });
+      setAlert({ msg: SUSPENDED_MESSAGE, type: "error" });
+      return;
+    }
     if (status === "authenticated") {
-      if (session.profileCompleted) {
+      if (session.needsBasicInfo) {
+        router.push("/complete-profile");
+      } else if (session.profileCompleted) {
         router.push("/client-dashboard");
       } else {
         router.push("/intake-form");
@@ -57,7 +74,9 @@ export default function ClientPortal() {
         password,
         redirect: false,
       });
-      if (result?.error) {
+      if (result?.error === "SUSPENDED") {
+        setAlert({ msg: SUSPENDED_MESSAGE, type: "error" });
+      } else if (result?.error) {
         setAlert({ msg: "Invalid email or password", type: "error" });
       } else {
         router.push("/intake-form");

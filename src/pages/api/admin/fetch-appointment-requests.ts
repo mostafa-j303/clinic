@@ -24,6 +24,7 @@ export default async function handler(
         phone_number,
         appointment_name,
         selected_date,
+        slot_start,
         payment_method,
         price_used,
         status,

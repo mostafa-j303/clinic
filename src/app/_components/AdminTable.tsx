@@ -19,6 +19,8 @@ interface AdminTableProps<T> {
   pageSizeOptions?: number[];
   /** Column keys shown in the compact mobile card header (rest are reachable via the expand button). Defaults to the first 3 columns. */
   mobileColumns?: string[];
+  /** Row id to auto-expand and scroll its page into view on first load — used for email "View" deep links (e.g. /Orders?id=42). */
+  initialExpandedId?: string | number | null;
 }
 
 // A lightweight Tailwind replacement for material-react-table — sortable
@@ -35,12 +37,14 @@ export default function AdminTable<T>({
   emptyMessage = "No records yet.",
   pageSizeOptions = [10, 25, 50],
   mobileColumns,
+  initialExpandedId,
 }: AdminTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [expandedId, setExpandedId] = useState<string | number | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(pageSizeOptions[0]);
+  const didInitialExpand = React.useRef(false);
 
   const sortableColumns = useMemo(() => columns.filter((c) => c.sortValue), [columns]);
 
@@ -62,6 +66,16 @@ export default function AdminTable<T>({
   useEffect(() => {
     setPage(0);
   }, [data.length, sortKey, sortDir, pageSize]);
+
+  useEffect(() => {
+    if (didInitialExpand.current) return;
+    if (initialExpandedId === undefined || initialExpandedId === null) return;
+    const idx = sorted.findIndex((row) => getRowId(row) === initialExpandedId);
+    if (idx === -1) return;
+    didInitialExpand.current = true;
+    setExpandedId(initialExpandedId);
+    setPage(Math.floor(idx / pageSize));
+  }, [initialExpandedId, sorted, pageSize, getRowId]);
 
   const total = sorted.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));

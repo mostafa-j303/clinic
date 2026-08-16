@@ -14,7 +14,7 @@ import AppLoading from "./_components/Apploading";
 import { useSettings } from "./_context/SettingsContext";
 import { SessionProvider } from "next-auth/react";
 
-const ADMIN_ROUTES = ["/Setting", "/Orders", "/IntakeForms", "/Appointments"];
+const ADMIN_ROUTES = ["/Setting", "/Orders", "/IntakeForms", "/Appointments", "/Users"];
 
 const figtree = Figtree({
   subsets: ["latin"],

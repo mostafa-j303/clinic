@@ -28,6 +28,9 @@ interface Settings {
   discount: string;
   minOrder: string;
   delivery: string;
+  rewardThreshold: number | null;
+  rewardBonus: number | null;
+  siteUrl: string | null;
 }
 
 interface SettingsContextType {

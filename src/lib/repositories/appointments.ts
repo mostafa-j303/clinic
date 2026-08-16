@@ -18,15 +18,17 @@ export async function createAppointment(input: {
   offerprice?: string;
   duration?: string;
   details?: AppointmentDetailsInput;
+  visitCount?: number | null;
+  validityDays?: number | null;
 }) {
   const pool = connectToDatabase();
   const insertAppointment = await pool.query(
     `
-      INSERT INTO appointments (name, price, offer_price, duration)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO appointments (name, price, offer_price, duration, visit_count, validity_days)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id
     `,
-    [input.name, input.price, input.offerprice, input.duration]
+    [input.name, input.price, input.offerprice, input.duration, input.visitCount ?? null, input.validityDays ?? null]
   );
 
   const appointmentId = insertAppointment.rows[0].id;
@@ -52,16 +54,18 @@ export async function updateAppointment(input: {
   offerprice?: string;
   duration?: string;
   details?: AppointmentDetailsInput;
+  visitCount?: number | null;
+  validityDays?: number | null;
 }) {
   const pool = connectToDatabase();
 
   await pool.query(
     `
       UPDATE appointments
-      SET name = $1, price = $2, offer_price = $3, duration = $4
-      WHERE id = $5
+      SET name = $1, price = $2, offer_price = $3, duration = $4, visit_count = $5, validity_days = $6
+      WHERE id = $7
     `,
-    [input.name, input.price, input.offerprice, input.duration, input.id]
+    [input.name, input.price, input.offerprice, input.duration, input.visitCount ?? null, input.validityDays ?? null, input.id]
   );
 
   await pool.query(`DELETE FROM appointment_details WHERE appointment_id = $1`, [

@@ -10,14 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
  const session = await requireAdmin(req, res);
   if (!session) return;
 
-  const { name, price, offerprice, duration, details } = req.body;
+  const { name, price, offerprice, duration, details, visitCount, validityDays } = req.body;
 
   if (!name || !price ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    const appointmentId = await createAppointment({ name, price, offerprice, duration, details });
+    const appointmentId = await createAppointment({ name, price, offerprice, duration, details, visitCount, validityDays });
     res.status(201).json({ message: 'Appointment added successfully', id: appointmentId });
   } catch (error) {
     console.error('Error adding appointment:', error);

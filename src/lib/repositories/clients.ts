@@ -12,11 +12,12 @@ export async function createClient(input: {
   fullName: string;
 }) {
   const pool = connectToDatabase();
-  await pool.query(
+  const result = await pool.query(
     `INSERT INTO clients (email, password_hash, full_name, profile_completed)
-     VALUES ($1, $2, $3, false)`,
+     VALUES ($1, $2, $3, false) RETURNING id`,
     [input.email, input.passwordHash, input.fullName]
   );
+  return result.rows[0].id as number;
 }
 
 export async function getClientAccountInfo(clientId: number) {
@@ -28,17 +29,29 @@ export async function getClientAccountInfo(clientId: number) {
   return result.rows[0] ?? null;
 }
 
+export async function updateClientBasicInfo(
+  clientId: number,
+  input: { phoneNumber: string; gender: string }
+) {
+  const pool = connectToDatabase();
+  await pool.query(
+    "UPDATE clients SET phone_number = $1, gender = $2 WHERE id = $3",
+    [input.phoneNumber, input.gender, clientId]
+  );
+}
+
 /** Admin notification email + brand colors, shared by every server-side email trigger (registration, intake). */
 export async function getAdminNotificationSettings() {
   const pool = connectToDatabase();
   const result = await pool.query(
-    "SELECT mail, primary_color, accent_color FROM settings LIMIT 1"
+    "SELECT mail, primary_color, accent_color, site_url FROM settings LIMIT 1"
   );
   const row = result.rows[0];
   return {
     adminEmail: row?.mail as string | undefined,
     brandPrimary: row?.primary_color as string | undefined,
     brandAccent: row?.accent_color as string | undefined,
+    siteUrl: row?.site_url as string | undefined,
   };
 }
 
@@ -105,7 +118,7 @@ const toBool = (val: unknown) => (val === "Yes" ? true : val === "No" ? false : 
 
 export async function insertIntakeForm(clientId: number, f: IntakeFormInput) {
   const pool = connectToDatabase();
-  await pool.query(
+  const result = await pool.query(
     `INSERT INTO client_intake_forms (
       client_id, full_name, age, phone_number, gender, occupation,
       reason, goals, specific_goal,
@@ -125,7 +138,7 @@ export async function insertIntakeForm(clientId: number, f: IntakeFormInput) {
       $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,
       $17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,
       $31,$32,$33,$34,$35,$36,$37,$38,$39
-    )`,
+    ) RETURNING id`,
     [
       clientId,
       f.fullName, f.age, f.phoneNumber, f.gender, f.occupation,
@@ -144,6 +157,7 @@ export async function insertIntakeForm(clientId: number, f: IntakeFormInput) {
       f.additionalInfo,
     ]
   );
+  return result.rows[0].id as number;
 }
 
 export async function markProfileCompleted(clientId: number, completed: boolean) {
@@ -152,6 +166,57 @@ export async function markProfileCompleted(clientId: number, completed: boolean)
     completed,
     clientId,
   ]);
+}
+
+/** Full client list for the admin Users table: account fields + own phone/gender (from complete-profile, not the intake form's copy) + aggregated visit-credit totals across all their package bundles. */
+export async function listClientsForAdmin() {
+  const pool = connectToDatabase();
+  const result = await pool.query(`
+    SELECT
+      c.id, c.email, c.full_name, c.phone_number, c.gender,
+      c.profile_completed, c.is_suspended, c.created_at,
+      COALESCE(credits.total_visits, 0) AS total_visits,
+      COALESCE(credits.remaining_visits, 0) AS remaining_visits,
+      COALESCE(credits.completed_visits, 0) AS completed_visits
+    FROM clients c
+    LEFT JOIN (
+      SELECT
+        client_id,
+        SUM(total_visits) AS total_visits,
+        SUM(remaining_visits) AS remaining_visits,
+        SUM(completed_visits) AS completed_visits
+      FROM client_package_credits
+      GROUP BY client_id
+    ) credits ON credits.client_id = c.id
+    ORDER BY c.created_at DESC
+  `);
+  return result.rows;
+}
+
+export async function setClientSuspended(clientId: number, suspended: boolean) {
+  const pool = connectToDatabase();
+  await pool.query("UPDATE clients SET is_suspended = $1 WHERE id = $2", [
+    suspended,
+    clientId,
+  ]);
+}
+
+/** Permanently erases a client and every record tied to them. `client_intake_forms` and `client_package_credits` cascade from the `clients` FK, but `appointment_requests.client_id` has no ON DELETE clause (defaults to RESTRICT) and must be cleared first in the same transaction. */
+export async function deleteClientHard(clientId: number) {
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("DELETE FROM appointment_requests WHERE client_id = $1", [clientId]);
+    const result = await client.query("DELETE FROM clients WHERE id = $1", [clientId]);
+    await client.query("COMMIT");
+    return { notFound: result.rowCount === 0 };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function listClientsWithIntakeSummary() {

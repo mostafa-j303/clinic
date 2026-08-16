@@ -29,6 +29,10 @@ export const authOptions: NextAuthOptions = {
         const client = result.rows[0];
         if (!client || !client.password_hash) return null;
 
+        if (client.is_suspended) {
+          throw new Error("SUSPENDED");
+        }
+
         const isValid = await bcrypt.compare(
           credentials.password,
           client.password_hash
@@ -49,7 +53,7 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google") {
         const pool = connectToDatabase();
         const existing = await pool.query(
-          "SELECT id FROM clients WHERE google_id = $1 OR email = $2",
+          "SELECT id, is_suspended FROM clients WHERE google_id = $1 OR email = $2",
           [user.id, user.email]
         );
 
@@ -59,6 +63,8 @@ export const authOptions: NextAuthOptions = {
              VALUES ($1, $2, $3, false)`,
             [user.id, user.email, user.name]
           );
+        } else if (existing.rows[0].is_suspended) {
+          return "/client-portal?error=SUSPENDED";
         } else if (!existing.rows[0].google_id) {
           // Link Google to existing email account
           await pool.query(
@@ -76,15 +82,24 @@ export const authOptions: NextAuthOptions = {
       if (trigger === "update" && session?.profileCompleted !== undefined) {
         token.profileCompleted = session.profileCompleted;
       }
+      if (trigger === "update" && session?.phoneNumber !== undefined) {
+        token.phoneNumber = session.phoneNumber;
+      }
+      if (trigger === "update" && session?.gender !== undefined) {
+        token.gender = session.gender;
+      }
       // 🔥 always ensure DB sync
       const result = await pool.query(
-        "SELECT id, profile_completed FROM clients WHERE email = $1",
+        "SELECT id, profile_completed, phone_number, gender, is_suspended FROM clients WHERE email = $1",
         [token.email]
       );
 
       if (result.rows[0]) {
         token.clientId = result.rows[0].id;
         token.profileCompleted = result.rows[0].profile_completed;
+        token.phoneNumber = result.rows[0].phone_number;
+        token.gender = result.rows[0].gender;
+        token.isSuspended = result.rows[0].is_suspended;
       }
       return token;
     },
@@ -92,6 +107,10 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       session.clientId = token.clientId as number;
       session.profileCompleted = token.profileCompleted as boolean;
+      session.phoneNumber = (token.phoneNumber as string | null) ?? null;
+      session.gender = (token.gender as string | null) ?? null;
+      session.needsBasicInfo = !token.phoneNumber || !token.gender;
+      session.isSuspended = Boolean(token.isSuspended);
       return session;
     },
   },

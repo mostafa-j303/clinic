@@ -40,7 +40,7 @@ $$;
 -- Name: get_appointments(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_appointments() RETURNS TABLE(id integer, price text, offerprice text, name text, duration text, details json, is_featured boolean)
+CREATE FUNCTION public.get_appointments() RETURNS TABLE(id integer, price text, offerprice text, name text, duration text, details json, is_featured boolean, visit_count integer, validity_days integer)
     LANGUAGE sql
     AS $$
     SELECT 
@@ -53,10 +53,12 @@ CREATE FUNCTION public.get_appointments() RETURNS TABLE(id integer, price text, 
             json_agg(ad.detail ORDER BY ad.id) FILTER (WHERE ad.detail IS NOT NULL),
             '[]'
         ) AS details,
-        a.is_featured
+        a.is_featured,
+        a.visit_count,
+        a.validity_days
     FROM appointments a
     LEFT JOIN appointment_details ad ON a.id = ad.appointment_id
-    GROUP BY a.id, a.price, a.offer_price, a.name, a.duration, a.is_featured
+    GROUP BY a.id, a.price, a.offer_price, a.name, a.duration, a.is_featured, a.visit_count, a.validity_days
     ORDER BY a.is_featured DESC, a.id ASC;
 $$;
 
@@ -86,34 +88,18 @@ $$;
 -- Name: get_settings_data(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_settings_data() RETURNS TABLE(my_location text, web_title text, primary_color text, hover_primary text, secondary_color text, hover_secondary text, accent_color text, address text, building text, floor text, facebook text, tiktok text, instagram text, mail text, phone_number text, whatsapp_number text, discount text, min_order text, delivery text)
-    LANGUAGE plpgsql
+CREATE FUNCTION public.get_settings_data() RETURNS TABLE(my_location text, web_title text, primary_color text, hover_primary text, secondary_color text, hover_secondary text, accent_color text, address text, building text, floor text, facebook text, tiktok text, instagram text, mail text, phone_number text, whatsapp_number text, discount text, min_order text, delivery text, reward_threshold integer, reward_bonus integer, site_url text)
+    LANGUAGE sql
     AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    s.my_location,
-    s.web_title,
-    s.primary_color,
-    s.hover_primary,
-    s.secondary_color,
-    s.hover_secondary,
-    s.accent_color,
-    s.address,
-    s.building,
-    s.floor,
-    s.facebook,
-    s.tiktok,
-    s.instagram,
-    s.mail,
-    s.phone_number,
-    s.whatsapp_number,
-    s.discount,
-    s.min_order,
-    s.delivery
-  FROM settings s
-  LIMIT 1;
-END;
+    SELECT
+      s.my_location, s.web_title, s.primary_color, s.hover_primary,
+      s.secondary_color, s.hover_secondary, s.accent_color,
+      s.address, s.building, s.floor,
+      s.facebook, s.tiktok, s.instagram, s.mail, s.phone_number, s.whatsapp_number,
+      s.discount, s.min_order, s.delivery,
+      s.reward_threshold, s.reward_bonus, s.site_url
+    FROM settings s
+    LIMIT 1;
 $$;
 
 
@@ -197,7 +183,11 @@ CREATE TABLE public.appointment_requests (
     payment_method text NOT NULL,
     price_used text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    status text DEFAULT 'Pending'::text NOT NULL
+    status text DEFAULT 'Pending'::text NOT NULL,
+    client_id integer,
+    slot_start timestamp without time zone,
+    slot_end timestamp without time zone,
+    credit_id integer
 );
 
 
@@ -231,7 +221,9 @@ CREATE TABLE public.appointments (
     price text NOT NULL,
     offer_price text,
     duration text,
-    is_featured boolean DEFAULT false NOT NULL
+    is_featured boolean DEFAULT false NOT NULL,
+    visit_count integer,
+    validity_days integer
 );
 
 
@@ -355,6 +347,43 @@ ALTER SEQUENCE public.client_intake_forms_id_seq OWNED BY public.client_intake_f
 
 
 --
+-- Name: client_package_credits; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_package_credits (
+    id integer NOT NULL,
+    client_id integer NOT NULL,
+    appointment_id integer NOT NULL,
+    total_visits integer NOT NULL,
+    remaining_visits integer NOT NULL,
+    completed_visits integer DEFAULT 0 NOT NULL,
+    purchased_at timestamp without time zone DEFAULT now(),
+    expires_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: client_package_credits_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_package_credits_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_package_credits_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_package_credits_id_seq OWNED BY public.client_package_credits.id;
+
+
+--
 -- Name: clients; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -365,7 +394,10 @@ CREATE TABLE public.clients (
     full_name text,
     password_hash text,
     profile_completed boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT now()
+    created_at timestamp without time zone DEFAULT now(),
+    phone_number text,
+    gender text,
+    is_suspended boolean DEFAULT false
 );
 
 
@@ -387,6 +419,72 @@ CREATE SEQUENCE public.clients_id_seq
 --
 
 ALTER SEQUENCE public.clients_id_seq OWNED BY public.clients.id;
+
+
+--
+-- Name: clinic_closures; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clinic_closures (
+    id integer NOT NULL,
+    closure_date date NOT NULL,
+    slot_time time without time zone,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: clinic_closures_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.clinic_closures_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: clinic_closures_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.clinic_closures_id_seq OWNED BY public.clinic_closures.id;
+
+
+--
+-- Name: clinic_hours; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.clinic_hours (
+    id integer NOT NULL,
+    day_of_week smallint NOT NULL,
+    is_closed boolean DEFAULT true NOT NULL,
+    open_time time without time zone,
+    close_time time without time zone,
+    CONSTRAINT clinic_hours_day_of_week_check CHECK (((day_of_week >= 0) AND (day_of_week <= 6)))
+);
+
+
+--
+-- Name: clinic_hours_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.clinic_hours_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: clinic_hours_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.clinic_hours_id_seq OWNED BY public.clinic_hours.id;
 
 
 --
@@ -582,7 +680,10 @@ CREATE TABLE public.settings (
     mail text,
     phone_number text,
     whatsapp_number text,
-    accent_color text DEFAULT '#059669'::text
+    accent_color text DEFAULT '#059669'::text,
+    reward_threshold integer,
+    reward_bonus integer,
+    site_url text
 );
 
 
@@ -675,10 +776,31 @@ ALTER TABLE ONLY public.client_intake_forms ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: client_package_credits id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_package_credits ALTER COLUMN id SET DEFAULT nextval('public.client_package_credits_id_seq'::regclass);
+
+
+--
 -- Name: clients id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.clients ALTER COLUMN id SET DEFAULT nextval('public.clients_id_seq'::regclass);
+
+
+--
+-- Name: clinic_closures id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_closures ALTER COLUMN id SET DEFAULT nextval('public.clinic_closures_id_seq'::regclass);
+
+
+--
+-- Name: clinic_hours id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_hours ALTER COLUMN id SET DEFAULT nextval('public.clinic_hours_id_seq'::regclass);
 
 
 --
@@ -788,6 +910,14 @@ ALTER TABLE ONLY public.client_intake_forms
 
 
 --
+-- Name: client_package_credits client_package_credits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_package_credits
+    ADD CONSTRAINT client_package_credits_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: clients clients_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -809,6 +939,30 @@ ALTER TABLE ONLY public.clients
 
 ALTER TABLE ONLY public.clients
     ADD CONSTRAINT clients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clinic_closures clinic_closures_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_closures
+    ADD CONSTRAINT clinic_closures_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clinic_hours clinic_hours_day_of_week_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_hours
+    ADD CONSTRAINT clinic_hours_day_of_week_key UNIQUE (day_of_week);
+
+
+--
+-- Name: clinic_hours clinic_hours_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clinic_hours
+    ADD CONSTRAINT clinic_hours_pkey PRIMARY KEY (id);
 
 
 --
@@ -876,6 +1030,27 @@ ALTER TABLE ONLY public.settings
 
 
 --
+-- Name: idx_appointment_requests_slot; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_appointment_requests_slot ON public.appointment_requests USING btree (slot_start, slot_end);
+
+
+--
+-- Name: idx_client_package_credits_client; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_client_package_credits_client ON public.client_package_credits USING btree (client_id);
+
+
+--
+-- Name: idx_clinic_closures_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_clinic_closures_date ON public.clinic_closures USING btree (closure_date);
+
+
+--
 -- Name: appointment_details appointment_details_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -884,11 +1059,43 @@ ALTER TABLE ONLY public.appointment_details
 
 
 --
+-- Name: appointment_requests appointment_requests_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_requests
+    ADD CONSTRAINT appointment_requests_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- Name: appointment_requests appointment_requests_credit_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.appointment_requests
+    ADD CONSTRAINT appointment_requests_credit_id_fkey FOREIGN KEY (credit_id) REFERENCES public.client_package_credits(id);
+
+
+--
 -- Name: client_intake_forms client_intake_forms_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.client_intake_forms
     ADD CONSTRAINT client_intake_forms_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
+
+
+--
+-- Name: client_package_credits client_package_credits_appointment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_package_credits
+    ADD CONSTRAINT client_package_credits_appointment_id_fkey FOREIGN KEY (appointment_id) REFERENCES public.appointments(id);
+
+
+--
+-- Name: client_package_credits client_package_credits_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_package_credits
+    ADD CONSTRAINT client_package_credits_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
 
 
 --

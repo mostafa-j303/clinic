@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { openWhishApp } from "../utils/openWhishApp";
 import Image from "next/image";
 import { useSettings } from "../_context/SettingsContext";
 import { useAdminAuth } from "../_context/AdminAuthContext";
-import { Pencil, Plus, Trash2, X, Check, Star } from "lucide-react";
+import { Pencil, Plus, Trash2, X, Check, Star, CalendarDays, LogIn } from "lucide-react";
 import AppointmentFormModal from "./AppointmentFormModal";
 import ConfirmationModal from "./ConfirmationModal";
 import Alert from "./Alert";
@@ -14,7 +16,7 @@ import "react-phone-input-2/lib/style.css";
 import Loading from "./Loding";
 import SectionHeading from "./SectionHeading";
 import ParticleBackdrop, { hexToRgba } from "./ParticleBackdrop";
-import { generateAppointmentEmailHTML } from "../utils/emailTemplates";
+import SlotPicker from "./SlotPicker";
 
 type AppointmentType = {
   id: number;
@@ -24,6 +26,15 @@ type AppointmentType = {
   duration?: string;
   details: string[];
   is_featured?: boolean;
+  visit_count?: number | null;
+  validity_days?: number | null;
+};
+
+type CreditBundle = {
+  id: number;
+  appointment_id: number;
+  remaining_visits: number;
+  total_visits: number;
 };
 
 function Appointment() {
@@ -34,11 +45,16 @@ function Appointment() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
+  const [slot, setSlot] = useState<string | null>(null);
+  const [scheduleNow, setScheduleNow] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
 
   const { settings, loading, error } = useSettings();
   const [fetched, setFetched] = useState(false);
   const { isAdmin } = useAdminAuth();
+  const { data: clientSession, status: sessionStatus } = useSession();
+  const router = useRouter();
+  const [credits, setCredits] = useState<CreditBundle[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState<AppointmentType | null>(null);
@@ -112,6 +128,8 @@ function Appointment() {
         offerprice: appointmentData.offerprice,
         duration: appointmentData.duration,
         details: appointmentData.details,
+        visit_count: (appointmentData as any).visitCount ?? null,
+        validity_days: (appointmentData as any).validityDays ?? null,
       };
 
       setAppointments((prev) =>
@@ -159,6 +177,30 @@ function Appointment() {
     setLastName(storedLastName);
   }, []);
 
+  // Pull the client's remaining-visit balances so the booking modal can show
+  // "X visits remaining" and the request can be blocked client-side too.
+  useEffect(() => {
+    if (sessionStatus !== "authenticated") {
+      setCredits([]);
+      return;
+    }
+    fetch("/api/client/my-credits")
+      .then((res) => res.json())
+      .then((data) => setCredits(data.credits || []))
+      .catch(() => setCredits([]));
+  }, [sessionStatus]);
+
+  const openBookingModal = (appointment: AppointmentType) => {
+    if (sessionStatus !== "authenticated") {
+      showAlertMessage("Please log in to book an appointment.", "error");
+      setTimeout(() => router.push("/client-portal"), 1200);
+      return;
+    }
+    setDate("");
+    setSlot(null);
+    setSelectedAppointment(appointment);
+  };
+
   const normalizePhone = (input: string): string | null => {
     let value = input.replace(/[^\d+]/g, "");
     if ((value.match(/\+/g) || []).length > 1) return null;
@@ -169,9 +211,17 @@ function Appointment() {
   };
 
   const handleSubmit = async () => {
+    if (sessionStatus !== "authenticated") {
+      showAlertMessage("Please log in to book an appointment.", "error");
+      return;
+    }
     const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) {
       showAlertMessage("Invalid phone number. Please check the format.", "error");
+      return;
+    }
+    if (scheduleNow && (!date || !slot)) {
+      showAlertMessage("Please pick a date and time.", "error");
       return;
     }
     localStorage.setItem("name", name);
@@ -195,54 +245,25 @@ function Appointment() {
             phone: normalizedPhone,
             appointmentId: selectedAppointment.id,
             appointmentName: selectedAppointment.name,
-            selectedDate: date,
+            slotStart: scheduleNow ? `${date}T${slot}:00` : null,
             paymentMethod,
             priceUsed,
           }),
         });
 
-        if (!res.ok) throw new Error("Insert failed");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Insert failed");
 
-        //Mail sending logic starts here
-        // Send confirmation email to admin
-        if (settings && settings.social.mail) {
-          try {
-            const emailResponse = await fetch("/api/send-email", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                to: settings.social.mail,
-                subject: `New Appointment Booking from ${name} ${lastName}`,
-                htmlContent: generateAppointmentEmailHTML({
-                  customerName: `${name} ${lastName}`,
-                  customerPhone: normalizedPhone,
-                  appointmentName: selectedAppointment.name,
-                  appointmentDate: date,
-                  price: priceUsed,
-                  paymentMethod,
-                  brandPrimary: settings.colors?.primary,
-                  brandAccent: settings.colors?.accent,
-                }),
-                type: 'appointment',
-                recipientName: 'Admin',
-              }),
-            });
-
-            if (!emailResponse.ok) {
-              console.error('Failed to send appointment confirmation email');
-            }
-          } catch (emailError) {
-            console.error('Error sending appointment email:', emailError);
-            // Don't fail the booking if email fails
-          }
-        }
-        //mail sending logic ends here
-
-        showAlertMessage("Appointment request sent successfully.", "success");
+        showAlertMessage(
+          scheduleNow
+            ? "Appointment request sent successfully."
+            : "Package added — schedule your first visit any time from your dashboard.",
+          "success"
+        );
         closeModal();
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        showAlertMessage("Failed to submit appointment. Please try again.", "error");
+        showAlertMessage(err.message || "Failed to submit appointment. Please try again.", "error");
       } finally {
         setIsSubmitting(false);
       }
@@ -281,7 +302,19 @@ function Appointment() {
 
   const closeModal = () => {
     setSelectedAppointment(null);
+    setDate("");
+    setSlot(null);
+    setScheduleNow(true);
   };
+
+  const creditForSelected = selectedAppointment
+    ? credits.find((c) => c.appointment_id === selectedAppointment.id)
+    : null;
+  const outOfCredits = !!(
+    selectedAppointment?.visit_count &&
+    creditForSelected &&
+    creditForSelected.remaining_visits <= 0
+  );
 
   if (loading) return <Loading variant="grid" message="Loading appointments..." />;
   if (error) return <div className="text-red-500 text-center py-20">Error: {error}</div>;
@@ -402,9 +435,10 @@ function Appointment() {
 
               {/* Book Button */}
               <button
-                onClick={() => setSelectedAppointment(appointment)}
-                className="w-full py-2 sm:py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-2 sm:mb-3 text-xs sm:text-base"
+                onClick={() => openBookingModal(appointment)}
+                className="w-full py-2 sm:py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-2 sm:mb-3 text-xs sm:text-base flex items-center justify-center gap-1.5"
               >
+                {sessionStatus !== "authenticated" && <LogIn size={14} />}
                 Book Now
               </button>
 
@@ -541,19 +575,86 @@ function Appointment() {
                 />
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                  Preferred Date *
+              {/* Visit balance */}
+              {selectedAppointment.visit_count && (
+                <div
+                  className={`rounded-lg p-3 text-sm font-medium ${
+                    outOfCredits
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
+                      : "bg-primary/5 text-primary border border-primary/20"
+                  }`}
+                >
+                  {creditForSelected
+                    ? outOfCredits
+                      ? "You have no visits remaining on this package. Please purchase a new package."
+                      : `${creditForSelected.remaining_visits} of ${creditForSelected.total_visits} visits remaining.`
+                    : `This package includes ${selectedAppointment.visit_count} visits, valid ${
+                        selectedAppointment.validity_days ? `for ${selectedAppointment.validity_days} days` : ""
+                      } from your first booking.`}
+                </div>
+              )}
+
+              {/* Schedule now vs. later — only meaningful for multi-visit packages;
+                  a plain single-visit booking always needs a time right away. */}
+              {!!selectedAppointment.visit_count && !outOfCredits && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={scheduleNow}
+                    onChange={(e) => {
+                      setScheduleNow(e.target.checked);
+                      if (!e.target.checked) {
+                        setDate("");
+                        setSlot(null);
+                      }
+                    }}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Schedule my first visit now
+                  </span>
                 </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
-                  required
-                />
-              </div>
+              )}
+
+              {!scheduleNow && !!selectedAppointment.visit_count && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                  No problem — you can pick a time for your first visit any time from your
+                  dashboard.
+                </p>
+              )}
+
+              {scheduleNow && (
+                <>
+                  {/* Date */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+                      <CalendarDays size={16} className="text-primary" />
+                      Preferred Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={date}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => {
+                        setDate(e.target.value);
+                        setSlot(null);
+                      }}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  {/* Time slots */}
+                  {date && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                        Available Times (30 min) *
+                      </label>
+                      <SlotPicker date={date} selectedSlot={slot} onSelectSlot={setSlot} />
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Payment Method */}
               <div>
@@ -609,9 +710,21 @@ function Appointment() {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={!name || !lastName || !date || !phone || isSubmitting}
+                  disabled={
+                    !name ||
+                    !lastName ||
+                    !phone ||
+                    (scheduleNow && (!date || !slot)) ||
+                    isSubmitting ||
+                    outOfCredits
+                  }
                   className={`flex-1 px-4 py-2 font-semibold rounded-lg transition flex items-center justify-center gap-2 ${
-                    !name || !lastName || !date || !phone || isSubmitting
+                    !name ||
+                    !lastName ||
+                    !phone ||
+                    (scheduleNow && (!date || !slot)) ||
+                    isSubmitting ||
+                    outOfCredits
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-gradient-to-r from-primary to-accent text-white hover:shadow-lg"
                   }`}
@@ -621,8 +734,10 @@ function Appointment() {
                       <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                       Sending...
                     </>
-                  ) : (
+                  ) : scheduleNow ? (
                     "Send Request"
+                  ) : (
+                    "Add Package"
                   )}
                 </button>
               </div>

@@ -1,8 +1,9 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Alert from "../_components/Alert";
+import PhoneField from "../_components/PhoneField";
 
 const SECTIONS = [
   "Personal Information",
@@ -238,9 +239,24 @@ export default function IntakeFormPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/client-portal");
-    if (status === "authenticated" && session.profileCompleted)
+    if (status === "authenticated" && session.isSuspended) {
+      signOut({ callbackUrl: "/client-portal?error=SUSPENDED" });
+    } else if (status === "authenticated" && session.needsBasicInfo) {
+      router.push("/complete-profile");
+    } else if (status === "authenticated" && session.profileCompleted) {
       router.push("/client-dashboard");
+    }
   }, [status, session, router]);
+
+  useEffect(() => {
+    if (status === "authenticated" && !session.needsBasicInfo) {
+      setForm((prev) => ({
+        ...prev,
+        phoneNumber: prev.phoneNumber || (session.phoneNumber || "").replace(/\D/g, ""),
+        gender: prev.gender || session.gender || "",
+      }));
+    }
+  }, [status, session]);
 
   const set = (key: keyof FormData, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -371,11 +387,9 @@ export default function IntakeFormPage() {
               )}
             </Field>
             <Field label="Phone Number">
-              <input
-                className={inputCls}
+              <PhoneField
                 value={form.phoneNumber}
-                onChange={(e) => set("phoneNumber", e.target.value)}
-                placeholder="+961..."
+                onChange={(v) => set("phoneNumber", v)}
               />
             </Field>
             <Field label="Gender" required>

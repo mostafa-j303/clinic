@@ -20,7 +20,7 @@ import {
   MapPinIcon,
   DollarSign,
 } from "lucide-react";
-import { generateOrderEmailHTML } from "../utils/emailTemplates";
+import { generateOrderEmailHTML, toWhatsAppLink } from "../utils/emailTemplates";
 
 // Memoized Cart Item Component
 const CartItemCard = React.memo(
@@ -441,8 +441,7 @@ export default function CartPage() {
 
     try {
       setIsSubmitting(true);
-      await sendOrderToDatabase();
-
+      const { orderId } = await sendOrderToDatabase();
 
       // Calculate order details for email
       const parsedData = {
@@ -483,6 +482,8 @@ export default function CartPage() {
                 paymentMethod,
                 brandPrimary: settings.colors?.primary,
                 brandAccent: settings.colors?.accent,
+                viewUrl: `${settings.siteUrl || window.location.origin}/Orders?id=${orderId}`,
+                whatsappUrl: toWhatsAppLink(normalizedPhone),
               }),
               type: 'order',
               recipientName: 'Admin',

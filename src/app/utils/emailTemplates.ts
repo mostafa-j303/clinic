@@ -19,6 +19,44 @@ function brandTint(hex: string, lightness: number): string {
   return hslToHex({ h, s: Math.max(15, Math.min(s, 45)), l: lightness });
 }
 
+// Builds a wa.me click-to-chat link from any freeform phone string (strips
+// everything but digits — wa.me wants the number with no "+", spaces, or dashes).
+export function toWhatsAppLink(phone: string | undefined | null): string | undefined {
+  if (!phone) return undefined;
+  const digits = phone.replace(/\D/g, "");
+  return digits ? `https://wa.me/${digits}` : undefined;
+}
+
+const CTA_BUTTON_STYLES = `
+  .cta-buttons { text-align: center; margin-top: 24px; }
+  .btn {
+    display: inline-block;
+    margin: 6px 8px;
+    padding: 12px 26px;
+    border-radius: 8px;
+    color: #ffffff !important;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .btn-whatsapp { background-color: #25D366; }
+`;
+
+// Renders the "message on WhatsApp" / "view in admin panel" button pair —
+// either link is optional (e.g. registration has no phone number yet), and
+// the block is omitted entirely if neither is available.
+function ctaButtonsHTML(whatsappUrl: string | undefined, viewUrl: string | undefined, brandPrimary: string): string {
+  if (!whatsappUrl && !viewUrl) return "";
+  const buttons: string[] = [];
+  if (whatsappUrl) {
+    buttons.push(`<a href="${whatsappUrl}" class="btn btn-whatsapp" target="_blank" rel="noopener">Message on WhatsApp</a>`);
+  }
+  if (viewUrl) {
+    buttons.push(`<a href="${viewUrl}" class="btn btn-view" style="background-color: ${brandPrimary};" target="_blank" rel="noopener">View in Admin Panel</a>`);
+  }
+  return `<div class="cta-buttons">${buttons.join("")}</div>`;
+}
+
 export interface OrderEmailData {
   customerName: string;
   customerPhone: string;
@@ -36,6 +74,8 @@ export interface OrderEmailData {
   orderDate?: string;
   brandPrimary?: string;
   brandAccent?: string;
+  viewUrl?: string;
+  whatsappUrl?: string;
 }
 
 export interface AppointmentEmailData {
@@ -48,6 +88,8 @@ export interface AppointmentEmailData {
   bookingDate?: string;
   brandPrimary?: string;
   brandAccent?: string;
+  viewUrl?: string;
+  whatsappUrl?: string;
 }
 
 export interface RegistrationEmailData {
@@ -56,6 +98,8 @@ export interface RegistrationEmailData {
   registeredAt?: string;
   brandPrimary?: string;
   brandAccent?: string;
+  viewUrl?: string;
+  whatsappUrl?: string;
 }
 
 export interface IntakeEmailData {
@@ -73,6 +117,8 @@ export interface IntakeEmailData {
   submittedAt?: string;
   brandPrimary?: string;
   brandAccent?: string;
+  viewUrl?: string;
+  whatsappUrl?: string;
 }
 
 /**
@@ -216,6 +262,7 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
           font-size: 12px;
           margin-top: 10px;
         }
+        ${CTA_BUTTON_STYLES}
       </style>
     </head>
     <body>
@@ -301,6 +348,7 @@ export function generateOrderEmailHTML(data: OrderEmailData): string {
               ✓ Your order has been received and will be confirmed via WhatsApp
             </p>
             <div class="status-badge">Status: Pending Confirmation</div>
+            ${ctaButtonsHTML(data.whatsappUrl, data.viewUrl, brandPrimary)}
           </div>
         </div>
 
@@ -439,6 +487,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
           font-size: 12px;
           margin-top: 15px;
         }
+        ${CTA_BUTTON_STYLES}
       </style>
     </head>
     <body>
@@ -501,6 +550,7 @@ export function generateAppointmentEmailHTML(data: AppointmentEmailData): string
               ✓ Your appointment booking has been received and will be confirmed via WhatsApp
             </p>
             <div class="status-badge">Status: Pending Confirmation</div>
+            ${ctaButtonsHTML(data.whatsappUrl, data.viewUrl, brandPrimary)}
           </div>
         </div>
 
@@ -592,6 +642,7 @@ export function generateRegistrationEmailHTML(data: RegistrationEmailData): stri
           font-size: 12px;
           margin-top: 15px;
         }
+        ${CTA_BUTTON_STYLES}
       </style>
     </head>
     <body>
@@ -617,6 +668,7 @@ export function generateRegistrationEmailHTML(data: RegistrationEmailData): stri
 
           <div style="text-align: center; margin-top: 30px;">
             <div class="status-badge">Status: New Registration</div>
+            ${ctaButtonsHTML(data.whatsappUrl, data.viewUrl, brandPrimary)}
           </div>
         </div>
 
@@ -740,6 +792,7 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
           font-size: 12px;
           margin-top: 15px;
         }
+        ${CTA_BUTTON_STYLES}
       </style>
     </head>
     <body>
@@ -819,6 +872,7 @@ export function generateIntakeEmailHTML(data: IntakeEmailData): string {
               Review the dashboard for the full intake details.
             </p>
             <div class="status-badge">Status: New Intake Submission</div>
+            ${ctaButtonsHTML(data.whatsappUrl, data.viewUrl, brandPrimary)}
           </div>
         </div>
 
