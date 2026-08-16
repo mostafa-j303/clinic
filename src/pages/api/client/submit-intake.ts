@@ -98,7 +98,7 @@ export default async function handler(
     }
 
     try {
-      await sendWhatsAppMessage(intakeFormWhatsAppParams(f.fullName, f.reason));
+      await sendWhatsAppMessage(intakeFormWhatsAppParams(f.fullName, f.reason, intakeFormId));
     } catch (whatsappError) {
       console.error("Error sending intake form WhatsApp notification:", whatsappError);
     }

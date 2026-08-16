@@ -89,7 +89,7 @@ export default async function handler(
 
     try {
       await sendWhatsAppMessage(
-        appointmentWhatsAppParams(firstName, lastName, appointmentName, dateLabel)
+        appointmentWhatsAppParams(firstName, lastName, appointmentName, dateLabel, result.requestId, !slotStart)
       );
     } catch (whatsappError) {
       console.error("Error sending appointment WhatsApp notification:", whatsappError);

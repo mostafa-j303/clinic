@@ -1,13 +1,22 @@
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const WHATSAPP_OWNER_NUMBER = process.env.WHATSAPP_OWNER_NUMBER;
-const WHATSAPP_TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || "new_notification";
 const WHATSAPP_TEMPLATE_LANG = process.env.WHATSAPP_TEMPLATE_LANG || "en_US";
 const WHATSAPP_API_VERSION = process.env.WHATSAPP_API_VERSION || "v20.0";
 
-// One approved template ("new_notification") is reused for all 4 event types.
-// Its body must have exactly 3 placeholders: {{1}} event title, {{2}} who, {{3}} details.
-export async function sendWhatsAppMessage(bodyParams: string[]): Promise<void> {
+export type WhatsAppNotification = {
+  /** One of the 4 approved per-event templates — see whatsappTemplates.ts */
+  templateName: "order_notification" | "appointment_notification" | "intake_notification" | "registration_notification";
+  /** {{1}} event title, {{2}} who, {{3}} details — the template body. */
+  bodyParams: string[];
+  /** The record id appended to the template's fixed-base URL button (e.g. "42" -> `.../Orders?id=42`). */
+  buttonParam: string;
+};
+
+// Each of the 4 templates has a body (3 text placeholders) AND a dynamic URL
+// button (1 placeholder — just the record id, appended to that template's
+// own fixed base URL, configured on the template itself in Meta, not here).
+export async function sendWhatsAppMessage(notification: WhatsAppNotification): Promise<void> {
   if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_OWNER_NUMBER) {
     console.warn(
       "WhatsApp notification skipped: missing WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_OWNER_NUMBER env vars"
@@ -28,12 +37,18 @@ export async function sendWhatsAppMessage(bodyParams: string[]): Promise<void> {
         to: WHATSAPP_OWNER_NUMBER,
         type: "template",
         template: {
-          name: WHATSAPP_TEMPLATE_NAME,
+          name: notification.templateName,
           language: { code: WHATSAPP_TEMPLATE_LANG },
           components: [
             {
               type: "body",
-              parameters: bodyParams.map((text) => ({ type: "text", text })),
+              parameters: notification.bodyParams.map((text) => ({ type: "text", text })),
+            },
+            {
+              type: "button",
+              sub_type: "url",
+              index: "0",
+              parameters: [{ type: "text", text: notification.buttonParam }],
             },
           ],
         },

@@ -306,7 +306,7 @@ export async function createBookingRequest(input: {
  * admin still confirms the actual time, same as any other booking.
  */
 export type CreateFromCreditResult =
-  | { ok: true; requestId: number }
+  | { ok: true; requestId: number; appointmentName: string; priceUsed: string }
   | { ok: false; reason: "not_found" | "no_credits" | "expired" | "slot_unavailable" };
 
 export async function createAppointmentFromCredit(input: {
@@ -384,7 +384,12 @@ export async function createAppointmentFromCredit(input: {
     );
 
     await client.query("COMMIT");
-    return { ok: true, requestId: insertResult.rows[0].id };
+    return {
+      ok: true,
+      requestId: insertResult.rows[0].id,
+      appointmentName: credit.appointment_name,
+      priceUsed: credit.offer_price || credit.price,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

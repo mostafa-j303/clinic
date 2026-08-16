@@ -35,7 +35,7 @@ export default async function handler(
   const clientId = await createClient({ email, passwordHash: hash, fullName });
 
   try {
-    await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email));
+    await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email, clientId));
   } catch (whatsappError) {
     console.error("Error sending registration WhatsApp notification:", whatsappError);
   }
