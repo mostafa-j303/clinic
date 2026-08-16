@@ -16,21 +16,21 @@ export default function ClientDashboard() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-12">
       <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8 text-center">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="text-primary" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {session?.user?.name}!</h1>
-          <p className="text-gray-600 mt-2">Your consultation form has been submitted.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {session?.user?.name}!</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">Your consultation form has been submitted.</p>
 
           <div className="grid grid-cols-1 gap-4 mt-8">
             <Link
@@ -43,7 +43,7 @@ export default function ClientDashboard() {
 
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex items-center justify-center gap-3 border-2 border-gray-200 text-gray-700 font-semibold py-4 rounded-xl hover:bg-gray-50 transition"
+              className="flex items-center justify-center gap-3 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold py-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               <LogOut size={20} />
               Sign Out

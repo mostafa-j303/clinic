@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getPool } from "../../../lib/db";
 import { sendWhatsAppMessage } from "../../lib/whatsapp";
 import { orderWhatsAppParams } from "../../app/utils/whatsappTemplates";
+import { createOrder } from "../../lib/repositories/orders";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,41 +21,8 @@ if (!phoneRegex.test(phone)) {
   return res.status(400).json({ message: "Invalid phone number" });
 }
 
-
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
-    await client.query("BEGIN");
-
-    // 1️⃣ Insert order
-    const orderResult = await client.query(
-      `
-      INSERT INTO orders (name, last_name, phone, payment_method, address, location_link, status)
-      VALUES ($1, $2, $3, $4, $5, $6, 'Pending')
-      RETURNING id
-      `,
-      [name, lastName, phone, paymentMethod, address, locationLink]
-    );
-
-    const orderId = orderResult.rows[0].id;
-
-    // 2️⃣ Insert order items
-    for (const item of cart) {
-      if (!item.id || !item.quantity) {
-        throw new Error("Invalid cart item");
-      }
-
-      await client.query(
-        `
-        INSERT INTO order_items (order_id, product_id, quantity)
-        VALUES ($1, $2, $3)
-        `,
-        [orderId, item.id, item.quantity]
-      );
-    }
-
-    await client.query("COMMIT");
+    const orderId = await createOrder({ name, lastName, phone, paymentMethod, address, locationLink, cart });
 
     try {
       await sendWhatsAppMessage(orderWhatsAppParams(name, lastName, orderId, cart.length));
@@ -68,13 +35,10 @@ if (!phoneRegex.test(phone)) {
       orderId,
     });
   } catch (error) {
-    await client.query("ROLLBACK");
     console.error("Database error:", error);
 
     return res.status(500).json({
       message: "Failed to create order",
     });
-  } finally {
-    client.release();
   }
 }

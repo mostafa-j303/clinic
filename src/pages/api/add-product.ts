@@ -2,9 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm, File } from "formidable";
 import fs from "fs";
 import { put } from "@vercel/blob";
-import { getPool } from "../../../lib/db";
 import getFieldValue from "@/app/utils/getFieldValue";
 import { requireAdmin } from '../../../lib/session';
+import { findCategoryIdByName, insertProduct, insertProductImage } from '../../lib/repositories/products';
 
 // Disable default body parser
 export const config = {
@@ -42,22 +42,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pool = getPool();
-
-    const catRes = await pool.query("SELECT id FROM categories WHERE name = $1", [categories]);
-    const category_id = catRes.rows?.[0]?.id;
+    const category_id = await findCategoryIdByName(categories);
 
     if (!category_id) {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    const insertProduct = await pool.query(
-      `INSERT INTO products (name, price, details, category_id)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
-      [name, price, details, category_id]
-    );
-
-    const product_id = insertProduct.rows[0].id;
+    const product_id = await insertProduct({ name, price, details, categoryId: category_id });
 
     const imageBuffer = fs.readFileSync(file.filepath);
     const mimetype = file.mimetype || "image/jpeg";
@@ -69,11 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       addRandomSuffix: true,
     });
 
-    await pool.query(
-      `INSERT INTO product_images (product_id, image_url, mimetype, filename)
-       VALUES ($1, $2, $3, $4)`,
-      [product_id, blob.url, mimetype, filename]
-    );
+    await insertProductImage({ productId: product_id, imageUrl: blob.url, mimetype, filename });
 
     return res.status(200).json({ message: "Product added successfully", id: product_id });
   } catch (error) {

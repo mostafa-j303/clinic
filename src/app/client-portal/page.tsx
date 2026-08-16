@@ -68,19 +68,19 @@ export default function ClientPortal() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       {alert && (
         <Alert value={alert.msg} type={alert.type} onClose={() => setAlert(null)} />
       )}
 
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-primary to-accent px-8 py-10 text-center">
           <h1 className="text-2xl font-bold text-white">Client Portal</h1>
@@ -93,16 +93,16 @@ export default function ClientPortal() {
           {/* Google button */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 border-2 border-gray-200 rounded-xl py-3 font-semibold text-gray-700 hover:border-primary hover:bg-primary/5 transition mb-6"
+            className="w-full flex items-center justify-center gap-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl py-3 font-semibold text-gray-700 dark:text-gray-200 hover:border-primary hover:bg-primary/5 transition mb-6"
           >
             <FcGoogle size={22} />
             Continue with Google
           </button>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-sm text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <span className="text-sm text-gray-400 dark:text-gray-500">or</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,7 +113,7 @@ export default function ClientPortal() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl focus:border-primary focus:outline-none text-gray-900 dark:text-white"
               />
             )}
 
@@ -123,7 +123,7 @@ export default function ClientPortal() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none text-gray-900"
+              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl focus:border-primary focus:outline-none text-gray-900 dark:text-white"
             />
 
             <div className="relative">
@@ -133,12 +133,12 @@ export default function ClientPortal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none text-gray-900 pr-12"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl focus:border-primary focus:outline-none text-gray-900 dark:text-white pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
               >
                 {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -159,7 +159,7 @@ export default function ClientPortal() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-6">
             {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => setMode(mode === "login" ? "register" : "login")}

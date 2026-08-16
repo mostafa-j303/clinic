@@ -36,7 +36,7 @@ export default function SectionHeading({
       </span>
       <h2
         className={`text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight ${
-          isDark ? "text-white" : "text-gray-900"
+          isDark ? "text-white" : "text-gray-900 dark:text-white"
         }`}
       >
         {title}
@@ -45,7 +45,7 @@ export default function SectionHeading({
         <p
           className={`mt-4 text-base sm:text-lg leading-relaxed ${
             isCenter ? "mx-auto max-w-2xl" : "max-w-2xl"
-          } ${isDark ? "text-white/80" : "text-gray-600"}`}
+          } ${isDark ? "text-white/80" : "text-gray-600 dark:text-gray-300"}`}
         >
           {subtitle}
         </p>

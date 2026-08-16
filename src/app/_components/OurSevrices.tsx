@@ -3,7 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useSettings } from "../_context/SettingsContext";
 import Loading from "./Loding";
-import { Award, GraduationCap, Heart, Stethoscope } from "lucide-react";
+import { Award, GraduationCap, Heart, Stethoscope, BadgeCheck } from "lucide-react";
 import SectionHeading from "./SectionHeading";
 
 function OurServices() {
@@ -78,15 +78,25 @@ function OurServices() {
           subtitle="Licensed dietitian with over 9 years of dedicated experience in nutritional therapy, combining clinical expertise with a passion for patient care."
         />
 
-        {/* Main Description Card */}
-        <div className="bg-gradient-to-br from-primary/5 to-accent/10 border-2 border-primary rounded-xl p-6 sm:p-8 mb-12 sm:mb-16">
-          <div className="flex items-start gap-4">
-            <Award className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+        {/* Foundation Panel — credentials strip + statement, rebuilt from a plain bordered box */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-white to-accent/10 dark:from-primary/15 dark:via-gray-800 dark:to-accent/10 p-5 sm:p-8 mb-8 sm:mb-16"
+        >
+          <Award className="hidden sm:block absolute -right-4 -top-4 w-36 h-36 text-primary/10 dark:text-primary/10" />
+
+          <div className="relative flex items-start gap-3 sm:gap-4">
+            <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-primary text-white shadow-md">
+              <Award className="w-5 h-5 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white mb-1.5 sm:mb-3">
                 Foundation Built on Excellence
               </h3>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base sm:text-lg">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm sm:text-lg">
                 I am a licensed dietitian with over nine years of dedicated experience in the field
                 of nutritional therapy. My foundation was built through intensive clinical training at
                 a hospital, where I completed a comprehensive 6-month internship that deepened my
@@ -94,41 +104,65 @@ function OurServices() {
               </p>
             </div>
           </div>
-        </div>
+
+          {/* Credential strip */}
+          <div className="relative mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-primary/15">
+            {[
+              { value: "9+", label: "Years Experience" },
+              { value: "1000+", label: "Clients Guided" },
+              { value: "Licensed", label: "Dietitian" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center sm:text-left">
+                <div className="text-lg sm:text-2xl font-bold text-primary">{stat.value}</div>
+                <div className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
-              <div
+              <motion.div
                 key={index}
-                className="group bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+                className="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary hover:-translate-y-1 p-4 sm:p-8 shadow-sm hover:shadow-lg transition-all duration-300"
               >
                 {/* Icon */}
-                <div className="flex items-center justify-center w-14 h-14 bg-primary/10 group-hover:bg-primary rounded-lg mb-5 transition-colors duration-300">
-                  <IconComponent className="w-7 h-7 text-primary group-hover:text-white transition-colors duration-300" />
+                <div className="flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 group-hover:bg-primary rounded-lg mb-3 sm:mb-5 transition-colors duration-300">
+                  <IconComponent className="w-5 h-5 sm:w-7 sm:h-7 text-primary group-hover:text-white transition-colors duration-300" />
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-sm sm:text-xl font-bold text-gray-900 dark:text-white mb-1.5 sm:mb-3">
                   {service.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                <p className="text-xs sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3 sm:line-clamp-none">
                   {service.description}
                 </p>
 
                 {/* Accent line */}
-                <div className="mt-4 h-1 w-0 bg-primary group-hover:w-12 transition-all duration-300" />
-              </div>
+                <div className="mt-3 sm:mt-4 h-1 w-0 bg-primary group-hover:w-12 transition-all duration-300" />
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Specializations */}
-        <div className="mt-12 sm:mt-16 bg-gray-50 dark:bg-gray-800 rounded-xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Areas of Expertise</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Specializations — pill badges instead of a plain bulleted list */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mt-8 sm:mt-16 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 sm:p-8 border border-gray-200 dark:border-gray-700"
+        >
+          <h3 className="text-base sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-6">Areas of Expertise</h3>
+          <div className="flex flex-wrap gap-1.5 sm:gap-3">
             {[
               "Renal Nutrition",
               "Diabetes Management",
@@ -140,13 +174,16 @@ function OurServices() {
               "Medical Nutrition Therapy",
               "Community Nutrition",
             ].map((specialty, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full" />
-                <span className="text-gray-700 dark:text-gray-300 font-medium">{specialty}</span>
-              </div>
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-[11px] sm:text-sm font-medium px-2.5 sm:px-4 py-1 sm:py-2 rounded-full"
+              >
+                <BadgeCheck size={12} className="text-primary flex-shrink-0 sm:size-4" />
+                {specialty}
+              </span>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

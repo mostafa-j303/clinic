@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../../lib/db';
 import { requireAdmin } from '../../../lib/session';
+import { createAppointment } from '../../lib/repositories/appointments';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,33 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pool = connectToDatabase();
-
-    const insertAppointment = await pool.query(
-      `
-        INSERT INTO appointments (name, price, offer_price, duration)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id
-      `,
-      [name, price, offerprice, duration]
-    );
-
-    const appointmentId = insertAppointment.rows[0].id;
-
-    // Insert details if they exist
-    if (Array.isArray(details) && details.length > 0) {
-      const insertDetailsPromises = details.map((detail: string) =>
-        pool.query(
-          `
-            INSERT INTO appointment_details (appointment_id, detail)
-            VALUES ($1, $2)
-          `,
-          [appointmentId, detail]
-        )
-      );
-      await Promise.all(insertDetailsPromises);
-    }
-
+    const appointmentId = await createAppointment({ name, price, offerprice, duration, details });
     res.status(201).json({ message: 'Appointment added successfully', id: appointmentId });
   } catch (error) {
     console.error('Error adding appointment:', error);

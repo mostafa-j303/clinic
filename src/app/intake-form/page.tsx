@@ -129,7 +129,7 @@ function Checkbox({
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${
           checked
             ? "bg-primary border-primary"
-            : "border-gray-300 group-hover:border-primary"
+            : "border-gray-300 dark:border-gray-600 group-hover:border-primary"
         }`}
       >
         {checked && (
@@ -145,7 +145,7 @@ function Checkbox({
         )}
       </div>
 
-      <span className="text-gray-700 text-sm">{label}</span>
+      <span className="text-gray-700 dark:text-gray-200 text-sm">{label}</span>
     </label>
   );
 }
@@ -171,13 +171,13 @@ function Radio({
         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
           checked
             ? "border-primary"
-            : "border-gray-300 group-hover:border-primary"
+            : "border-gray-300 dark:border-gray-600 group-hover:border-primary"
         }`}
       >
         {checked && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
       </div>
 
-      <span className="text-gray-700 text-sm">{label}</span>
+      <span className="text-gray-700 dark:text-gray-200 text-sm">{label}</span>
     </label>
   );
 }
@@ -192,8 +192,8 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
-      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 mb-6">
+      <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
         <span className="text-2xl">{emoji}</span> {title}
       </h2>
       <div className="space-y-4">{children}</div>
@@ -212,7 +212,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
@@ -221,7 +221,7 @@ function Field({
 }
 
 const inputCls =
-  "w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-primary focus:outline-none text-gray-900 transition";
+  "w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl focus:border-primary focus:outline-none text-gray-900 dark:text-white transition";
 const textareaCls = `${inputCls} resize-none`;
 
 export default function IntakeFormPage() {
@@ -289,7 +289,7 @@ export default function IntakeFormPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 pb-12 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-12 flex items-center justify-center">
         <span className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -303,7 +303,7 @@ export default function IntakeFormPage() {
     ((applicableSteps.indexOf(step) + 1) / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-12">
       {alert && (
         <Alert
           value={alert.msg}
@@ -315,13 +315,13 @@ export default function IntakeFormPage() {
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             First Consultation Form
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
             Please fill out this form before your first consultation.
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Your answers will help us create a personalized plan tailored to
             your needs.
           </p>
@@ -329,13 +329,13 @@ export default function IntakeFormPage() {
 
         {/* Progress */}
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-gray-500 mb-2">
+          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
             <span>
               Section {applicableSteps.indexOf(step) + 1} of {totalSteps}
             </span>
             <span>{SECTIONS[step]}</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -762,7 +762,7 @@ export default function IntakeFormPage() {
         {/* Step 9: For Women Only */}
         {step === 9 && (
           <SectionCard title="For Women Only" emoji="🌸">
-            <p className="text-sm text-gray-500 -mt-2 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2 mb-4">
               Skip this section if it doesn't apply to you.
             </p>
             <Field label="Are you currently pregnant or breastfeeding?">
@@ -852,7 +852,7 @@ export default function IntakeFormPage() {
                 onChange={(e) => set("readinessScale", Number(e.target.value))}
                 className="w-full accent-primary"
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
                 <span>1 – Not ready</span>
                 <span>10 – Fully committed</span>
               </div>
@@ -891,7 +891,7 @@ export default function IntakeFormPage() {
               />
             </Field>
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mt-4">
-              <p className="text-sm text-gray-700 italic">
+              <p className="text-sm text-gray-700 dark:text-gray-200 italic">
                 "Based on everything we discussed, I'll create a personalized
                 plan that fits your lifestyle — not just a diet."
               </p>
@@ -904,7 +904,7 @@ export default function IntakeFormPage() {
           {step > 0 && (
             <button
               onClick={() => goToStep(-1)}
-              className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition"
+              className="flex-1 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               ← Back
             </button>

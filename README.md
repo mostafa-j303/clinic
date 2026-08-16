@@ -20,6 +20,21 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## End-to-end tests
+
+A real, committed Playwright suite lives in `e2e/` (config: `playwright.config.ts`).
+
+```bash
+npm run test:e2e       # headless run, starts its own dev server if one isn't already running
+npm run test:e2e:ui    # interactive UI mode, useful while writing/debugging a spec
+```
+
+Notes:
+- Never point this suite at production — `playwright.config.ts` always targets `http://localhost:3000` via a dev server it starts itself.
+- Admin specs read `ADMIN_PASSWORD_REFERENCE` from `.env` to log in — keep that value in sync with the real admin password (see the "Admin login access" section of `CLAUDE.md`).
+- There is no separate test database. Specs that would create real data (registering a client, submitting an intake form, placing an order) are intentionally scoped to UI-only assertions (disabled/enabled button states, navigation, validation) rather than actually submitting — don't add a spec that calls `/api/client/register`, `/api/orders`, `/api/client/submit-intake`, etc. against this shared DB without first setting up an isolated test database.
+- Outbound notification calls (`/api/send-email`, `/api/send-whatsapp`) are stubbed at the network layer for every test (see `e2e/fixtures.ts`) — no real email/WhatsApp message is ever sent by the suite.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

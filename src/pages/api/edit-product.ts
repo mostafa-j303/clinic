@@ -4,8 +4,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { IncomingForm } from "formidable";
 import fs from "fs";
 import { put } from "@vercel/blob";
-import { getPool } from "../../../lib/db";
 import { requireAdmin } from '../../../lib/session';
+import {
+  findCategoryIdByName,
+  updateProductFields,
+  deleteProductImages,
+  insertProductImage,
+} from '../../lib/repositories/products';
 
 // Disable default body parser
 export const config = {
@@ -45,26 +50,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pool = getPool();
-
-    const catRes = await pool.query("SELECT id FROM categories WHERE name = $1", [categories]);
-    const category_id = catRes.rows?.[0]?.id;
+    const category_id = await findCategoryIdByName(categories);
 
     if (!category_id) {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    // Update the product fields
-    await pool.query(
-      `UPDATE products
-       SET name = $1, price = $2, details = $3, category_id = $4
-       WHERE id = $5`,
-      [name, price, details, category_id, id]
-    );
+    await updateProductFields({ id, name, price, details, categoryId: category_id });
 
     // If a new file is uploaded, replace the image
     if (file) {
-      await pool.query(`DELETE FROM product_images WHERE product_id = $1`, [id]);
+      await deleteProductImages(id);
 
       const imageBuffer = fs.readFileSync(file.filepath);
       const mimetype = file.mimetype || "image/jpeg";
@@ -76,11 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         addRandomSuffix: true,
       });
 
-      await pool.query(
-        `INSERT INTO product_images (product_id, image_url, mimetype, filename)
-         VALUES ($1, $2, $3, $4)`,
-        [id, blob.url, mimetype, filename]
-      );
+      await insertProductImage({ productId: id, imageUrl: blob.url, mimetype, filename });
     }
 
     return res.status(200).json({ message: "Product updated successfully", id });

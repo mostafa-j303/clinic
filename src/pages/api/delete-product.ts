@@ -1,7 +1,7 @@
 // pages/api/delete-product.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getPool } from '../../../lib/db';
 import { requireAdmin } from '../../../lib/session';
+import { deleteProduct } from '../../lib/repositories/products';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
@@ -17,11 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pool = getPool();
-
-    // Then delete the product itself
-    await pool.query('DELETE FROM products WHERE id = $1', [id]);
-
+    await deleteProduct(id);
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);

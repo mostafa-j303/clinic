@@ -1,7 +1,7 @@
 // pages/api/delete-appointment.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '../../../lib/db';
 import { requireAdmin } from '../../../lib/session';
+import { deleteAppointment } from '../../lib/repositories/appointments';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
@@ -18,17 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pool = connectToDatabase();
-
-    await pool.query(
-      `DELETE FROM appointment_details WHERE appointment_id = $1`,
-      [id]
-    );
-    await pool.query(
-      `DELETE FROM appointments WHERE id = $1`,
-      [id]
-    );
-
+    await deleteAppointment(id);
     res.status(200).json({ message: 'Appointment deleted successfully' });
   } catch (error) {
     console.error('Error deleting appointment:', error);

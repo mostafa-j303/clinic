@@ -40,3 +40,5 @@ yarn-error.log*
 next-env.d.ts
 
 /client_secret_448519862856-m7omumgb5ufr07375rpvk0lqood85fob.apps.googleusercontent.com.json
+test-results/
+playwright-report/

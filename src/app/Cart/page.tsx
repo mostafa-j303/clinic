@@ -33,7 +33,7 @@ const CartItemCard = React.memo(
     index: number;
     onRemove: (id: number) => void;
   }) => (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex gap-4">
         <img
           src={item.image}
@@ -41,12 +41,12 @@ const CartItemCard = React.memo(
           className="w-20 h-20 rounded-lg object-cover"
         />
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">{item.name}</h3>
-          <p className="text-sm text-gray-600 mt-1">{item.details}</p>
+          <h3 className="font-semibold text-gray-900 dark:text-white">{item.name}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{item.details}</p>
           <div className="flex items-center justify-between mt-3">
             <span className="text-lg font-bold text-primary">{item.price}</span>
             <div className="flex items-center gap-2">
-              <div className="bg-gray-100 px-3 py-1 rounded text-sm font-semibold text-gray-700">
+              <div className="bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Qty: {item.quantity}
               </div>
               <button
@@ -86,32 +86,32 @@ const PriceSummary = React.memo(
     const isBelowMinimum = total < minOrder;
 
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Order Summary</h3>
 
-        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Subtotal</span>
-            <span className="font-semibold text-gray-900">
+            <span className="text-gray-600 dark:text-gray-300">Subtotal</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
               ${subtotal.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Discount ({discountPercentage}%)</span>
+            <span className="text-gray-600 dark:text-gray-300">Discount ({discountPercentage}%)</span>
             <span className="font-semibold text-red-600">
               -${discount.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Delivery Charge</span>
-            <span className="font-semibold text-gray-900">
+            <span className="text-gray-600 dark:text-gray-300">Delivery Charge</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
               ${delivery.toFixed(2)}
             </span>
           </div>
         </div>
 
         <div className="flex justify-between items-center mb-4">
-          <span className="font-bold text-gray-900">Total</span>
+          <span className="font-bold text-gray-900 dark:text-white">Total</span>
           <span className="text-2xl font-bold text-primary">
             ${total.toFixed(2)}
           </span>
@@ -148,17 +148,17 @@ const LocationSection = React.memo(
     onFetchLocation: () => void;
     onClearLocation: () => void;
   }) => (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
         <MapPin size={20} className="text-primary" />
         Delivery Location
       </h3>
 
       {locationFetched ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 size={20} className="text-green-600" />
-            <span className="font-semibold text-green-900">
+            <span className="font-semibold text-green-900 dark:text-green-300">
               Location Fetched Successfully
             </span>
           </div>
@@ -225,7 +225,7 @@ const FormInput = React.memo(
     type?: string;
   }) => (
     <div>
-      <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+      <label className=" text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
         <Icon size={18} className="text-primary" />
         {label}
       </label>
@@ -234,7 +234,7 @@ const FormInput = React.memo(
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500 transition-all"
+        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all"
       />
     </div>
   )
@@ -553,7 +553,7 @@ export default function CartPage() {
     isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {showAlert && (
         <Alert value={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
       )}
@@ -561,10 +561,10 @@ export default function CartPage() {
       {fetchingLocation && <LocationLoader />}
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shopping Cart</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
             {cart.length} {cart.length === 1 ? "item" : "items"} in your cart
           </p>
         </div>
@@ -573,12 +573,12 @@ export default function CartPage() {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
         {cart.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">🛒</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               Your cart is empty
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Add some delicious items to get started!
             </p>
             <Link
@@ -592,7 +592,7 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4 max-h-[550px] overflow-y-auto pr-2 ">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Order Items
               </h2>
               {cart.map((item, index) => (
@@ -631,8 +631,8 @@ export default function CartPage() {
 
         {/* Checkout Form */}
         {cart.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Delivery Information
             </h2>
 
@@ -654,7 +654,7 @@ export default function CartPage() {
             </div>
 
             <div className="mb-6">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <label className=" text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
                 <PhoneIcon size={18} className="text-primary" />
                 Phone Number
               </label>
@@ -669,12 +669,12 @@ export default function CartPage() {
                 dropdownClass="custom-dropdown"
                 enableSearch
                 containerClass="w-full"
-                inputClass="!w-full !py-2.5 !pl-12 !text-gray-900 !border !rounded-lg !focus:ring-2 !focus:ring-primary"
+                inputClass="!w-full !py-2.5 !pl-12 !text-gray-900 dark:!text-white !border !rounded-lg !focus:ring-2 !focus:ring-primary"
               />
             </div>
 
             <div className="mb-6">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <label className=" text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
                 <MapPinIcon size={18} className="text-primary" />
                 Delivery Address
               </label>
@@ -682,19 +682,19 @@ export default function CartPage() {
                 placeholder="Enter your complete address with details"
                 value={address}
                 onChange={handleAddressChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500 resize-none h-24 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none h-24 transition-all"
               />
             </div>
 
             <div className="mb-6">
-              <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <label className=" text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
                 <DollarSign size={18} className="text-primary" />
                 Payment Method
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white transition-all"
               >
                 <option value="Cash">Cash</option>
                 <option value="Wish Money">Wish Money</option>
@@ -711,7 +711,7 @@ export default function CartPage() {
                   height={50}
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
                     Pay to Wish Account:
                   </p>
                   <p className="text-lg font-bold text-primary mt-1">
@@ -751,7 +751,7 @@ export default function CartPage() {
               )}
             </button>
 
-            <p className="text-center text-sm text-gray-600 mt-4 flex items-center justify-center gap-2">
+            <p className="text-center text-sm text-gray-600 dark:text-gray-300 mt-4 flex items-center justify-center gap-2">
               <CheckCircle2 size={16} className="text-green-600" />
               All items will be confirmed via WhatsApp
             </p>

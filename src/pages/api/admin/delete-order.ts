@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getPool } from "../../../../lib/db";
 import { requireAdmin } from "../../../../lib/session";
+import { deleteOrder } from '../../../lib/repositories/orders';
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,15 +19,8 @@ export default async function handler(
     return res.status(400).json({ message: "Order ID is required" });
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
-    await client.query(
-      "DELETE FROM orders WHERE id = $1",
-      [orderId]
-    );
-
+    await deleteOrder(orderId);
     return res.status(200).json({
       message: "Order and related items deleted successfully",
     });
@@ -36,7 +29,5 @@ export default async function handler(
     return res.status(500).json({
       message: "Failed to delete order",
     });
-  } finally {
-    client.release();
   }
 }

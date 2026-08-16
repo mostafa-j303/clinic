@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { connectToDatabase } from "../../../../lib/db";
 import bcrypt from "bcrypt";
 import { sendWhatsAppMessage } from "../../../lib/whatsapp";
 import { registrationWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 import { generateRegistrationEmailHTML } from "../../../app/utils/emailTemplates";
+import { findClientByEmail, createClient, getAdminNotificationSettings } from "../../../lib/repositories/clients";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -25,22 +25,13 @@ export default async function handler(
     return res.status(400).json({ message: "Password must be at least 8 characters" });
   }
 
-  const pool = connectToDatabase();
-
-  const existing = await pool.query(
-    "SELECT id FROM clients WHERE email = $1",
-    [email]
-  );
-  if (existing.rows.length > 0) {
+  const existing = await findClientByEmail(email);
+  if (existing) {
     return res.status(409).json({ message: "Email already registered" });
   }
 
   const hash = await bcrypt.hash(password, 12);
-  await pool.query(
-    `INSERT INTO clients (email, password_hash, full_name, profile_completed)
-     VALUES ($1, $2, $3, false)`,
-    [email, hash, fullName]
-  );
+  await createClient({ email, passwordHash: hash, fullName });
 
   try {
     await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email));
@@ -49,12 +40,7 @@ export default async function handler(
   }
 
   try {
-    const settingsResult = await pool.query(
-      "SELECT mail, primary_color, accent_color FROM settings LIMIT 1"
-    );
-    const adminEmail = settingsResult.rows[0]?.mail;
-    const brandPrimary = settingsResult.rows[0]?.primary_color;
-    const brandAccent = settingsResult.rows[0]?.accent_color;
+    const { adminEmail, brandPrimary, brandAccent } = await getAdminNotificationSettings();
 
     if (adminEmail && BREVO_API_KEY) {
       await fetch("https://api.brevo.com/v3/smtp/email", {

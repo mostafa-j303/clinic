@@ -306,12 +306,12 @@ function Appointment() {
           title="Choose Your Package"
           subtitle="Personalized nutrition packages designed around your goals, from a single consultation to a full year of ongoing support."
         />
-        {/* Grid of Appointment Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Grid of Appointment Cards — 2-up on mobile, matching the Products grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {appointments.map((appointment: AppointmentType) => (
             <div
               key={appointment.id}
-              className={`group relative bg-white dark:bg-gray-800 rounded-xl border-2 shadow-sm hover:shadow-lg transition-all duration-300 p-6 flex flex-col ${
+              className={`group relative bg-white dark:bg-gray-800 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-6 flex flex-col ${
                 appointment.is_featured
                   ? "border-amber-400 shadow-amber-200/50"
                   : "border-gray-200 dark:border-gray-700 hover:border-primary"
@@ -320,9 +320,10 @@ function Appointment() {
               {appointment.is_featured && (
                 // Small dedicated corner wrapper owns the clipping, sized just for the
                 // ribbon — keeps it independent of the card's own overflow behavior.
-                <div className="absolute top-0 right-0 w-28 h-28 overflow-hidden rounded-tr-xl pointer-events-none">
+                // Scaled down on mobile so it doesn't overrun a narrow 2-up card.
+                <div className="absolute top-0 right-0 w-16 h-16 sm:w-28 sm:h-28 overflow-hidden rounded-tr-xl pointer-events-none">
                   <motion.div
-                    className="absolute top-[22px] right-[-40px] w-[150px] py-1 text-center text-[11px] font-bold uppercase tracking-wide text-white shadow-md rotate-45"
+                    className="absolute top-[10px] right-[-24px] w-[90px] py-0.5 text-center text-[7px] sm:top-[22px] sm:right-[-40px] sm:w-[150px] sm:py-1 sm:text-[11px] font-bold uppercase tracking-wide text-white shadow-md rotate-45"
                     style={{
                       backgroundSize: "200% 100%",
                       backgroundImage:
@@ -337,8 +338,8 @@ function Appointment() {
               )}
 
               {/* Header */}
-              <div className="mb-4 flex items-start justify-between gap-2">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <div className="mb-2 sm:mb-4 flex items-start justify-between gap-2">
+                <h3 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white line-clamp-2">
                   {appointment.name}
                 </h3>
                 {isAdmin && (
@@ -348,7 +349,7 @@ function Appointment() {
                     title={appointment.is_featured ? "Unmark as featured" : "Mark as featured (shows first)"}
                   >
                     <Star
-                      size={20}
+                      size={18}
                       className={
                         appointment.is_featured
                           ? "fill-amber-400 text-amber-500"
@@ -360,19 +361,19 @@ function Appointment() {
               </div>
 
               {/* Price Section */}
-              <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <p className="flex items-baseline gap-2">
+              <div className="mb-2 sm:mb-4 pb-2 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
+                <p className="flex items-baseline gap-1.5 sm:gap-2">
                   {appointment.offerprice ? (
                     <>
-                      <span className="text-sm text-gray-500 line-through">
+                      <span className="text-xs sm:text-sm text-gray-500 line-through">
                         {appointment.price}
                       </span>
-                      <span className="text-2xl font-bold text-primary">
+                      <span className="text-lg sm:text-2xl font-bold text-primary">
                         {appointment.offerprice}
                       </span>
                     </>
                   ) : (
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-lg sm:text-2xl font-bold text-primary">
                       {appointment.price}
                     </span>
                   )}
@@ -380,20 +381,20 @@ function Appointment() {
               </div>
 
               {/* Details List */}
-              <ul className="space-y-2 mb-6 flex-grow">
+              <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-6 flex-grow">
                 {appointment.details.map((detail, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check size={16} className="text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{detail}</span>
+                  <li key={index} className="flex items-start gap-1.5 sm:gap-2">
+                    <Check size={13} className="text-primary flex-shrink-0 mt-0.5 sm:size-4" />
+                    <span className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 sm:line-clamp-none">{detail}</span>
                   </li>
                 ))}
               </ul>
 
               {/* Duration */}
               {appointment.duration && (
-                <div className="mb-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <div className="mb-2 sm:mb-4 pb-2 sm:pb-4 border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-4">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200">
                     {appointment.duration}
                   </p>
                 </div>
@@ -402,27 +403,27 @@ function Appointment() {
               {/* Book Button */}
               <button
                 onClick={() => setSelectedAppointment(appointment)}
-                className="w-full py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-3"
+                className="w-full py-2 sm:py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 mb-2 sm:mb-3 text-xs sm:text-base"
               >
                 Book Now
               </button>
 
               {/* Admin Controls */}
               {isAdmin && (
-                <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex gap-2 pt-2 sm:pt-3 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => openEditModal(appointment)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg py-2 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg py-1.5 sm:py-2 transition-colors"
                   >
-                    <Pencil size={16} />
-                    <span className="text-xs font-semibold">Edit</span>
+                    <Pencil size={14} />
+                    <span className="text-[11px] sm:text-xs font-semibold">Edit</span>
                   </button>
                   <button
                     onClick={() => handleDeleteClick(appointment.id)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-lg py-2 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 sm:gap-2 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-lg py-1.5 sm:py-2 transition-colors"
                   >
-                    <Trash2 size={16} />
-                    <span className="text-xs font-semibold">Delete</span>
+                    <Trash2 size={14} />
+                    <span className="text-[11px] sm:text-xs font-semibold">Delete</span>
                   </button>
                 </div>
               )}
@@ -431,13 +432,13 @@ function Appointment() {
 
           {/* Add New Appointment Card (Admin Only) */}
           {isAdmin && (
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-dashed border-green-400 p-6 flex items-center justify-center hover:border-green-600 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/10 rounded-xl border-2 border-dashed border-green-400 dark:border-green-700 p-3 sm:p-6 flex items-center justify-center hover:border-green-600 hover:shadow-lg transition-all duration-300 cursor-pointer group"
               onClick={openAddModal}
             >
               <div className="text-center">
-                <Plus className="w-12 h-12 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                <p className="font-semibold text-green-700">Add Appointment</p>
-                <p className="text-xs text-green-600 mt-1">Create new service</p>
+                <Plus className="w-8 h-8 sm:w-12 sm:h-12 text-green-600 mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform" />
+                <p className="text-xs sm:text-base font-semibold text-green-700 dark:text-green-400">Add Appointment</p>
+                <p className="text-[10px] sm:text-xs text-green-600 dark:text-green-500 mt-0.5 sm:mt-1">Create new service</p>
               </div>
             </div>
           )}

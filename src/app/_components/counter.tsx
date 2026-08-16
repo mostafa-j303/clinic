@@ -8,8 +8,10 @@ interface CounterProps {
   maxCount?: number;
 }
 
-const Counter: React.FC<CounterProps> = ({ 
-  initialCount, 
+// Compact quantity stepper — sized to sit inline next to an Add button
+// instead of stretching full-width as its own block.
+const Counter: React.FC<CounterProps> = ({
+  initialCount,
   onCountChange,
   minCount = 1,
   maxCount = 999
@@ -40,14 +42,14 @@ const Counter: React.FC<CounterProps> = ({
 
   const handleDirectInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = parseInt(e.target.value, 10);
-    
+
     if (isNaN(value)) {
       value = minCount;
     }
-    
+
     // Clamp value between min and max
     value = Math.max(minCount, Math.min(value, maxCount));
-    
+
     setCount(value);
     onCountChange(value);
   };
@@ -56,21 +58,21 @@ const Counter: React.FC<CounterProps> = ({
   const isAtMax = count >= maxCount;
 
   return (
-    <div className="w-full justify-center flex items-center gap-1 bg-gray-100 rounded-lg p-1 ">
+    <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 flex-shrink-0">
       {/* Decrement Button */}
       <button
         type="button"
         onClick={handleDecrement}
         disabled={isAtMin}
-        className={`flex items-center justify-center size-9 rounded-md transition-all flex-1 ${
+        className={`flex items-center justify-center size-6 rounded-md transition-all ${
           isAtMin
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-white text-gray-600 hover:bg-primary hover:text-white active:scale-95"
+            ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+            : "text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 hover:text-primary active:scale-95"
         }`}
         aria-label="Decrease quantity"
         title={isAtMin ? `Minimum quantity is ${minCount}` : "Decrease quantity"}
       >
-        <Minus size={18} />
+        <Minus size={13} />
       </button>
 
       {/* Input Field */}
@@ -81,7 +83,7 @@ const Counter: React.FC<CounterProps> = ({
         onChange={handleDirectInput}
         min={minCount}
         max={maxCount}
-        className="h-9 w-14 text-center text-black font-semibold border-0 bg-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-primary [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+        className="h-6 w-7 text-center text-xs text-black dark:text-white font-semibold border-0 bg-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-primary [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
         aria-label="Quantity"
       />
 
@@ -90,15 +92,15 @@ const Counter: React.FC<CounterProps> = ({
         type="button"
         onClick={handleIncrement}
         disabled={isAtMax}
-        className={`flex items-center justify-center size-9 rounded-md transition-all flex-1 ${
+        className={`flex items-center justify-center size-6 rounded-md transition-all ${
           isAtMax
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-white text-gray-600 hover:bg-primary hover:text-white active:scale-95"
+            ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+            : "text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600 hover:text-primary active:scale-95"
         }`}
         aria-label="Increase quantity"
         title={isAtMax ? `Maximum quantity is ${maxCount}` : "Increase quantity"}
       >
-        <Plus size={18} />
+        <Plus size={13} />
       </button>
     </div>
   );

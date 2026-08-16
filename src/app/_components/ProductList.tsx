@@ -170,14 +170,14 @@ const ProductList: React.FC<ProductListProps> = ({
           <SwiperSlide key={product.id}>
             <div className="w-full h-full">
               {/* Product Card */}
-              <div className="w-full h-full min-h-96 bg-white rounded-lg border-2 border-gray-200 hover:border-primary overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
-                
-                {/* Image Container */}
-                <div className="relative w-full h-40 bg-gray-100 overflow-hidden group flex-shrink-0">
+              <div className="w-full h-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col">
+
+                {/* Image Container — aspect-ratio based so it scales with card width instead of a fixed height that reads too tall on narrow mobile cards */}
+                <div className="relative w-full aspect-[4/3] bg-gray-100 dark:bg-gray-900 overflow-hidden group flex-shrink-0">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-fill group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   {isAdmin && (
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -200,46 +200,41 @@ const ProductList: React.FC<ProductListProps> = ({
                 </div>
 
                 {/* Content Area */}
-                <div className="flex flex-col flex-grow p-3 overflow-hidden">
-                  
-                  {/* Main Content - Price, Name, Description */}
-                  <div className="flex-grow overflow-hidden">
-                    {/* Price */}
-                    <div className="text-lg md:text-xl font-bold text-primary truncate mb-1">
-                      {product.price}
-                    </div>
+                <div className="flex flex-col flex-grow p-2.5 sm:p-3 gap-1">
+                  {/* Product Name */}
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
+                    {product.name}
+                  </h3>
 
-                    {/* Product Name */}
-                    <h3 className="text-xs md:text-sm font-bold text-gray-900 line-clamp-2 mb-1">
-                      {product.name}
-                    </h3>
+                  {/* Details */}
+                  <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 line-clamp-1 sm:line-clamp-2 flex-grow">
+                    {product.details}
+                  </p>
 
-                    {/* Details */}
-                    <p className="text-[10px] md:text-xs text-gray-600 line-clamp-3">
-                      {product.details}
-                    </p>
+                  {/* Price */}
+                  <div className="text-base sm:text-lg font-bold text-primary">
+                    {product.price}
                   </div>
 
-                  {/* Counter - Right Side */}
-                  <div className=" flex justify-center">
+                  {/* Stepper + Add — one compact row instead of two stacked full-width blocks */}
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     <Counter
                       initialCount={productQuantities[product.id] || 1}
                       onCountChange={(newCount) =>
                         handleCountChange(product.id, newCount)
                       }
                     />
+                    <button
+                      onClick={() =>
+                        addToCart(product, productQuantities[product.id] || 1)
+                      }
+                      className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-primary to-accent hover:shadow-md text-white font-semibold py-1.5 px-2 rounded-lg transition-all duration-300 active:scale-95 text-xs"
+                      aria-label={`Add ${product.name} to cart`}
+                    >
+                      <ShoppingCart size={14} />
+                      <span>Add</span>
+                    </button>
                   </div>
-
-                  {/* Add Button - Full Width */}
-                  <button
-                    onClick={() =>
-                      addToCart(product, productQuantities[product.id] || 1)
-                    }
-                    className="w-full mt-2 flex items-center justify-center gap-1 bg-gradient-to-r from-primary to-accent hover:shadow-lg text-white font-semibold py-2 px-2 rounded-lg transition-all duration-300 active:scale-95 text-xs md:text-sm flex-shrink-0"
-                  >
-                    <ShoppingCart size={16} />
-                    <span className="hidden sm:inline">Add</span>
-                  </button>
                 </div>
               </div>
             </div>

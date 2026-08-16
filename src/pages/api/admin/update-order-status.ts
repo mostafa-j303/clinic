@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getPool } from "../../../../lib/db";
 import { requireAdmin } from "../../../../lib/session";
+import { updateOrderStatus } from '../../../lib/repositories/orders';
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,39 +24,21 @@ export default async function handler(
     return res.status(400).json({ message: "Invalid status" });
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
-
   try {
-    // 🔒 Get current status
-    const currentRes = await client.query(
-      "SELECT status FROM orders WHERE id = $1",
-      [orderId]
-    );
+    const { result } = await updateOrderStatus(orderId, status);
 
-    if (currentRes.rowCount === 0) {
+    if (result === "not_found") {
       return res.status(404).json({ message: "Order not found" });
     }
-
-    const currentStatus = currentRes.rows[0].status;
-
-    // 🔒 Block invalid transitions
-    if (currentStatus === "Delivered" || currentStatus === "Cancelled") {
+    if (result === "finalized") {
       return res.status(400).json({
         message: "This order is finalized and cannot be updated",
       });
     }
 
-    await client.query(
-      `UPDATE orders SET status = $1 WHERE id = $2`,
-      [status, orderId]
-    );
-
     return res.status(200).json({ message: "Status updated successfully" });
   } catch (error) {
     console.error("Database error:", error);
     return res.status(500).json({ message: "Failed to update status" });
-  } finally {
-    client.release();
   }
 }
