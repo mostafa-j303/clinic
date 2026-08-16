@@ -16,13 +16,13 @@ import {
   CalendarCheck,
   List,
   CalendarRange,
-  CalendarDays,
   Plus,
+  Ticket,
+  PackageCheck,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import AdminCalendarView from "../_components/AdminCalendarView";
 import AdminBookingModal from "../_components/AdminBookingModal";
-import SlotPicker from "../_components/SlotPicker";
 
 type AppointmentRequest = {
   id: number;
@@ -95,76 +95,90 @@ const StatusBadge = React.memo(({ status }: { status: string }) => {
 
 StatusBadge.displayName = "StatusBadge";
 
-// Memoized Detail Panel Component
+// Memoized Detail Panel Component — the same panel is used for both tabs,
+// `isPackage` (no slot_start) switches which fields/actions make sense:
+// a package request is approved (grants visit credits) or cancelled/deleted,
+// never scheduled or "completed" itself — those apply to the actual visits
+// booked later against the credits it grants.
 const AppointmentDetailPanel = React.memo(
   ({
     appointment,
+    isPackage,
     onSendWhatsApp,
     onConfirm,
     onComplete,
     onCancel,
     onDelete,
-    onSchedule,
     isUpdating,
   }: {
     appointment: AppointmentRequest;
+    isPackage: boolean;
     onSendWhatsApp: (appointment: AppointmentRequest) => void;
     onConfirm: (id: number) => void;
     onComplete: (id: number) => void;
     onCancel: (id: number) => void;
     onDelete: (id: number) => void;
-    onSchedule: (id: number, slotStart: string) => void;
     isUpdating: boolean;
   }) => {
     const isFinalStatus =
       appointment.status === "Completed" || appointment.status === "Cancelled";
-    const displayDate = appointment.slot_start || appointment.selected_date;
-    const [showScheduler, setShowScheduler] = useState(false);
-    const [schedDate, setSchedDate] = useState("");
-    const [schedSlot, setSchedSlot] = useState<string | null>(null);
 
     return (
       <div className="p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-900">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Appointment Details */}
+          {/* Request Details */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-              <Calendar size={20} /> Appointment Details
+              {isPackage ? <Ticket size={20} /> : <Calendar size={20} />}
+              {isPackage ? "Package Details" : "Appointment Details"}
             </h3>
 
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Appointment Type
+                  {isPackage ? "Package" : "Appointment Type"}
                 </p>
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mt-1">
                   {appointment.appointment_name}
                 </p>
               </div>
 
-              <div>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Scheduled Date &amp; Time
-                </p>
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mt-1">
-                  {appointment.slot_start ? (
-                    <>
-                      {new Date(displayDate).toLocaleDateString(undefined, {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                      {` · ${new Date(appointment.slot_start).toLocaleTimeString(undefined, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}`}
-                    </>
-                  ) : (
-                    <span className="text-amber-600 dark:text-amber-400">Not yet scheduled</span>
-                  )}
-                </p>
-              </div>
+              {isPackage ? (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Visits
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mt-1">
+                    {appointment.status === "Confirmed" ? (
+                      <span className="text-green-600 dark:text-green-400">
+                        Approved — credited to client's account
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400">
+                        Awaiting approval — no visits credited yet
+                      </span>
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Scheduled Date &amp; Time
+                  </p>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mt-1">
+                    {new Date(appointment.slot_start!).toLocaleDateString(undefined, {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    {` · ${new Date(appointment.slot_start!).toLocaleTimeString(undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -232,54 +246,6 @@ const AppointmentDetailPanel = React.memo(
           </div>
         </div>
 
-        {/* Scheduler — only shown for a Pending request with no slot yet */}
-        {appointment.status === "Pending" && !appointment.slot_start && showScheduler && (
-          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 space-y-3">
-            <div>
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-                <CalendarDays size={16} className="text-primary" />
-                Date
-              </label>
-              <input
-                type="date"
-                value={schedDate}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => {
-                  setSchedDate(e.target.value);
-                  setSchedSlot(null);
-                }}
-                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
-              />
-            </div>
-            {schedDate && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                  Available Times (30 min)
-                </label>
-                <SlotPicker date={schedDate} selectedSlot={schedSlot} onSelectSlot={setSchedSlot} />
-              </div>
-            )}
-            <div className="flex gap-2">
-              <button
-                disabled={!schedDate || !schedSlot || isUpdating}
-                onClick={() => {
-                  onSchedule(appointment.id, `${schedDate}T${schedSlot}:00`);
-                  setShowScheduler(false);
-                }}
-                className="flex-1 px-4 py-2.5 rounded-lg font-semibold bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Schedule &amp; Confirm
-              </button>
-              <button
-                onClick={() => setShowScheduler(false)}
-                className="px-4 py-2.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Action Buttons */}
         <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -291,29 +257,18 @@ const AppointmentDetailPanel = React.memo(
               <span className="hidden sm:inline">WhatsApp</span>
             </button>
 
-            {appointment.status === "Pending" && appointment.slot_start && (
+            {appointment.status === "Pending" && (
               <button
                 disabled={isUpdating}
                 onClick={() => onConfirm(appointment.id)}
                 className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg disabled:opacity-60"
               >
-                <CalendarCheck size={18} />
-                <span className="hidden sm:inline">Confirm</span>
+                {isPackage ? <PackageCheck size={18} /> : <CalendarCheck size={18} />}
+                <span className="hidden sm:inline">{isPackage ? "Approve Package" : "Confirm"}</span>
               </button>
             )}
 
-            {appointment.status === "Pending" && !appointment.slot_start && !showScheduler && (
-              <button
-                disabled={isUpdating}
-                onClick={() => setShowScheduler(true)}
-                className="px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg disabled:opacity-60"
-              >
-                <CalendarDays size={18} />
-                <span className="hidden sm:inline">Schedule Visit</span>
-              </button>
-            )}
-
-            {appointment.status === "Confirmed" && (
+            {!isPackage && appointment.status === "Confirmed" && (
               <button
                 disabled={isUpdating}
                 onClick={() => onComplete(appointment.id)}
@@ -324,20 +279,24 @@ const AppointmentDetailPanel = React.memo(
               </button>
             )}
 
-            <button
-              disabled={isFinalStatus || isUpdating}
-              onClick={() => onCancel(appointment.id)}
-              className={`px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all ${
-                isFinalStatus || isUpdating
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg"
-              }`}
-            >
-              <XCircle size={18} />
-              <span className="hidden sm:inline">
-                {isUpdating ? "Updating..." : "Cancel"}
-              </span>
-            </button>
+            {/* Cancelling an already-approved package has no clean semantics
+                (the credits are already granted) — only offer it for Pending. */}
+            {(!isPackage || appointment.status === "Pending") && (
+              <button
+                disabled={isFinalStatus || isUpdating}
+                onClick={() => onCancel(appointment.id)}
+                className={`px-4 py-2.5 rounded-lg font-semibold flex gap-2 justify-center items-center transition-all ${
+                  isFinalStatus || isUpdating
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg"
+                }`}
+              >
+                <XCircle size={18} />
+                <span className="hidden sm:inline">
+                  {isUpdating ? "Updating..." : "Cancel"}
+                </span>
+              </button>
+            )}
 
             <button
               onClick={() => onDelete(appointment.id)}
@@ -373,6 +332,7 @@ export default function AppointmentRequestsAdmin() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<"list" | "calendar">("list");
+  const [activeTab, setActiveTab] = useState<"appointments" | "packages">("appointments");
   const [showNewBooking, setShowNewBooking] = useState(false);
 
   // 🔐 Admin guard
@@ -399,6 +359,20 @@ export default function AppointmentRequestsAdmin() {
     fetchRequests();
   }, [fetchRequests]);
 
+  // A request with no slot_start is a package request (grants credits on
+  // approval); one with a slot_start is an actual booked appointment time.
+  const packageRequests = useMemo(() => requests.filter((r) => !r.slot_start), [requests]);
+  const appointmentRequests = useMemo(() => requests.filter((r) => !!r.slot_start), [requests]);
+
+  // Deep-linked from an email's "View in Admin Panel" button — jump to
+  // whichever tab actually contains that row.
+  useEffect(() => {
+    if (!deepLinkId) return;
+    const id = Number(deepLinkId);
+    if (packageRequests.some((r) => r.id === id)) setActiveTab("packages");
+    else if (appointmentRequests.some((r) => r.id === id)) setActiveTab("appointments");
+  }, [deepLinkId, packageRequests, appointmentRequests]);
+
   // 🟢 Update status (memoized)
   const updateStatus = useCallback(async (id: number, status: string) => {
     if (updatingId === id) return;
@@ -422,30 +396,6 @@ export default function AppointmentRequestsAdmin() {
       );
     } catch (err: any) {
       showAlertMessage(err.message || "Failed to update status", "error");
-    } finally {
-      setUpdatingId(null);
-    }
-  }, [updatingId]);
-
-  // 🗓 Schedule + auto-confirm a request the client left unscheduled (memoized)
-  const scheduleRequest = useCallback(async (id: number, slotStart: string) => {
-    if (updatingId === id) return;
-    try {
-      setUpdatingId(id);
-      const res = await fetch("/api/admin/schedule-appointment-request", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, slotStart }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to schedule visit");
-
-      setRequests((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, slot_start: slotStart, status: "Confirmed" } : r))
-      );
-      showAlertMessage("Visit scheduled and confirmed", "success");
-    } catch (err: any) {
-      showAlertMessage(err.message || "Failed to schedule visit", "error");
     } finally {
       setUpdatingId(null);
     }
@@ -478,10 +428,10 @@ export default function AppointmentRequestsAdmin() {
   }, [confirmId]);
 
   // 📲 WhatsApp (memoized) — just opens a pre-filled chat, doesn't change status.
-  // Confirming/completing the request is a separate explicit action now.
   const sendWhatsApp = useCallback((r: AppointmentRequest) => {
-    const when = r.slot_start || r.selected_date;
-    const msg = `Hello ${r.first_name} 👋\n\nYour appointment request has been received.\n\n🗓 Appointment: ${r.appointment_name}\n📅 Date: ${new Date(when).toLocaleString()}\n💳 Payment: ${r.payment_method}\n💰 Price: ${r.price_used}\n\nThank you 🙏`;
+    const msg = r.slot_start
+      ? `Hello ${r.first_name} 👋\n\nYour appointment request has been received.\n\n🗓 Appointment: ${r.appointment_name}\n📅 Date: ${new Date(r.slot_start).toLocaleString()}\n💳 Payment: ${r.payment_method}\n💰 Price: ${r.price_used}\n\nThank you 🙏`
+      : `Hello ${r.first_name} 👋\n\nYour package request has been received.\n\n🎟 Package: ${r.appointment_name}\n💳 Payment: ${r.payment_method}\n💰 Price: ${r.price_used}\n\nWe'll confirm it and credit your visits shortly. Thank you 🙏`;
 
     window.open(
       `https://wa.me/${r.phone_number}?text=${encodeURIComponent(msg)}`,
@@ -489,8 +439,8 @@ export default function AppointmentRequestsAdmin() {
     );
   }, []);
 
-  // 📊 Columns (memoized)
-  const columns = useMemo<AdminTableColumn<AppointmentRequest>[]>(
+  // 📊 Appointment (has a slot) columns
+  const appointmentColumns = useMemo<AdminTableColumn<AppointmentRequest>[]>(
     () => [
       {
         key: "id",
@@ -539,24 +489,20 @@ export default function AppointmentRequestsAdmin() {
       {
         key: "date",
         header: "Date & Time",
-        sortValue: (row) => row.slot_start || row.selected_date,
-        cell: (row) => {
-          const when = row.slot_start || row.selected_date;
-          return (
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {new Date(when).toLocaleDateString(undefined, {
-                month: "short",
-                day: "2-digit",
-                year: "numeric",
-              })}
-              {row.slot_start &&
-                ` · ${new Date(row.slot_start).toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`}
-            </span>
-          );
-        },
+        sortValue: (row) => row.slot_start || "",
+        cell: (row) => (
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {new Date(row.slot_start!).toLocaleDateString(undefined, {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+            })}
+            {` · ${new Date(row.slot_start!).toLocaleTimeString(undefined, {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`}
+          </span>
+        ),
       },
       {
         key: "payment",
@@ -603,6 +549,98 @@ export default function AppointmentRequestsAdmin() {
     []
   );
 
+  // 📊 Package request columns — no date/time, since none exists yet
+  const packageColumns = useMemo<AdminTableColumn<AppointmentRequest>[]>(
+    () => [
+      {
+        key: "id",
+        header: "ID",
+        width: "w-16",
+        sortValue: (row) => row.id,
+        cell: (row) => (
+          <span className="font-mono font-bold text-gray-900 dark:text-white">
+            #{row.id}
+          </span>
+        ),
+      },
+      {
+        key: "client",
+        header: "Client",
+        sortValue: (row) => `${row.first_name} ${row.last_name}`,
+        cell: (row) => (
+          <div className="font-medium text-gray-900 dark:text-white">
+            {row.first_name} {row.last_name}
+          </div>
+        ),
+      },
+      {
+        key: "phone",
+        header: "Phone",
+        sortValue: (row) => row.phone_number,
+        cell: (row) => (
+          <a
+            href={`tel:${row.phone_number}`}
+            className="text-primary hover:underline text-sm font-medium"
+          >
+            {row.phone_number}
+          </a>
+        ),
+      },
+      {
+        key: "package",
+        header: "Package",
+        sortValue: (row) => row.appointment_name,
+        cell: (row) => (
+          <span className="font-medium text-gray-700 dark:text-gray-200">
+            {row.appointment_name}
+          </span>
+        ),
+      },
+      {
+        key: "payment",
+        header: "Payment",
+        sortValue: (row) => row.payment_method,
+        cell: (row) => (
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {row.payment_method}
+          </span>
+        ),
+      },
+      {
+        key: "price",
+        header: "Price",
+        sortValue: (row) => row.price_used,
+        cell: (row) => (
+          <span className="font-bold text-gray-900 dark:text-white">
+            {row.price_used}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortValue: (row) => row.status,
+        cell: (row) => <StatusBadge status={row.status} />,
+      },
+      {
+        key: "created",
+        header: "Requested On",
+        sortValue: (row) => row.created_at,
+        cell: (row) => (
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {new Date(row.created_at).toLocaleString(undefined, {
+              month: "short",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
   if (isLoading)
     return (
       <AdminShell>
@@ -619,7 +657,7 @@ export default function AppointmentRequestsAdmin() {
 
       {confirmId && (
         <ConfirmationModal
-          text="Are you sure you want to delete this appointment request?"
+          text="Are you sure you want to delete this request?"
           onCancel={() => setConfirmId(null)}
           onConfirm={deleteRequest}
           isDangerous={true}
@@ -630,37 +668,62 @@ export default function AppointmentRequestsAdmin() {
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Appointment Requests
+            Appointments &amp; Packages
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Manage and respond to client appointment requests
+            Approve package requests (which grant client visit credits) and confirm booked
+            appointment times, separately
           </p>
+
+          {/* Tabs */}
+          <div className="mt-4 flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setActiveTab("appointments")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "appointments"
+                  ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <Calendar size={14} /> Appointment Requests ({appointmentRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("packages")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "packages"
+                  ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <Ticket size={14} /> Package Requests ({packageRequests.length})
+            </button>
+          </div>
+
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-semibold text-sm">
-              {requests.length} requests
-            </span>
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => setView("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  view === "list"
-                    ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                <List size={14} /> List
-              </button>
-              <button
-                onClick={() => setView("calendar")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  view === "calendar"
-                    ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                <CalendarRange size={14} /> Calendar
-              </button>
-            </div>
+            {activeTab === "appointments" && (
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => setView("list")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    view === "list"
+                      ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  <List size={14} /> List
+                </button>
+                <button
+                  onClick={() => setView("calendar")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    view === "calendar"
+                      ? "bg-white dark:bg-gray-700 text-primary shadow-sm"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  <CalendarRange size={14} /> Calendar
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setShowNewBooking(true)}
               className="flex items-center gap-1.5 bg-primary hover:bg-hovprimary text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
@@ -673,26 +736,51 @@ export default function AppointmentRequestsAdmin() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {view === "calendar" ? (
-          <AdminCalendarView requests={requests} />
+        {activeTab === "appointments" ? (
+          view === "calendar" ? (
+            <AdminCalendarView requests={appointmentRequests} />
+          ) : (
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <AdminTable
+                columns={appointmentColumns}
+                data={appointmentRequests}
+                getRowId={(row) => row.id}
+                emptyMessage="No appointment requests yet."
+                mobileColumns={["id", "client", "status"]}
+                initialExpandedId={deepLinkId ? Number(deepLinkId) : null}
+                renderDetailPanel={(row) => (
+                  <AppointmentDetailPanel
+                    appointment={row}
+                    isPackage={false}
+                    onSendWhatsApp={sendWhatsApp}
+                    onConfirm={(id) => updateStatus(id, "Confirmed")}
+                    onComplete={(id) => updateStatus(id, "Completed")}
+                    onCancel={(id) => updateStatus(id, "Cancelled")}
+                    onDelete={(id) => setConfirmId(id)}
+                    isUpdating={updatingId === row.id}
+                  />
+                )}
+              />
+            </div>
+          )
         ) : (
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
             <AdminTable
-              columns={columns}
-              data={requests}
+              columns={packageColumns}
+              data={packageRequests}
               getRowId={(row) => row.id}
-              emptyMessage="No appointment requests yet."
+              emptyMessage="No package requests yet."
               mobileColumns={["id", "client", "status"]}
               initialExpandedId={deepLinkId ? Number(deepLinkId) : null}
               renderDetailPanel={(row) => (
                 <AppointmentDetailPanel
                   appointment={row}
+                  isPackage={true}
                   onSendWhatsApp={sendWhatsApp}
                   onConfirm={(id) => updateStatus(id, "Confirmed")}
                   onComplete={(id) => updateStatus(id, "Completed")}
                   onCancel={(id) => updateStatus(id, "Cancelled")}
                   onDelete={(id) => setConfirmId(id)}
-                  onSchedule={scheduleRequest}
                   isUpdating={updatingId === row.id}
                 />
               )}

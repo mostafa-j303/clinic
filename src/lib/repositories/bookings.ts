@@ -79,6 +79,36 @@ export async function getAvailableSlots(dateStr: string): Promise<string[]> {
   });
 }
 
+/**
+ * Day-level availability (has at least one open slot, or not) for every day
+ * in a given month — powers the client-facing booking calendar's month grid
+ * so it can grey out fully-booked/closed days without the browser having to
+ * call the single-day endpoint once per visible cell. Reuses
+ * `getAvailableSlots` per day (same weekly-hours/closures/confirmed-booking
+ * rules, including "today" excluding already-past times) rather than
+ * duplicating that logic — a month is at most 31 days, so 31 parallel
+ * queries is cheap and keeps this a single source of truth.
+ */
+export async function getMonthAvailability(
+  year: number,
+  month: number
+): Promise<Record<string, boolean>> {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const dateStrs = Array.from(
+    { length: daysInMonth },
+    (_, i) => `${year}-${String(month).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`
+  );
+
+  const entries = await Promise.all(
+    dateStrs.map(async (dateStr) => {
+      const slots = await getAvailableSlots(dateStr);
+      return [dateStr, slots.length > 0] as const;
+    })
+  );
+
+  return Object.fromEntries(entries);
+}
+
 export type DaySlotStatus = "available" | "closed" | "confirmed" | "past";
 
 /**
@@ -130,13 +160,22 @@ export type CreateBookingResult =
   | { ok: false; reason: "no_credits" | "slot_unavailable" | "package_not_found" };
 
 /**
- * Creates a booking request. `slotStart` is optional — a client can choose a
- * package without picking a time yet ("schedule my first visit now" left
- * unchecked); the request is still created (so both the client and admin can
- * see the package was chosen) with `slot_start` left null, and no visit
- * credit is consumed since none has actually been scheduled. Scheduling a
- * time later — by the client themselves or by the admin — goes through
- * `scheduleRequestSlot`, which is what actually consumes the credit.
+ * Creates a booking request. Two very different things go through this:
+ *
+ * 1. A "package request" — the client is just requesting to buy a
+ *    multi-visit package (the linked appointment has `visit_count`), never
+ *    with a `slotStart`. No visit credit exists yet at this point — the
+ *    admin has to *approve the package itself* (see `confirmBookingRequest`'s
+ *    slot_start-null branch) before the client's `client_package_credits`
+ *    bundle is created. This is deliberate: "you get your X visits once the
+ *    package is accepted," not the moment you ask for it.
+ * 2. A direct appointment booking — either a plain single-visit service
+ *    (`visit_count` null, always has a `slotStart`), or an admin walk-in
+ *    booking that picks a package AND a slot in one step (the only case
+ *    `slotStart` and `visit_count` are both present — see
+ *    `AdminBookingModal.tsx`/`admin/create-booking.ts`, which immediately
+ *    confirms afterward, so the admin is the authority granting the credit
+ *    there, not a client self-service request).
  */
 export async function createBookingRequest(input: {
   clientId: number;
@@ -181,7 +220,11 @@ export async function createBookingRequest(input: {
 
     let creditId: number | null = null;
 
-    if (visit_count) {
+    // Only touches client_package_credits when a slot is being booked
+    // immediately (the admin walk-in case) — a plain client package request
+    // (visit_count set, no slotStart) leaves creditId null; the bundle gets
+    // created later, when the admin approves the package.
+    if (visit_count && input.slotStart) {
       const existing = await client.query(
         `SELECT id, remaining_visits FROM client_package_credits
          WHERE client_id = $1 AND appointment_id = $2
@@ -192,27 +235,22 @@ export async function createBookingRequest(input: {
 
       if (existing.rows.length > 0) {
         const bundle = existing.rows[0];
-        // Only a *scheduled* visit actually consumes a credit — picking the
-        // package without a time yet doesn't spend anything.
-        if (input.slotStart && bundle.remaining_visits <= 0) {
+        if (bundle.remaining_visits <= 0) {
           await client.query("ROLLBACK");
           return { ok: false, reason: "no_credits" };
         }
-        if (input.slotStart) {
-          await client.query(
-            "UPDATE client_package_credits SET remaining_visits = remaining_visits - 1 WHERE id = $1",
-            [bundle.id]
-          );
-        }
+        await client.query(
+          "UPDATE client_package_credits SET remaining_visits = remaining_visits - 1 WHERE id = $1",
+          [bundle.id]
+        );
         creditId = bundle.id;
       } else {
         const expiresAt = validity_days
           ? `now() + interval '${Number(validity_days)} days'`
           : "NULL";
-        const remaining = input.slotStart ? "$3 - 1" : "$3";
         const created = await client.query(
           `INSERT INTO client_package_credits (client_id, appointment_id, total_visits, remaining_visits, expires_at)
-           VALUES ($1, $2, $3, ${remaining}, ${expiresAt})
+           VALUES ($1, $2, $3, $3 - 1, ${expiresAt})
            RETURNING id`,
           [input.clientId, input.appointmentId, visit_count]
         );
@@ -258,106 +296,101 @@ export async function createBookingRequest(input: {
 }
 
 /**
- * Assigns a time slot to a request that was created without one (the client
- * deferred scheduling their first visit). This is the moment a visit credit
- * is actually consumed. `asAdmin: true` also confirms the booking in the
- * same step (and runs the same "other pending requests for this slot lose
- * out" cleanup as `confirmBookingRequest`) since the admin placing it is
- * authoritative; a client scheduling their own deferred visit leaves it
- * Pending for the admin to confirm, same as a normal booking.
+ * Books a specific time using a visit the client already has credit for
+ * (from an approved package) — the client-facing "book an appointment" page,
+ * reached from their visit-count badge, not the package-purchase flow.
+ * Always creates a brand-new `appointment_requests` row (unlike the old
+ * one-shot "schedule my first visit" design this replaced, a client can call
+ * this as many times as they have remaining visits — each booking is its own
+ * row, all sharing the same `credit_id`). Leaves the new row Pending — the
+ * admin still confirms the actual time, same as any other booking.
  */
-export async function scheduleRequestSlot(
-  id: number,
-  slotStart: string,
-  opts: { asAdmin?: boolean; clientId?: number } = {}
-): Promise<StatusTransitionResult> {
+export type CreateFromCreditResult =
+  | { ok: true; requestId: number }
+  | { ok: false; reason: "not_found" | "no_credits" | "expired" | "slot_unavailable" };
+
+export async function createAppointmentFromCredit(input: {
+  clientId: number;
+  creditId: number;
+  slotStart: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}): Promise<CreateFromCreditResult> {
   const pool = getPool();
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const current = await client.query(
-      "SELECT status, slot_start, credit_id, client_id FROM appointment_requests WHERE id = $1 FOR UPDATE",
-      [id]
+    const creditRes = await client.query(
+      `SELECT c.id, c.client_id, c.remaining_visits, c.expires_at, c.appointment_id,
+              a.name AS appointment_name, a.price, a.offer_price
+       FROM client_package_credits c
+       JOIN appointments a ON a.id = c.appointment_id
+       WHERE c.id = $1 FOR UPDATE`,
+      [input.creditId]
     );
-    if (current.rows.length === 0) {
+    if (creditRes.rows.length === 0 || creditRes.rows[0].client_id !== input.clientId) {
       await client.query("ROLLBACK");
       return { ok: false, reason: "not_found" };
     }
-    const row = current.rows[0];
-    if (row.status !== "Pending" || row.slot_start) {
+    const credit = creditRes.rows[0];
+    if (credit.expires_at && new Date(credit.expires_at) < new Date()) {
       await client.query("ROLLBACK");
-      return { ok: false, reason: "finalized" };
+      return { ok: false, reason: "expired" };
     }
-    if (opts.clientId && row.client_id !== opts.clientId) {
+    if (credit.remaining_visits <= 0) {
       await client.query("ROLLBACK");
-      return { ok: false, reason: "not_found" };
+      return { ok: false, reason: "no_credits" };
     }
 
     const slotTaken = await client.query(
       `SELECT id FROM appointment_requests WHERE status = 'Confirmed' AND slot_start = $1::timestamp`,
-      [slotStart]
+      [input.slotStart]
     );
     if (slotTaken.rows.length > 0) {
       await client.query("ROLLBACK");
-      return { ok: false, reason: "slot_taken" };
+      return { ok: false, reason: "slot_unavailable" };
     }
 
-    if (row.credit_id) {
-      await client.query(
-        "UPDATE client_package_credits SET remaining_visits = remaining_visits - 1 WHERE id = $1",
-        [row.credit_id]
-      );
-    }
-
-    const newStatus = opts.asAdmin ? "Confirmed" : "Pending";
     await client.query(
-      `UPDATE appointment_requests
-       SET slot_start = $1::timestamp, slot_end = $1::timestamp + interval '${SLOT_MINUTES} minutes', status = $2
-       WHERE id = $3`,
-      [slotStart, newStatus, id]
+      "UPDATE client_package_credits SET remaining_visits = remaining_visits - 1 WHERE id = $1",
+      [credit.id]
     );
 
-    if (opts.asAdmin) {
-      const others = await client.query(
-        `SELECT id, credit_id FROM appointment_requests
-         WHERE status = 'Pending' AND slot_start = $1::timestamp AND id != $2`,
-        [slotStart, id]
-      );
-      for (const other of others.rows) {
-        if (other.credit_id) {
-          await client.query(
-            "UPDATE client_package_credits SET remaining_visits = remaining_visits + 1 WHERE id = $1",
-            [other.credit_id]
-          );
-        }
-        await client.query(`UPDATE appointment_requests SET status = 'Cancelled' WHERE id = $1`, [
-          other.id,
-        ]);
-      }
-    }
+    const insertResult = await client.query(
+      `INSERT INTO appointment_requests
+        (first_name, last_name, phone_number, appointment_id, appointment_name, selected_date,
+         payment_method, price_used, status, client_id, slot_start, slot_end, credit_id)
+       VALUES (
+         $1,$2,$3,$4,$5,$6::timestamp,$7,$8,'Pending',$9,
+         $6::timestamp, $6::timestamp + interval '${SLOT_MINUTES} minutes',
+         $10
+       )
+       RETURNING id`,
+      [
+        input.firstName,
+        input.lastName,
+        input.phone,
+        credit.appointment_id,
+        credit.appointment_name,
+        input.slotStart,
+        "Package Credit",
+        credit.offer_price || credit.price,
+        input.clientId,
+        credit.id,
+      ]
+    );
 
     await client.query("COMMIT");
-    return { ok: true };
+    return { ok: true, requestId: insertResult.rows[0].id };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
   } finally {
     client.release();
   }
-}
-
-export async function getUnscheduledRequestsForClient(clientId: number) {
-  const pool = getPool();
-  const result = await pool.query(
-    `SELECT id, appointment_id, appointment_name, price_used, created_at
-     FROM appointment_requests
-     WHERE client_id = $1 AND status = 'Pending' AND slot_start IS NULL
-     ORDER BY created_at DESC`,
-    [clientId]
-  );
-  return result.rows;
 }
 
 export type StatusTransitionResult =
@@ -372,17 +405,46 @@ export async function confirmBookingRequest(id: number): Promise<StatusTransitio
     await client.query("BEGIN");
 
     const current = await client.query(
-      "SELECT status, slot_start FROM appointment_requests WHERE id = $1 FOR UPDATE",
+      "SELECT status, slot_start, appointment_id, client_id FROM appointment_requests WHERE id = $1 FOR UPDATE",
       [id]
     );
     if (current.rows.length === 0) {
       await client.query("ROLLBACK");
       return { ok: false, reason: "not_found" };
     }
-    const { status, slot_start } = current.rows[0];
-    if (status === "Cancelled" || status === "Completed") {
+    const { status, slot_start, appointment_id, client_id } = current.rows[0];
+    if (status === "Cancelled" || status === "Completed" || status === "Confirmed") {
       await client.query("ROLLBACK");
       return { ok: false, reason: "finalized" };
+    }
+
+    // A package request (no slot) isn't "confirming a time" — it's approving
+    // the package itself, which is the moment the client actually receives
+    // their X visits. See createBookingRequest's doc comment for why no
+    // credit bundle exists yet at this point.
+    if (!slot_start) {
+      const pkgRes = await client.query(
+        "SELECT visit_count, validity_days FROM appointments WHERE id = $1",
+        [appointment_id]
+      );
+      const visitCount = pkgRes.rows[0]?.visit_count || 1;
+      const validityDays = pkgRes.rows[0]?.validity_days;
+      const expiresAt = validityDays ? `now() + interval '${Number(validityDays)} days'` : "NULL";
+
+      const created = await client.query(
+        `INSERT INTO client_package_credits (client_id, appointment_id, total_visits, remaining_visits, expires_at)
+         VALUES ($1, $2, $3, $3, ${expiresAt})
+         RETURNING id`,
+        [client_id, appointment_id, visitCount]
+      );
+
+      await client.query(
+        "UPDATE appointment_requests SET status = 'Confirmed', credit_id = $1 WHERE id = $2",
+        [created.rows[0].id, id]
+      );
+
+      await client.query("COMMIT");
+      return { ok: true };
     }
 
     if (slot_start) {

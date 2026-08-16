@@ -16,7 +16,16 @@ import "react-phone-input-2/lib/style.css";
 import Loading from "./Loding";
 import SectionHeading from "./SectionHeading";
 import ParticleBackdrop, { hexToRgba } from "./ParticleBackdrop";
-import SlotPicker from "./SlotPicker";
+import ClientCalendarPicker from "./ClientCalendarPicker";
+
+// Mirrors AppointmentFormModal's day->unit conversion, just for display here.
+function daysToFriendly(days: number): string {
+  const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+  if (days > 0 && days % 365 === 0) return plural(days / 365, "year");
+  if (days > 0 && days % 30 === 0) return plural(days / 30, "month");
+  if (days > 0 && days % 7 === 0) return plural(days / 7, "week");
+  return plural(days, "day");
+}
 
 type AppointmentType = {
   id: number;
@@ -30,13 +39,6 @@ type AppointmentType = {
   validity_days?: number | null;
 };
 
-type CreditBundle = {
-  id: number;
-  appointment_id: number;
-  remaining_visits: number;
-  total_visits: number;
-};
-
 function Appointment() {
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [selectedAppointment, setSelectedAppointment] =
@@ -46,7 +48,6 @@ function Appointment() {
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<string | null>(null);
-  const [scheduleNow, setScheduleNow] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
 
   const { settings, loading, error } = useSettings();
@@ -54,7 +55,6 @@ function Appointment() {
   const { isAdmin } = useAdminAuth();
   const { data: clientSession, status: sessionStatus } = useSession();
   const router = useRouter();
-  const [credits, setCredits] = useState<CreditBundle[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState<AppointmentType | null>(null);
@@ -177,19 +177,6 @@ function Appointment() {
     setLastName(storedLastName);
   }, []);
 
-  // Pull the client's remaining-visit balances so the booking modal can show
-  // "X visits remaining" and the request can be blocked client-side too.
-  useEffect(() => {
-    if (sessionStatus !== "authenticated") {
-      setCredits([]);
-      return;
-    }
-    fetch("/api/client/my-credits")
-      .then((res) => res.json())
-      .then((data) => setCredits(data.credits || []))
-      .catch(() => setCredits([]));
-  }, [sessionStatus]);
-
   const openBookingModal = (appointment: AppointmentType) => {
     if (sessionStatus !== "authenticated") {
       showAlertMessage("Please log in to book an appointment.", "error");
@@ -220,7 +207,11 @@ function Appointment() {
       showAlertMessage("Invalid phone number. Please check the format.", "error");
       return;
     }
-    if (scheduleNow && (!date || !slot)) {
+    // A package (visit_count set) is always requested without a time — the
+    // client books actual visits later, separately, once it's approved and
+    // credited. A plain single-visit service still needs a time right away.
+    const isPackage = !!selectedAppointment?.visit_count;
+    if (!isPackage && (!date || !slot)) {
       showAlertMessage("Please pick a date and time.", "error");
       return;
     }
@@ -245,7 +236,7 @@ function Appointment() {
             phone: normalizedPhone,
             appointmentId: selectedAppointment.id,
             appointmentName: selectedAppointment.name,
-            slotStart: scheduleNow ? `${date}T${slot}:00` : null,
+            slotStart: isPackage ? null : `${date}T${slot}:00`,
             paymentMethod,
             priceUsed,
           }),
@@ -255,9 +246,9 @@ function Appointment() {
         if (!res.ok) throw new Error(data.message || "Insert failed");
 
         showAlertMessage(
-          scheduleNow
-            ? "Appointment request sent successfully."
-            : "Package added — schedule your first visit any time from your dashboard.",
+          isPackage
+            ? "Package request sent — we'll confirm it and credit your visits soon."
+            : "Appointment request sent successfully.",
           "success"
         );
         closeModal();
@@ -304,17 +295,7 @@ function Appointment() {
     setSelectedAppointment(null);
     setDate("");
     setSlot(null);
-    setScheduleNow(true);
   };
-
-  const creditForSelected = selectedAppointment
-    ? credits.find((c) => c.appointment_id === selectedAppointment.id)
-    : null;
-  const outOfCredits = !!(
-    selectedAppointment?.visit_count &&
-    creditForSelected &&
-    creditForSelected.remaining_visits <= 0
-  );
 
   if (loading) return <Loading variant="grid" message="Loading appointments..." />;
   if (error) return <div className="text-red-500 text-center py-20">Error: {error}</div>;
@@ -415,6 +396,14 @@ function Appointment() {
 
               {/* Details List */}
               <ul className="space-y-1 sm:space-y-2 mb-3 sm:mb-6 flex-grow">
+                {!!appointment.visit_count && (
+                  <li className="flex items-start gap-1.5 sm:gap-2">
+                    <Check size={13} className="text-primary flex-shrink-0 mt-0.5 sm:size-4" />
+                    <span className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 sm:line-clamp-none">
+                      {appointment.visit_count} Visit{appointment.visit_count === 1 ? "" : "s"} Included
+                    </span>
+                  </li>
+                )}
                 {appointment.details.map((detail, index) => (
                   <li key={index} className="flex items-start gap-1.5 sm:gap-2">
                     <Check size={13} className="text-primary flex-shrink-0 mt-0.5 sm:size-4" />
@@ -575,85 +564,32 @@ function Appointment() {
                 />
               </div>
 
-              {/* Visit balance */}
-              {selectedAppointment.visit_count && (
-                <div
-                  className={`rounded-lg p-3 text-sm font-medium ${
-                    outOfCredits
-                      ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
-                      : "bg-primary/5 text-primary border border-primary/20"
-                  }`}
-                >
-                  {creditForSelected
-                    ? outOfCredits
-                      ? "You have no visits remaining on this package. Please purchase a new package."
-                      : `${creditForSelected.remaining_visits} of ${creditForSelected.total_visits} visits remaining.`
-                    : `This package includes ${selectedAppointment.visit_count} visits, valid ${
-                        selectedAppointment.validity_days ? `for ${selectedAppointment.validity_days} days` : ""
-                      } from your first booking.`}
+              {/* Packages just grant visit credits — no time picked here at
+                  all. Booking an actual appointment (using those credits)
+                  happens later from the "Book Appointment" page. */}
+              {selectedAppointment.visit_count ? (
+                <div className="rounded-lg p-3 text-sm font-medium bg-primary/5 text-primary border border-primary/20">
+                  This package includes {selectedAppointment.visit_count} visit
+                  {selectedAppointment.visit_count === 1 ? "" : "s"}
+                  {selectedAppointment.validity_days
+                    ? `, valid for ${daysToFriendly(selectedAppointment.validity_days)}`
+                    : ""}
+                  . Once we approve your request, you'll see your visits in the header and can
+                  book appointment times any time from the Book Appointment page.
                 </div>
-              )}
-
-              {/* Schedule now vs. later — only meaningful for multi-visit packages;
-                  a plain single-visit booking always needs a time right away. */}
-              {!!selectedAppointment.visit_count && !outOfCredits && (
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={scheduleNow}
-                    onChange={(e) => {
-                      setScheduleNow(e.target.checked);
-                      if (!e.target.checked) {
-                        setDate("");
-                        setSlot(null);
-                      }
-                    }}
-                    className="w-4 h-4 accent-primary"
+              ) : (
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+                    <CalendarDays size={16} className="text-primary" />
+                    Pick a Date & Time *
+                  </label>
+                  <ClientCalendarPicker
+                    date={date}
+                    slot={slot}
+                    onDateChange={setDate}
+                    onSlotChange={setSlot}
                   />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Schedule my first visit now
-                  </span>
-                </label>
-              )}
-
-              {!scheduleNow && !!selectedAppointment.visit_count && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
-                  No problem — you can pick a time for your first visit any time from your
-                  dashboard.
-                </p>
-              )}
-
-              {scheduleNow && (
-                <>
-                  {/* Date */}
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-                      <CalendarDays size={16} className="text-primary" />
-                      Preferred Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={date}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) => {
-                        setDate(e.target.value);
-                        setSlot(null);
-                      }}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:outline-none focus:border-primary transition text-black dark:text-white"
-                      required
-                    />
-                  </div>
-
-                  {/* Time slots */}
-                  {date && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                        Available Times (30 min) *
-                      </label>
-                      <SlotPicker date={date} selectedSlot={slot} onSelectSlot={setSlot} />
-                    </div>
-                  )}
-                </>
+                </div>
               )}
 
               {/* Payment Method */}
@@ -714,17 +650,15 @@ function Appointment() {
                     !name ||
                     !lastName ||
                     !phone ||
-                    (scheduleNow && (!date || !slot)) ||
-                    isSubmitting ||
-                    outOfCredits
+                    (!selectedAppointment.visit_count && (!date || !slot)) ||
+                    isSubmitting
                   }
                   className={`flex-1 px-4 py-2 font-semibold rounded-lg transition flex items-center justify-center gap-2 ${
                     !name ||
                     !lastName ||
                     !phone ||
-                    (scheduleNow && (!date || !slot)) ||
-                    isSubmitting ||
-                    outOfCredits
+                    (!selectedAppointment.visit_count && (!date || !slot)) ||
+                    isSubmitting
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-gradient-to-r from-primary to-accent text-white hover:shadow-lg"
                   }`}
@@ -734,10 +668,10 @@ function Appointment() {
                       <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                       Sending...
                     </>
-                  ) : scheduleNow ? (
-                    "Send Request"
+                  ) : selectedAppointment.visit_count ? (
+                    "Request Package"
                   ) : (
-                    "Add Package"
+                    "Send Request"
                   )}
                 </button>
               </div>

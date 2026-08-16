@@ -8,6 +8,19 @@ type AppointmentFormModalProps = {
   initialData?: any;
 };
 
+// Validity is entered by the admin as a friendly amount + unit (e.g. "3
+// months") but stored as a plain integer of days (`validity_days`) — this
+// keeps every downstream consumer (booking credit expiry math in
+// bookings.ts) unchanged, it's purely a nicer input/display on this form.
+const DAYS_PER_UNIT: Record<string, number> = { days: 1, weeks: 7, months: 30, years: 365 };
+
+function daysToAmountUnit(days: number): { amount: string; unit: string } {
+  if (days > 0 && days % 365 === 0) return { amount: String(days / 365), unit: "years" };
+  if (days > 0 && days % 30 === 0) return { amount: String(days / 30), unit: "months" };
+  if (days > 0 && days % 7 === 0) return { amount: String(days / 7), unit: "weeks" };
+  return { amount: String(days), unit: "days" };
+}
+
 const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   isOpen,
   onClose,
@@ -20,7 +33,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   const [duration, setDuration] = useState("");
   const [details, setDetails] = useState("");
   const [visitCount, setVisitCount] = useState("");
-  const [validityDays, setValidityDays] = useState("");
+  const [validityAmount, setValidityAmount] = useState("");
+  const [validityUnit, setValidityUnit] = useState("months");
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -30,7 +44,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       setDuration(initialData.duration || "");
       setDetails(initialData.details?.join(";\n") || "");
       setVisitCount(initialData.visit_count != null ? String(initialData.visit_count) : "");
-      setValidityDays(initialData.validity_days != null ? String(initialData.validity_days) : "");
+      if (initialData.validity_days != null) {
+        const { amount, unit } = daysToAmountUnit(initialData.validity_days);
+        setValidityAmount(amount);
+        setValidityUnit(unit);
+      } else {
+        setValidityAmount("");
+        setValidityUnit("months");
+      }
     } else if (!initialData && isOpen) {
       // Clear fields when no initialData and modal is open
       setName("");
@@ -39,7 +60,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       setDuration("");
       setDetails("");
       setVisitCount("");
-      setValidityDays("");
+      setValidityAmount("");
+      setValidityUnit("months");
     }
   }, [initialData, isOpen]);
 
@@ -64,7 +86,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       duration,
       details: formattedDetails,
       visitCount: visitCount.trim() ? Number(visitCount) : null,
-      validityDays: validityDays.trim() ? Number(validityDays) : null,
+      validityDays: validityAmount.trim()
+        ? Math.round(Number(validityAmount) * DAYS_PER_UNIT[validityUnit])
+        : null,
     };
     
     console.log("Saving appointment:", appointment); // Debug log to see what's being sent
@@ -193,21 +217,34 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Valid For (days)
+                Valid For
               </label>
-              <input
-                type="number"
-                min={1}
-                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
-                placeholder="e.g., 365"
-                value={validityDays}
-                onChange={(e) => setValidityDays(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black"
+                  placeholder="e.g., 3"
+                  value={validityAmount}
+                  onChange={(e) => setValidityAmount(e.target.value)}
+                />
+                <select
+                  className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition text-black bg-white"
+                  value={validityUnit}
+                  onChange={(e) => setValidityUnit(e.target.value)}
+                >
+                  <option value="days">Days</option>
+                  <option value="weeks">Weeks</option>
+                  <option value="months">Months</option>
+                  <option value="years">Years</option>
+                </select>
+              </div>
             </div>
           </div>
           <p className="text-xs text-gray-500 -mt-2">
-            Leave both blank for a single-visit package (the default). Set both to track a
-            client's remaining visits — e.g. 16 visits, valid for 365 days.
+            Leave both blank for a single-visit package (the default) — the client picks their
+            date directly, no scheduling checkbox. Set both to track a client's remaining
+            visits — e.g. 16 visits, valid for 1 year.
           </p>
 
           {/* Details */}
@@ -224,7 +261,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Example: Diet plan; Recommendations; Follow-up
+              Example: Diet plan; Recommendations; Follow-up. No need to list the number of
+              visits here — it's shown automatically from "Number of Visits" above.
             </p>
           </div>
 

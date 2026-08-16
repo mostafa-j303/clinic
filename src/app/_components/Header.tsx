@@ -12,6 +12,7 @@ import {
   FileText,
   Sun,
   Moon,
+  Ticket,
 } from "lucide-react";
 import { useCart } from "../_context/CartContext";
 import Cart from "../_components/Cart";
@@ -35,6 +36,27 @@ const Header: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
 
   const { data: clientSession } = useSession();
+  const [totalVisits, setTotalVisits] = useState(0);
+
+  // Persistent "X Visits" badge — the client's remaining visit credits
+  // across every approved package, so they always know how many they have
+  // and can jump straight to booking one, without digging into the dashboard.
+  useEffect(() => {
+    if (!clientSession?.clientId) {
+      setTotalVisits(0);
+      return;
+    }
+    fetch("/api/client/my-credits")
+      .then((res) => res.json())
+      .then((data) => {
+        const sum = (data.credits || []).reduce(
+          (acc: number, c: { remaining_visits: number }) => acc + c.remaining_visits,
+          0
+        );
+        setTotalVisits(sum);
+      })
+      .catch(() => setTotalVisits(0));
+  }, [clientSession?.clientId]);
 
   const toggleCart = () => setIsCartOpen((prev) => !prev);
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
@@ -140,6 +162,17 @@ const Header: React.FC = () => {
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+
+          {/* Visit count badge — only for logged-in clients with credits */}
+          {clientSession && totalVisits > 0 && (
+            <Link
+              href="/book-appointment"
+              className="hidden sm:flex items-center gap-1.5 rounded-full bg-accent/10 text-accent px-3 py-2 text-sm font-semibold hover:bg-accent/20 transition-colors"
+            >
+              <Ticket size={16} />
+              {totalVisits} Visit{totalVisits === 1 ? "" : "s"}
+            </Link>
+          )}
 
           {/* Cart Button */}
           <button
@@ -258,6 +291,19 @@ const Header: React.FC = () => {
                   </Link>
                 </li>
               ))}
+
+              {clientSession && totalVisits > 0 && (
+                <li>
+                  <Link
+                    href="/book-appointment"
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-accent hover:bg-gray-100 transition"
+                    onClick={closeMenus}
+                  >
+                    <Ticket size={16} />
+                    {totalVisits} Visit{totalVisits === 1 ? "" : "s"} — Book Appointment
+                  </Link>
+                </li>
+              )}
 
               <li>
                 <Link

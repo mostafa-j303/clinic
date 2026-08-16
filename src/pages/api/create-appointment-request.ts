@@ -85,7 +85,7 @@ export default async function handler(
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "Not scheduled yet — client will pick a time later";
+      : "Package request — awaiting approval, no time booked yet";
 
     try {
       await sendWhatsAppMessage(
@@ -131,7 +131,7 @@ export default async function handler(
     return res.status(200).json({
       message: slotStart
         ? "Appointment request created successfully"
-        : "Package added — schedule your first visit any time from your dashboard.",
+        : "Package request sent — we'll confirm it and credit your visits soon.",
       requestId: result.requestId,
     });
   } catch (error) {
