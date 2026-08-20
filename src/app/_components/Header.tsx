@@ -66,7 +66,10 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout");
+    // keepalive: lets the request finish even if the tab/browser closes
+    // right after this click, instead of risking it getting aborted before
+    // the server actually destroys the session — see AdminShell.tsx's note.
+    await fetch("/api/admin/logout", { keepalive: true });
     logout();
     closeMenus();
   };

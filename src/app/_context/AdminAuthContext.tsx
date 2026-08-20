@@ -31,7 +31,27 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
   useEffect(() => {
-    checkAdmin(); // run on mount once
+    checkAdmin(); // run on mount
+
+    // A tab restored from the browser's back-forward cache (closing and
+    // reopening the site, or navigating back) can repaint the last-rendered
+    // React state — including a stale "still logged in" admin UI — without
+    // actually re-running this mount effect or hitting the server again.
+    // Re-verify with the server whenever that happens, or whenever the tab
+    // regains focus/visibility, so a real logout always sticks.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) checkAdmin();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") checkAdmin();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   const login = () => setIsAdmin(true);

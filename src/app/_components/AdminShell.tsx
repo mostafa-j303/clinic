@@ -32,7 +32,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout");
+    // keepalive: if the tab/browser closes right after this click, the
+    // browser still finishes delivering the request instead of aborting it
+    // mid-flight — without it, a fast enough close could leave the session
+    // never actually destroyed server-side, so it'd still be valid next visit.
+    await fetch("/api/admin/logout", { keepalive: true });
     logout();
   };
 
