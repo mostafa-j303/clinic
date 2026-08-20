@@ -88,22 +88,51 @@ const ColorInput = React.memo(
     label: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="flex items-center gap-3">
-        <input
-          type="color"
-          value={value}
-          onChange={onChange}
-          className="w-14 h-14 rounded-lg cursor-pointer border border-gray-300"
-        />
-        <span className="font-mono text-sm text-gray-600">{value}</span>
+  }) => {
+    // The hex text field is typed freely (so the admin can type/paste a code
+    // mid-edit without every keystroke needing to already be a valid color),
+    // but only commits upward (repainting the swatch + rest of the form)
+    // once it actually matches a full "#rrggbb" hex value.
+    const [hexDraft, setHexDraft] = useState(value);
+    useEffect(() => setHexDraft(value), [value]);
+
+    const commitIfValid = (next: string) => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(next)) {
+        onChange({ target: { value: next } } as React.ChangeEvent<HTMLInputElement>);
+      }
+    };
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={value}
+            onChange={onChange}
+            className="w-14 h-14 rounded-lg cursor-pointer border border-gray-300 flex-shrink-0"
+          />
+          <input
+            type="text"
+            value={hexDraft}
+            onChange={(e) => {
+              setHexDraft(e.target.value);
+              commitIfValid(e.target.value);
+            }}
+            onBlur={(e) => {
+              // Snap back to the last valid color if left mid-edit/invalid.
+              if (!/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) setHexDraft(value);
+            }}
+            placeholder="#000000"
+            maxLength={7}
+            className="w-28 px-2.5 py-1.5 border border-gray-300 rounded-lg font-mono text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
       </div>
-    </div>
-  )
+    );
+  }
 );
 
 ColorInput.displayName = "ColorInput";
