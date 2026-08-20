@@ -288,6 +288,65 @@ export async function listIntakeFormsFull() {
   return result.rows;
 }
 
+/** Same shape as listIntakeFormsFull's rows, filtered to one record — used for the PDF export sent alongside the Telegram notification right after submission. */
+export async function getIntakeFormById(intakeFormId: number) {
+  const pool = connectToDatabase();
+  const result = await pool.query(
+    `
+    SELECT
+      f.id,
+      f.client_id,
+      c.email,
+      c.full_name AS account_full_name,
+      c.profile_completed,
+      c.created_at AS client_created_at,
+      f.full_name,
+      f.age,
+      f.phone_number,
+      f.gender,
+      f.occupation,
+      f.reason,
+      f.goals,
+      f.specific_goal,
+      f.medical_conditions,
+      f.past_surgeries,
+      f.food_allergies,
+      f.medications,
+      f.current_weight,
+      f.height_cm,
+      f.usual_weight,
+      f.typical_day_eating,
+      f.meals_per_day,
+      f.water_intake,
+      f.eat_out_frequency,
+      f.food_dislikes,
+      f.budget_constraints,
+      f.eating_behaviors,
+      f.eating_challenges,
+      f.exercises,
+      f.exercise_details,
+      f.sleep_hours,
+      f.stress_level,
+      f.smokes,
+      f.drinks_alcohol,
+      f.menstrual_regular,
+      f.women_conditions,
+      f.pregnant_breastfeeding,
+      f.has_lab_tests,
+      f.lab_results,
+      f.readiness_scale,
+      f.expected_challenges,
+      f.expectations,
+      f.additional_info
+    FROM client_intake_forms f
+    JOIN clients c ON c.id = f.client_id
+    WHERE f.id = $1
+  `,
+    [intakeFormId]
+  );
+  return result.rows[0] ?? null;
+}
+
 /** Deletes an intake form and un-marks its client's profile as completed, transactionally. */
 export async function deleteIntakeForm(
   intakeFormId: number | string

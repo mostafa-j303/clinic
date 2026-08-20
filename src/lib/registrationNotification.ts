@@ -1,4 +1,5 @@
 import { sendWhatsAppMessage } from "./whatsapp";
+import { sendTelegramMessage } from "./telegram";
 import { registrationWhatsAppParams } from "../app/utils/whatsappTemplates";
 import { generateRegistrationEmailHTML } from "../app/utils/emailTemplates";
 import { getAdminNotificationSettings } from "./repositories/clients";
@@ -17,6 +18,20 @@ export async function notifyNewRegistration(clientId: number, fullName: string, 
     await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email, clientId));
   } catch (whatsappError) {
     console.error("Error sending registration WhatsApp notification:", whatsappError);
+  }
+
+  try {
+    const { siteUrl } = await getAdminNotificationSettings();
+    await sendTelegramMessage({
+      title: "New Client Registration",
+      // No phone yet — collected later via the required complete-profile /
+      // intake flow, not at signup. A WhatsApp contact button will show up
+      // on the intake-form notification once they've filled it in.
+      lines: [`Name: ${fullName}`, `Email: ${email}`],
+      buttons: [{ text: "View in Admin Panel", url: `${getSiteUrl(siteUrl)}/Users?id=${clientId}` }],
+    });
+  } catch (telegramError) {
+    console.error("Error sending registration Telegram notification:", telegramError);
   }
 
   try {

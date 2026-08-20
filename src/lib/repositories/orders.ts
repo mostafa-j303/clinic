@@ -48,6 +48,26 @@ export async function createOrder(input: {
   }
 }
 
+// Product names/prices for a just-created order — the client only ever
+// sends {id, quantity} (see Cart/page.tsx), so notifications that need to
+// show what was actually ordered look this up here.
+export async function getOrderItemsSummary(
+  orderId: number
+): Promise<{ name: string; price: string; quantity: number }[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `
+    SELECT p.name, p.price, oi.quantity
+    FROM order_items oi
+    JOIN products p ON p.id = oi.product_id
+    WHERE oi.order_id = $1
+    ORDER BY oi.id
+    `,
+    [orderId]
+  );
+  return result.rows;
+}
+
 export async function listOrders() {
   const pool = getPool();
   const client = await pool.connect();

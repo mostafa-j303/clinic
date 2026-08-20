@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { createAppointmentFromCredit } from "../../../lib/repositories/bookings";
 import { sendWhatsAppMessage } from "../../../lib/whatsapp";
+import { sendTelegramMessage } from "../../../lib/telegram";
 import { appointmentWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 import { generateAppointmentEmailHTML, toWhatsAppLink } from "../../../app/utils/emailTemplates";
 import { getAdminNotificationSettings } from "../../../lib/repositories/clients";
@@ -65,6 +66,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
     } catch (whatsappError) {
       console.error("Error sending appointment WhatsApp notification:", whatsappError);
+    }
+
+    try {
+      const { siteUrl } = await getAdminNotificationSettings();
+      await sendTelegramMessage({
+        title: "New Appointment Request",
+        lines: [
+          `Client: ${firstName} ${lastName}`,
+          `Phone: ${phone}`,
+          `Appointment: ${result.appointmentName}`,
+          `Date: ${dateLabel}`,
+          `Price: ${result.priceUsed}`,
+          `Payment: Package Credit`,
+        ],
+        buttons: [
+          { text: "View in Admin Panel", url: `${getSiteUrl(siteUrl)}/Appointments?id=${result.requestId}` },
+          { text: "Contact via WhatsApp", url: toWhatsAppLink(phone) },
+        ],
+      });
+    } catch (telegramError) {
+      console.error("Error sending appointment Telegram notification:", telegramError);
     }
 
     try {

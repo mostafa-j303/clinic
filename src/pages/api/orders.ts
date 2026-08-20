@@ -1,7 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { sendWhatsAppMessage } from "../../lib/whatsapp";
+import { sendTelegramMessage } from "../../lib/telegram";
 import { orderWhatsAppParams } from "../../app/utils/whatsappTemplates";
-import { createOrder } from "../../lib/repositories/orders";
+import { toWhatsAppLink } from "../../app/utils/emailTemplates";
+import { createOrder, getOrderItemsSummary } from "../../lib/repositories/orders";
+import { getAdminNotificationSettings } from "../../lib/repositories/clients";
+import { getSiteUrl } from "../../lib/siteUrl";
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,6 +32,34 @@ if (!phoneRegex.test(phone)) {
       await sendWhatsAppMessage(orderWhatsAppParams(name, lastName, orderId, cart.length));
     } catch (whatsappError) {
       console.error("Error sending order WhatsApp notification:", whatsappError);
+    }
+
+    try {
+      const [{ siteUrl }, items] = await Promise.all([
+        getAdminNotificationSettings(),
+        getOrderItemsSummary(orderId),
+      ]);
+      const itemLines = items.map((item) => `• ${item.name} x${item.quantity} (${item.price})`);
+      await sendTelegramMessage({
+        title: `New Order #${orderId}`,
+        lines: [
+          `Customer: ${name} ${lastName}`,
+          `Phone: ${phone}`,
+          `Payment: ${paymentMethod}`,
+          `Address: ${address}`,
+          "",
+          "Items:",
+          ...itemLines,
+        ],
+        buttons: [
+          { text: "View in Admin Panel", url: `${getSiteUrl(siteUrl)}/Orders?id=${orderId}` },
+          { text: "Visit Website", url: getSiteUrl(siteUrl) },
+          { text: "Contact via WhatsApp", url: toWhatsAppLink(phone) },
+          { text: "Delivery Location", url: locationLink },
+        ],
+      });
+    } catch (telegramError) {
+      console.error("Error sending order Telegram notification:", telegramError);
     }
 
     return res.status(200).json({

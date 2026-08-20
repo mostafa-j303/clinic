@@ -3,15 +3,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { generateIntakeEmailHTML, toWhatsAppLink } from "../../../app/utils/emailTemplates";
 import { sendWhatsAppMessage } from "../../../lib/whatsapp";
+import { sendTelegramMessage, sendTelegramDocument } from "../../../lib/telegram";
 import { intakeFormWhatsAppParams } from "../../../app/utils/whatsappTemplates";
 import {
   getClientAccountInfo,
   getAdminNotificationSettings,
+  getIntakeFormById,
   intakeFormExistsForClient,
   insertIntakeForm,
   markProfileCompleted,
 } from "../../../lib/repositories/clients";
 import { getSiteUrl } from "../../../lib/siteUrl";
+import { generateIntakeFormHtml } from "../../../app/utils/intakeFormPdfTemplate";
+import { htmlToPdfBuffer } from "../../../lib/pdf";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -101,6 +105,46 @@ export default async function handler(
       await sendWhatsAppMessage(intakeFormWhatsAppParams(f.fullName, f.reason, intakeFormId));
     } catch (whatsappError) {
       console.error("Error sending intake form WhatsApp notification:", whatsappError);
+    }
+
+    try {
+      const { siteUrl } = await getAdminNotificationSettings();
+      await sendTelegramMessage({
+        title: "New Intake Form",
+        lines: [
+          `Name: ${f.fullName}`,
+          `Phone: ${f.phoneNumber || "-"}`,
+          `Age: ${f.age}`,
+          `Gender: ${f.gender}`,
+          `Reason: ${f.reason}`,
+          `Current weight: ${f.currentWeight}`,
+          `Usual weight: ${f.usualWeight}`,
+          `Height: ${f.heightCm} cm`,
+          `Exercises: ${f.exercises === "Yes" && f.exerciseDetails ? `Yes - ${f.exerciseDetails}` : f.exercises}`,
+        ],
+        buttons: [
+          { text: "View in Admin Panel", url: `${getSiteUrl(siteUrl)}/IntakeForms?id=${intakeFormId}` },
+          { text: "Contact via WhatsApp", url: toWhatsAppLink(f.phoneNumber) },
+        ],
+      });
+    } catch (telegramError) {
+      console.error("Error sending intake form Telegram notification:", telegramError);
+    }
+
+    try {
+      const { brandPrimary } = await getAdminNotificationSettings();
+      const record = await getIntakeFormById(intakeFormId);
+      if (record) {
+        const html = generateIntakeFormHtml(record, brandPrimary || "#0891B2");
+        const pdfBuffer = await htmlToPdfBuffer(html);
+        await sendTelegramDocument(
+          pdfBuffer,
+          `Intake Form - ${f.fullName}.pdf`,
+          `Intake form PDF for ${f.fullName}`
+        );
+      }
+    } catch (pdfError) {
+      console.error("Error sending intake form PDF to Telegram:", pdfError);
     }
 
     return res.status(200).json({ message: "Form submitted successfully" });
