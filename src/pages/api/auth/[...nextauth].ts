@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { connectToDatabase } from "../../../../lib/db";
 import bcrypt from "bcrypt";
+import { notifyNewRegistration } from "../../../lib/registrationNotification";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -58,10 +59,18 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (existing.rows.length === 0) {
-          await pool.query(
+          const created = await pool.query(
             `INSERT INTO clients (google_id, email, full_name, profile_completed)
-             VALUES ($1, $2, $3, false)`,
+             VALUES ($1, $2, $3, false) RETURNING id`,
             [user.id, user.email, user.name]
+          );
+          // Unlike every other "something happened" event in this app, a
+          // first-time Google sign-in used to create the client row here
+          // with no notification at all — the admin only ever heard about
+          // credentials registrations (register.ts). Fire-and-forget so a
+          // slow/failed notification never blocks sign-in itself.
+          notifyNewRegistration(created.rows[0].id, user.name || "New client", user.email || "").catch(
+            (err) => console.error("Error sending Google registration notification:", err)
           );
         } else if (existing.rows[0].is_suspended) {
           return "/client-portal?error=SUSPENDED";

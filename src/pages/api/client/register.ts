@@ -1,14 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcrypt";
-import { sendWhatsAppMessage } from "../../../lib/whatsapp";
-import { registrationWhatsAppParams } from "../../../app/utils/whatsappTemplates";
-import { generateRegistrationEmailHTML } from "../../../app/utils/emailTemplates";
-import { findClientByEmail, createClient, getAdminNotificationSettings } from "../../../lib/repositories/clients";
-import { getSiteUrl } from "../../../lib/siteUrl";
-
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
-const BREVO_SENDER_NAME = process.env.BREVO_SENDER_NAME || "Your Business";
+import { findClientByEmail, createClient } from "../../../lib/repositories/clients";
+import { notifyNewRegistration } from "../../../lib/registrationNotification";
 
 export default async function handler(
   req: NextApiRequest,
@@ -34,43 +27,7 @@ export default async function handler(
   const hash = await bcrypt.hash(password, 12);
   const clientId = await createClient({ email, passwordHash: hash, fullName });
 
-  try {
-    await sendWhatsAppMessage(registrationWhatsAppParams(fullName, email, clientId));
-  } catch (whatsappError) {
-    console.error("Error sending registration WhatsApp notification:", whatsappError);
-  }
-
-  try {
-    const { adminEmail, brandPrimary, brandAccent, siteUrl } = await getAdminNotificationSettings();
-
-    if (adminEmail && BREVO_API_KEY) {
-      await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "api-key": BREVO_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sender: {
-            name: BREVO_SENDER_NAME,
-            email: BREVO_SENDER_EMAIL,
-          },
-          to: [{ email: adminEmail, name: "Admin" }],
-          subject: `New Client Registration: ${fullName}`,
-          htmlContent: generateRegistrationEmailHTML({
-            fullName,
-            email,
-            brandPrimary,
-            brandAccent,
-            viewUrl: `${getSiteUrl(siteUrl)}/Users?id=${clientId}`,
-          }),
-        }),
-      });
-    }
-  } catch (emailError) {
-    console.error("Error sending registration email:", emailError);
-  }
+  await notifyNewRegistration(clientId, fullName, email);
 
   return res.status(201).json({ message: "Account created. Please sign in." });
 }
