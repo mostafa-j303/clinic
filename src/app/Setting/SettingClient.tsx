@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSettings } from "../_context/SettingsContext";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "../_context/AdminAuthContext";
@@ -121,6 +121,7 @@ const ColorInput = React.memo(
               setHexDraft(e.target.value);
               commitIfValid(e.target.value);
             }}
+            onFocus={(e) => e.target.select()}
             onBlur={(e) => {
               // Snap back to the last valid color if left mid-edit/invalid.
               if (!/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) setHexDraft(value);
@@ -168,16 +169,23 @@ export default function SettingsPage() {
   }, [settings]);
 
   // Memoized handleChange to prevent new function on every render
+  // Clones every level along the path instead of mutating nested objects in
+  // place — mutating prev.social/prev.colors/etc. in place left their object
+  // reference unchanged, which silently broke anything that read them
+  // through a useMemo keyed on that reference (see socialEntries below —
+  // Facebook/Tiktok/Instagram/Mail appeared to reject all typed input
+  // because the memo never recomputed, so the display kept snapping back).
   const handleChange = useCallback((path: string, value: string) => {
     setFormData((prev: any) => {
       const keys = path.split(".");
-      const updated = { ...prev };
-      let obj = updated;
-      for (let i = 0; i < keys.length - 1; i++) {
-        obj = obj[keys[i]];
+      if (keys.length === 1) {
+        return { ...prev, [keys[0]]: value };
       }
-      obj[keys[keys.length - 1]] = value;
-      return updated;
+      const [parentKey, childKey] = keys;
+      return {
+        ...prev,
+        [parentKey]: { ...prev[parentKey], [childKey]: value },
+      };
     });
   }, []);
 
@@ -256,11 +264,11 @@ export default function SettingsPage() {
     }
   }, [formData, settings, setSettings]);
 
-  // Memoized social links entries
-  const socialEntries = useMemo(
-    () => formData?.social ? Object.entries(formData.social) : [],
-    [formData?.social]
-  );
+  // Recomputed on every render (cheap — 6 entries) rather than memoized on
+  // formData.social's object reference, since handleChange now correctly
+  // clones that object on every change anyway; a stale memo here previously
+  // caused every Social Links field to visually reject typed input.
+  const socialEntries = formData?.social ? Object.entries(formData.social) : [];
 
   if (loading)
     return (
