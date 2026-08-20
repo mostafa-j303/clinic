@@ -17,7 +17,6 @@
   "dependencies": {
     "@vercel/blob": "^2.8.0",
     "bcrypt": "^6.0.0",
-    "brevo": "^1.0.0",
     "formidable": "^3.5.4",
     "framer-motion": "^13.1.0",
     "iron-session": "^8.0.4",
