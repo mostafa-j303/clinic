@@ -17,6 +17,7 @@
   "dependencies": {
     "@sparticuz/chromium": "^147.0.0",
     "@vercel/blob": "^2.8.0",
+    "@vercel/functions": "^3.9.3",
     "bcrypt": "^6.0.0",
     "formidable": "^3.5.4",
     "framer-motion": "^13.1.0",

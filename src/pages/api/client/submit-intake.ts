@@ -16,6 +16,7 @@ import {
 import { getSiteUrl } from "../../../lib/siteUrl";
 import { generateIntakeFormHtml } from "../../../app/utils/intakeFormPdfTemplate";
 import { htmlToPdfBuffer } from "../../../lib/pdf";
+import { waitUntil } from "@vercel/functions";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "noreply@yourapp.com";
@@ -131,21 +132,31 @@ export default async function handler(
       console.error("Error sending intake form Telegram notification:", telegramError);
     }
 
-    try {
-      const { brandPrimary } = await getAdminNotificationSettings();
-      const record = await getIntakeFormById(intakeFormId);
-      if (record) {
-        const html = generateIntakeFormHtml(record, brandPrimary || "#0891B2");
-        const pdfBuffer = await htmlToPdfBuffer(html);
-        await sendTelegramDocument(
-          pdfBuffer,
-          `Intake Form - ${f.fullName}.pdf`,
-          `Intake form PDF for ${f.fullName}`
-        );
-      }
-    } catch (pdfError) {
-      console.error("Error sending intake form PDF to Telegram:", pdfError);
-    }
+    // Not awaited: on Vercel's free Hobby plan, the whole function is
+    // hard-capped at 10s with no way to raise it, and Chromium cold-start
+    // alone can eat several seconds — awaiting this here risked the
+    // client's actual form submission failing because of a slow PDF, even
+    // though their data had already saved and the text notification above
+    // already told the admin everything. waitUntil lets it keep trying in
+    // the background after the response is sent, best-effort, within
+    // whatever's left of the function's time budget.
+    waitUntil(
+      (async () => {
+        const { brandPrimary } = await getAdminNotificationSettings();
+        const record = await getIntakeFormById(intakeFormId);
+        if (record) {
+          const html = generateIntakeFormHtml(record, brandPrimary || "#0891B2");
+          const pdfBuffer = await htmlToPdfBuffer(html);
+          await sendTelegramDocument(
+            pdfBuffer,
+            `Intake Form - ${f.fullName}.pdf`,
+            `Intake form PDF for ${f.fullName}`
+          );
+        }
+      })().catch((pdfError) => {
+        console.error("Error sending intake form PDF to Telegram:", pdfError);
+      })
+    );
 
     return res.status(200).json({ message: "Form submitted successfully" });
   } catch (err) {
