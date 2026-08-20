@@ -8,11 +8,7 @@
   --color-secondary: #20D3EE;
   --color-hovsecondary: #4BD2E7;
   --color-accent: #059669;
-}
-:root {
   --foreground-rgb: 0, 0, 0;
-  --color-primary: theme('colors.primary');
-  --color-secondary: theme('colors.secondary');
 }
 
 .custom-dropdown {
