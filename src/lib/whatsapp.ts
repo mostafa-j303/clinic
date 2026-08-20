@@ -18,10 +18,20 @@ export type WhatsAppNotification = {
 // own fixed base URL, configured on the template itself in Meta, not here).
 export async function sendWhatsAppMessage(notification: WhatsAppNotification): Promise<void> {
   if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_OWNER_NUMBER) {
-    console.warn(
-      "WhatsApp notification skipped: missing WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_OWNER_NUMBER env vars"
-    );
-    return;
+    // Throwing (not silently returning) matters here: every caller wraps
+    // this in try/catch and logs via console.error, and the manual test
+    // route (send-whatsapp.ts) reports whatever this function does back to
+    // the caller as {success:true} on any non-throwing return — a silent
+    // skip here previously looked identical to an actual successful send
+    // from both the logs (a warn, not an error, easy to miss) and the API
+    // response, which is exactly what made a real missing-env-var
+    // misconfiguration in production indistinguishable from "it's working."
+    const missing = [
+      !WHATSAPP_TOKEN && "WHATSAPP_TOKEN",
+      !WHATSAPP_PHONE_NUMBER_ID && "WHATSAPP_PHONE_NUMBER_ID",
+      !WHATSAPP_OWNER_NUMBER && "WHATSAPP_OWNER_NUMBER",
+    ].filter(Boolean);
+    throw new Error(`WhatsApp not configured — missing env var(s): ${missing.join(", ")}`);
   }
 
   const response = await fetch(
