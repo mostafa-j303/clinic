@@ -40,27 +40,27 @@ $$;
 -- Name: get_appointments(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_appointments() RETURNS TABLE(id integer, price text, offerprice text, name text, duration text, details json, is_featured boolean, visit_count integer, validity_days integer)
+CREATE FUNCTION public.get_appointments() RETURNS TABLE(id integer, price text, offerprice text, name text, duration text, details json, featured_tier text, visit_count integer, validity_days integer)
     LANGUAGE sql
     AS $$
-    SELECT 
-        a.id,
-        a.price,
-        a.offer_price AS "offerPrice",
-        a.name,
-        a.duration,
-        COALESCE(
-            json_agg(ad.detail ORDER BY ad.id) FILTER (WHERE ad.detail IS NOT NULL),
-            '[]'
-        ) AS details,
-        a.is_featured,
-        a.visit_count,
-        a.validity_days
-    FROM appointments a
-    LEFT JOIN appointment_details ad ON a.id = ad.appointment_id
-    GROUP BY a.id, a.price, a.offer_price, a.name, a.duration, a.is_featured, a.visit_count, a.validity_days
-    ORDER BY a.is_featured DESC, a.id ASC;
-$$;
+          SELECT 
+              a.id,
+              a.price,
+              a.offer_price AS "offerPrice",
+              a.name,
+              a.duration,
+              COALESCE(
+                  json_agg(ad.detail ORDER BY ad.id) FILTER (WHERE ad.detail IS NOT NULL),
+                  '[]'
+              ) AS details,
+              a.featured_tier,
+              a.visit_count,
+              a.validity_days
+          FROM appointments a
+          LEFT JOIN appointment_details ad ON a.id = ad.appointment_id
+          GROUP BY a.id, a.price, a.offer_price, a.name, a.duration, a.featured_tier, a.visit_count, a.validity_days
+          ORDER BY CASE a.featured_tier WHEN 'gold' THEN 0 WHEN 'silver' THEN 1 WHEN 'bronze' THEN 2 ELSE 3 END, a.id ASC;
+      $$;
 
 
 --
@@ -221,9 +221,10 @@ CREATE TABLE public.appointments (
     price text NOT NULL,
     offer_price text,
     duration text,
-    is_featured boolean DEFAULT false NOT NULL,
     visit_count integer,
-    validity_days integer
+    validity_days integer,
+    featured_tier text,
+    CONSTRAINT appointments_featured_tier_check CHECK ((featured_tier = ANY (ARRAY['gold'::text, 'silver'::text, 'bronze'::text])))
 );
 
 

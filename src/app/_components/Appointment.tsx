@@ -34,9 +34,43 @@ type AppointmentType = {
   name: string;
   duration?: string;
   details: string[];
-  is_featured?: boolean;
+  featured_tier?: FeaturedTier;
   visit_count?: number | null;
   validity_days?: number | null;
+};
+
+type FeaturedTier = "gold" | "silver" | "bronze";
+
+const TIER_RANK: Record<FeaturedTier, number> = { gold: 0, silver: 1, bronze: 2 };
+function tierRank(tier: FeaturedTier | undefined | null): number {
+  return tier ? TIER_RANK[tier] : 3;
+}
+
+const TIER_CONFIG: Record<
+  FeaturedTier,
+  { label: string; cardClass: string; ribbonGradient: string; starFill: string; starHover: string }
+> = {
+  gold: {
+    label: "Most Popular",
+    cardClass: "border-amber-400 shadow-amber-200/50",
+    ribbonGradient: "linear-gradient(90deg, #b45309, #fbbf24, #b45309)",
+    starFill: "fill-amber-400 text-amber-500",
+    starHover: "hover:text-amber-400",
+  },
+  silver: {
+    label: "Popular Choice",
+    cardClass: "border-slate-400 shadow-slate-300/50",
+    ribbonGradient: "linear-gradient(90deg, #6b7280, #d1d5db, #6b7280)",
+    starFill: "fill-slate-400 text-slate-500",
+    starHover: "hover:text-slate-400",
+  },
+  bronze: {
+    label: "Great Value",
+    cardClass: "border-orange-700 shadow-orange-300/40",
+    ribbonGradient: "linear-gradient(90deg, #92400e, #cd7f32, #92400e)",
+    starFill: "fill-orange-700 text-orange-800",
+    starHover: "hover:text-orange-700",
+  },
 };
 
 function Appointment() {
@@ -80,26 +114,30 @@ function Appointment() {
     setFormOpen(true);
   };
 
-  const handleToggleFeatured = async (id: number) => {
+  const handleSetTier = async (id: number, tier: FeaturedTier) => {
+    const current = appointments.find((a) => a.id === id);
+    const nextTier: FeaturedTier | null = current?.featured_tier === tier ? null : tier;
+
     try {
       const res = await fetch("/api/toggle-appointment-featured", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, tier: nextTier }),
       });
-      if (!res.ok) throw new Error("Failed to toggle featured");
-      const { isFeatured } = await res.json();
+      if (!res.ok) throw new Error("Failed to update tier");
+      const { tier: savedTier } = await res.json();
 
       setAppointments((prev) => {
-        const updated = prev.map((a) => ({
-          ...a,
-          is_featured: a.id === id ? isFeatured : false,
-        }));
-        return [...updated].sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
+        const updated = prev.map((a) => {
+          if (a.id === id) return { ...a, featured_tier: savedTier ?? undefined };
+          if (savedTier && a.featured_tier === savedTier) return { ...a, featured_tier: undefined };
+          return a;
+        });
+        return [...updated].sort((a, b) => tierRank(a.featured_tier) - tierRank(b.featured_tier));
       });
     } catch (err) {
-      console.error("Failed to toggle featured appointment", err);
-      showAlertMessage("Failed to update featured package.", "error");
+      console.error("Failed to update appointment tier", err);
+      showAlertMessage("Failed to update package tier.", "error");
     }
   };
 
@@ -326,12 +364,12 @@ function Appointment() {
             <div
               key={appointment.id}
               className={`group relative bg-white dark:bg-gray-800 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-6 flex flex-col ${
-                appointment.is_featured
-                  ? "border-amber-400 shadow-amber-200/50"
+                appointment.featured_tier
+                  ? TIER_CONFIG[appointment.featured_tier].cardClass
                   : "border-gray-200 dark:border-gray-700 hover:border-primary"
               }`}
             >
-              {appointment.is_featured && (
+              {appointment.featured_tier && (
                 // Small dedicated corner wrapper owns the clipping, sized just for the
                 // ribbon — keeps it independent of the card's own overflow behavior.
                 // Scaled down on mobile so it doesn't overrun a narrow 2-up card.
@@ -340,13 +378,12 @@ function Appointment() {
                     className="absolute top-[10px] right-[-24px] w-[90px] py-0.5 text-center text-[7px] sm:top-[22px] sm:right-[-40px] sm:w-[150px] sm:py-1 sm:text-[11px] font-bold uppercase tracking-wide text-white shadow-md rotate-45"
                     style={{
                       backgroundSize: "200% 100%",
-                      backgroundImage:
-                        "linear-gradient(90deg, #b45309, #fbbf24, #b45309)",
+                      backgroundImage: TIER_CONFIG[appointment.featured_tier].ribbonGradient,
                     }}
                     animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                   >
-                    Most Popular
+                    {TIER_CONFIG[appointment.featured_tier].label}
                   </motion.div>
                 </div>
               )}
@@ -357,20 +394,29 @@ function Appointment() {
                   {appointment.name}
                 </h3>
                 {isAdmin && (
-                  <button
-                    onClick={() => handleToggleFeatured(appointment.id)}
-                    className="flex-shrink-0 cursor-pointer"
-                    title={appointment.is_featured ? "Unmark as featured" : "Mark as featured (shows first)"}
-                  >
-                    <Star
-                      size={18}
-                      className={
-                        appointment.is_featured
-                          ? "fill-amber-400 text-amber-500"
-                          : "text-gray-300 hover:text-amber-400"
-                      }
-                    />
-                  </button>
+                  <div className="flex-shrink-0 flex items-center gap-1">
+                    {(Object.keys(TIER_CONFIG) as FeaturedTier[]).map((tier) => (
+                      <button
+                        key={tier}
+                        onClick={() => handleSetTier(appointment.id, tier)}
+                        className="cursor-pointer"
+                        title={
+                          appointment.featured_tier === tier
+                            ? `Unmark as ${TIER_CONFIG[tier].label}`
+                            : `Mark as ${tier[0].toUpperCase()}${tier.slice(1)} (${TIER_CONFIG[tier].label})`
+                        }
+                      >
+                        <Star
+                          size={16}
+                          className={
+                            appointment.featured_tier === tier
+                              ? TIER_CONFIG[tier].starFill
+                              : `text-gray-300 ${TIER_CONFIG[tier].starHover}`
+                          }
+                        />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 

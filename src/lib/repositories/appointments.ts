@@ -90,8 +90,19 @@ export async function deleteAppointment(id: number | string) {
   await pool.query(`DELETE FROM appointments WHERE id = $1`, [id]);
 }
 
-/** Only one appointment package can be featured at a time — starring one un-stars any previously featured package. */
-export async function toggleFeaturedAppointment(id: number | string) {
+export type FeaturedTier = "gold" | "silver" | "bronze";
+const FEATURED_TIERS: FeaturedTier[] = ["gold", "silver", "bronze"];
+
+/**
+ * Only one package can hold a given tier (gold/silver/bronze) at a time —
+ * setting a tier on one package clears it from whichever other package
+ * previously held it. Passing `tier: null` clears this package's own tier.
+ */
+export async function setAppointmentTier(id: number | string, tier: FeaturedTier | null) {
+  if (tier !== null && !FEATURED_TIERS.includes(tier)) {
+    throw new Error(`Invalid tier: ${tier}`);
+  }
+
   const pool = connectToDatabase();
   const client = await pool.connect();
 
@@ -99,7 +110,7 @@ export async function toggleFeaturedAppointment(id: number | string) {
     await client.query("BEGIN");
 
     const current = await client.query(
-      "SELECT is_featured FROM appointments WHERE id = $1",
+      "SELECT id FROM appointments WHERE id = $1",
       [id]
     );
     if (current.rows.length === 0) {
@@ -107,17 +118,14 @@ export async function toggleFeaturedAppointment(id: number | string) {
       return { notFound: true as const };
     }
 
-    const willBeFeatured = !current.rows[0].is_featured;
-
-    await client.query("UPDATE appointments SET is_featured = false");
-    if (willBeFeatured) {
-      await client.query("UPDATE appointments SET is_featured = true WHERE id = $1", [
-        id,
-      ]);
+    if (tier !== null) {
+      // Only one package per tier — clear it from whoever else has it.
+      await client.query("UPDATE appointments SET featured_tier = NULL WHERE featured_tier = $1", [tier]);
     }
+    await client.query("UPDATE appointments SET featured_tier = $1 WHERE id = $2", [tier, id]);
 
     await client.query("COMMIT");
-    return { notFound: false as const, isFeatured: willBeFeatured };
+    return { notFound: false as const, tier };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
